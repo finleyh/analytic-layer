@@ -3,12 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>CVS Watch — Candidate review</title>
-<script src="./support.js"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
-</head>
-<body>
-<x-dc>
-<helmet>
 <style>
 body{margin:0;background:#0B0D10;color:#E7E9ED;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 .mono{font-family:'IBM Plex Mono',monospace}
@@ -24,8 +19,16 @@ a:hover{color:#78AAFF}
 .btn-reject{background:#241518;color:#E5484D;border:1px solid #442025}
 .btn-reject:hover{background:#2C1A1E}
 .chip{font-size:11px;font-family:'IBM Plex Mono',monospace;background:#1B2029;border:1px solid #262B35;color:#9199A8;padding:3px 8px;border-radius:5px;display:inline-block}
+.src{font-size:10px;font-family:'IBM Plex Mono',monospace;color:#5D6472;background:#0F1217;border:1px solid #1B2029;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.info{display:flex;gap:10px;align-items:flex-start;font-size:12px;line-height:1.5;color:#B7BCC6;background:#0F1A2B;border:1px solid #1E3A5F;border-radius:8px;padding:12px 14px;margin-bottom:20px}
+.info b{color:#4C8DFF}
+.ev{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;background:#0F1217;border:1px solid #1B2029;border-radius:7px;padding:12px 14px;margin-top:12px}
+.ev .k{font-size:10px;color:#5D6472;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px}
+.ev .v{font-size:13px;font-family:'IBM Plex Mono',monospace}
+.dim{opacity:0.55}
 </style>
-</helmet>
+</head>
+<body>
 
 <div style="display:flex;width:100%;min-height:100vh;background:#0B0D10">
 
@@ -35,6 +38,7 @@ a:hover{color:#78AAFF}
     <span style="font-size:15px;font-weight:600;letter-spacing:0.2px">CVS Watch</span>
   </div>
   <a href="Main.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 001 1h3v-6h6v6h3a1 1 0 001-1v-9"/></svg>Overview</a>
+  <a href="Watchlist.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Watchlist</a>
   <a href="FlowGraph.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.6"/><circle cx="18" cy="6" r="2.6"/><circle cx="12" cy="18" r="2.6"/><path d="M8.2 7.3l2.9 8.6M15.8 7.3l-2.9 8.6"/></svg>Flow graph</a>
   <a href="TopTalkers.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V13M10 20V6M16 20v-9M4 20h16"/></svg>Top talkers</a>
   <a href="CandidateReview.dc.html" class="navlink active"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l2.2-5h13.6L21 8M3 8v10.5A1.5 1.5 0 004.5 20h15a1.5 1.5 0 001.5-1.5V8M3 8h6.2l.9 3h3.8l.9-3H21"/></svg>Candidates</a>
@@ -47,95 +51,81 @@ a:hover{color:#78AAFF}
 
 <div style="flex:1 1 0;min-width:0;padding:36px 44px;box-sizing:border-box">
 
-  <div style="margin-bottom:24px">
+  <div style="margin-bottom:20px">
     <h1 style="margin:0 0 4px 0;font-size:22px;font-weight:600">Candidate review</h1>
-    <div style="font-size:13px;color:#5D6472">{{ pendingCount }} pending · agentic-asn-classification, nightly</div>
+    <div style="font-size:13px;color:#5D6472"><span id="pending">2</span> pending · agentic-asn-classification, nightly · <span class="mono">asn_classification_candidates</span></div>
   </div>
+
+  <div class="info"><span>ⓘ</span><span><b>Approve writes to netflow-rollups.</b> It inserts the ASN into the suggested <span class="mono">*_providers</span> table and marks the row reviewed (the <span class="mono">dashboard_app</span> role's only write grants). Rollup rows re-materialize going forward plus a 3-day refresh window — older rows for this peer stay <em>unclassified</em> on the Top talkers tab until a manual refresh. Reject just marks the row; the peer stays in the unclassified bucket.</span></div>
 
   <div style="display:flex;flex-direction:column;gap:16px">
 
-    <div class="card" style="padding:22px 24px;{{ card1Style }}">
+    <div class="card" id="card1" style="padding:22px 24px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap;gap:12px">
         <div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
             <span class="mono" style="font-size:15px;font-weight:600">AS62563</span>
             <span style="font-size:14px;color:#9199A8">GlobalTelehost Corp.</span>
           </div>
-          <div style="font-size:12px;color:#5D6472">→ <span class="mono" style="color:#4C8DFF">cloud_providers</span> · CA · triggered by <span class="mono">23.162.200.132</span> · 48 min ago</div>
+          <div style="font-size:12px;color:#5D6472">→ <span class="mono" style="color:#4C8DFF">cloud_providers</span> · CA · triggered by <a href="EntityDetail.dc.html" class="mono">23.162.200.132</a> · 48 min ago</div>
         </div>
-        <div style="display:flex;gap:8px;flex-shrink:0">
-          <sc-if value="{{ card1Pending }}" hint-placeholder-val="{{ true }}">
-            <button class="btn btn-reject" onClick="{{ reject1 }}">Reject</button>
-            <button class="btn btn-approve" onClick="{{ approve1 }}">Approve</button>
-          </sc-if>
-          <sc-if value="{{ card1Decided }}" hint-placeholder-val="{{ false }}">
-            <span class="chip" style="{{ card1BadgeStyle }}">{{ card1BadgeText }}</span>
-          </sc-if>
+        <div style="display:flex;gap:8px;flex-shrink:0" id="act1">
+          <button class="btn btn-reject" data-card="1" data-d="rejected">Reject</button>
+          <button class="btn btn-approve" data-card="1" data-d="approved">Approve</button>
         </div>
       </div>
-      <div style="font-size:13px;line-height:1.5;color:#B7BCC6;background:#0F1217;border:1px solid #1B2029;border-radius:7px;padding:12px 14px">{{ reasoning1 }}</div>
+      <div style="font-size:13px;line-height:1.5;color:#B7BCC6;background:#0F1217;border:1px solid #1B2029;border-radius:7px;padding:12px 14px">GlobalTelehost Corp. operates as a hosting and VPS provider, renting infrastructure and server resources to third parties, which is the defining characteristic of cloud/hosting providers.</div>
+      <div class="ev">
+        <div style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><span style="font-size:11px;font-weight:600;color:#9199A8;white-space:nowrap">Evidence — what the triggering peer actually did</span><span class="src">unclassified_peer_contacts_daily · flow_rollup_daily · 30d</span></div>
+        <div><div class="k">Monitored IPs touched</div><div class="v">1 <span style="color:#5D6472">(143.198.176.127)</span></div></div>
+        <div><div class="k">Bytes / flows</div><div class="v">41 KB / 212</div></div>
+        <div><div class="k">Days seen</div><div class="v">2 of 30</div></div>
+        <div><div class="k">Port families</div><div class="v" style="font-size:12px">voip_signaling, rtp_media</div></div>
+        <div><div class="k">Other IPs in ASN seen</div><div class="v">— <span style="color:#5D6472">needs ASN</span></div></div>
+      </div>
     </div>
 
-    <div class="card" style="padding:22px 24px;{{ card2Style }}">
+    <div class="card" id="card2" style="padding:22px 24px">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;flex-wrap:wrap;gap:12px">
         <div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
             <span class="mono" style="font-size:15px;font-weight:600">AS8075</span>
             <span style="font-size:14px;color:#9199A8">Microsoft Corporation</span>
           </div>
-          <div style="font-size:12px;color:#5D6472">→ <span class="mono" style="color:#4C8DFF">cloud_providers</span> · US · triggered by <span class="mono">158.23.180.16</span> · 47 min ago</div>
+          <div style="font-size:12px;color:#5D6472">→ <span class="mono" style="color:#4C8DFF">cloud_providers</span> · US · triggered by <a href="EntityDetail.dc.html" class="mono">158.23.180.16</a> · 47 min ago</div>
         </div>
-        <div style="display:flex;gap:8px;flex-shrink:0">
-          <sc-if value="{{ card2Pending }}" hint-placeholder-val="{{ true }}">
-            <button class="btn btn-reject" onClick="{{ reject2 }}">Reject</button>
-            <button class="btn btn-approve" onClick="{{ approve2 }}">Approve</button>
-          </sc-if>
-          <sc-if value="{{ card2Decided }}" hint-placeholder-val="{{ false }}">
-            <span class="chip" style="{{ card2BadgeStyle }}">{{ card2BadgeText }}</span>
-          </sc-if>
+        <div style="display:flex;gap:8px;flex-shrink:0" id="act2">
+          <button class="btn btn-reject" data-card="2" data-d="rejected">Reject</button>
+          <button class="btn btn-approve" data-card="2" data-d="approved">Approve</button>
         </div>
       </div>
-      <div style="font-size:13px;line-height:1.5;color:#B7BCC6;background:#0F1217;border:1px solid #1B2029;border-radius:7px;padding:12px 14px">{{ reasoning2 }}</div>
+      <div style="font-size:13px;line-height:1.5;color:#B7BCC6;background:#0F1217;border:1px solid #1B2029;border-radius:7px;padding:12px 14px">Microsoft Corporation operates Azure and other cloud services that rent infrastructure and computing resources to third parties, which is the primary business purpose of this ASN.</div>
+      <div class="ev">
+        <div style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><span style="font-size:11px;font-weight:600;color:#9199A8;white-space:nowrap">Evidence — what the triggering peer actually did</span><span class="src">unclassified_peer_contacts_daily · flow_rollup_daily · 30d</span></div>
+        <div><div class="k">Monitored IPs touched</div><div class="v">3</div></div>
+        <div><div class="k">Bytes / flows</div><div class="v">118 KB / 640</div></div>
+        <div><div class="k">Days seen</div><div class="v">5 of 30</div></div>
+        <div><div class="k">Port families</div><div class="v" style="font-size:12px">web_admin, other</div></div>
+        <div><div class="k">Other IPs in ASN seen</div><div class="v">— <span style="color:#5D6472">needs ASN</span></div></div>
+      </div>
     </div>
 
   </div>
 
+  <div style="font-size:11px;color:#5D6472;line-height:1.5;margin-top:20px">Evidence block values are illustrative — both of these candidates were approved on Oct 8 and their recent rows have already re-materialized as cloud, so the live unclassified view returns nothing for them. The point of the block: the analyst sees the data that triggered the card next to the model's reasoning, not just the reasoning. "Other IPs in ASN seen" is the one field that needs ASN in a rollup view.</div>
+
 </div>
 </div>
-</x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1080}}'>
-class Component extends DCLogic {
-  renderVals() {
-    const d1 = (this.state && this.state.d1) || null;
-    const d2 = (this.state && this.state.d2) || null;
-    const badge = (d) => d === 'approved'
-      ? { style: 'background:#153226;color:#3DD68C;border-color:#1E4D37', text: 'Approved → cloud_providers' }
-      : { style: 'background:#241518;color:#E5484D;border-color:#442025', text: 'Rejected' };
-    const dimmed = 'opacity:0.55';
-    const b1 = badge(d1);
-    const b2 = badge(d2);
-    const pending = (d1 ? 0 : 1) + (d2 ? 0 : 1);
-    return {
-      pendingCount: pending,
-      reasoning1: 'GlobalTelehost Corp. operates as a hosting and VPS provider, renting infrastructure and server resources to third parties, which is the defining characteristic of cloud/hosting providers.',
-      reasoning2: 'Microsoft Corporation operates Azure and other cloud services that rent infrastructure and computing resources to third parties, which is the primary business purpose of this ASN.',
-      card1Pending: !d1,
-      card1Decided: !!d1,
-      card1Style: d1 ? dimmed : '',
-      card1BadgeStyle: b1.style,
-      card1BadgeText: b1.text,
-      approve1: () => this.setState({ d1: 'approved' }),
-      reject1: () => this.setState({ d1: 'rejected' }),
-      card2Pending: !d2,
-      card2Decided: !!d2,
-      card2Style: d2 ? dimmed : '',
-      card2BadgeStyle: b2.style,
-      card2BadgeText: b2.text,
-      approve2: () => this.setState({ d2: 'approved' }),
-      reject2: () => this.setState({ d2: 'rejected' })
-    };
-  }
-}
+
+<script>
+let pending = 2;
+document.querySelectorAll('[data-card]').forEach(b => b.addEventListener('click', () => {
+  const c = b.dataset.card, d = b.dataset.d;
+  const ok = d === 'approved';
+  document.getElementById('act' + c).innerHTML = '<span class="chip" style="' + (ok ? 'background:#153226;color:#3DD68C;border-color:#1E4D37' : 'background:#241518;color:#E5484D;border-color:#442025') + '">' + (ok ? 'Approved → cloud_providers' : 'Rejected') + '</span>';
+  document.getElementById('card' + c).classList.add('dim');
+  document.getElementById('pending').textContent = --pending;
+}));
 </script>
 </body>
 </html>

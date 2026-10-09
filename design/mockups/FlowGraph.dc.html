@@ -3,12 +3,7 @@
 <head>
 <meta charset="utf-8">
 <title>CVS Watch — Flow graph</title>
-<script src="./support.js"></script>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
-</head>
-<body>
-<x-dc>
-<helmet>
 <style>
 body{margin:0;background:#0B0D10;color:#E7E9ED;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 .mono{font-family:'IBM Plex Mono',monospace}
@@ -18,15 +13,19 @@ a:hover{color:#78AAFF}
 .navlink:hover{background:#171B22;color:#E7E9ED}
 .navlink.active{background:#1B2029;color:#E7E9ED}
 .card{background:#141821;border:1px solid #262B35;border-radius:10px}
-.pill{font-size:12px;font-weight:500;padding:5px 12px;border-radius:999px;border:1px solid #262B35;color:#9199A8;background:transparent}
+.pill{font-size:12px;font-weight:500;padding:5px 12px;border-radius:999px;border:1px solid #262B35;color:#9199A8;background:transparent;cursor:pointer}
 .pill.active{background:#1B2029;border-color:#3A4254;color:#E7E9ED}
+.src{font-size:10px;font-family:'IBM Plex Mono',monospace;color:#5D6472;background:#0F1217;border:1px solid #1B2029;padding:2px 7px;border-radius:4px;white-space:nowrap}
 .chip{font-size:11px;font-family:'IBM Plex Mono',monospace;background:#1B2029;border:1px solid #262B35;color:#9199A8;padding:3px 8px;border-radius:5px;display:inline-block}
 .node{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .08s ease}
 .node:hover{transform:scale(1.08)}
+.node.sel{box-shadow:0 0 0 3px #E7E9ED, 0 0 0 7px rgba(231,233,237,0.22)}
 .nodelabel{position:absolute;font-size:11px;color:#9199A8;white-space:nowrap}
-button.reset{all:unset;cursor:pointer}
+.dn{font-size:12px;color:#9199A8;line-height:1.5;display:flex;gap:8px}
+.dn b{color:#E7E9ED;font-weight:600}
 </style>
-</helmet>
+</head>
+<body>
 
 <div style="display:flex;width:100%;min-height:100vh;background:#0B0D10">
 
@@ -36,6 +35,7 @@ button.reset{all:unset;cursor:pointer}
     <span style="font-size:15px;font-weight:600;letter-spacing:0.2px">CVS Watch</span>
   </div>
   <a href="Main.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 001 1h3v-6h6v6h3a1 1 0 001-1v-9"/></svg>Overview</a>
+  <a href="Watchlist.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Watchlist</a>
   <a href="FlowGraph.dc.html" class="navlink active"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.6"/><circle cx="18" cy="6" r="2.6"/><circle cx="12" cy="18" r="2.6"/><path d="M8.2 7.3l2.9 8.6M15.8 7.3l-2.9 8.6"/></svg>Flow graph</a>
   <a href="TopTalkers.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V13M10 20V6M16 20v-9M4 20h16"/></svg>Top talkers</a>
   <a href="CandidateReview.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l2.2-5h13.6L21 8M3 8v10.5A1.5 1.5 0 004.5 20h15a1.5 1.5 0 001.5-1.5V8M3 8h6.2l.9 3h3.8l.9-3H21"/></svg>Candidates</a>
@@ -51,7 +51,7 @@ button.reset{all:unset;cursor:pointer}
   <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:16px">
     <div>
       <h1 style="margin:0 0 4px 0;font-size:22px;font-weight:600">Flow graph</h1>
-      <div style="font-size:13px;color:#5D6472">Monitored ↔ peer traffic, aggregated — click any node</div>
+      <div style="font-size:13px;color:#5D6472">Edges from <span class="mono">tagged_entity_contacts_daily</span> (one per unordered IP pair) · node color from <span class="mono">flow_rollup_daily</span> flags · click any node</div>
     </div>
     <div style="display:flex;gap:6px">
       <button class="pill">24h</button>
@@ -65,51 +65,55 @@ button.reset{all:unset;cursor:pointer}
     <div class="card" style="width:800px;max-width:100%;height:620px;position:relative;overflow:hidden;flex-shrink:0">
 
       <svg width="800" height="620" viewBox="0 0 800 620" style="position:absolute;left:0;top:0;pointer-events:none">
-        <line x1="90" y1="130" x2="395" y2="75" style="stroke:#3E4863;stroke-width:6;stroke-linecap:round"/>
+        <line x1="90" y1="130" x2="395" y2="75" style="stroke:#F5A623;stroke-width:6;stroke-linecap:round;stroke-dasharray:3 7"/>
         <line x1="90" y1="130" x2="415" y2="275" style="stroke:#3E4863;stroke-width:5;stroke-linecap:round"/>
         <line x1="90" y1="130" x2="293" y2="443" style="stroke:#3E4863;stroke-width:2;stroke-linecap:round"/>
         <line x1="90" y1="130" x2="550" y2="290" style="stroke:#3E4863;stroke-width:2;stroke-linecap:round"/>
+        <line x1="90" y1="130" x2="262" y2="242" style="stroke:#3E4863;stroke-width:4;stroke-linecap:round"/>
         <line x1="90" y1="310" x2="537" y2="67" style="stroke:#3E4863;stroke-width:3;stroke-linecap:round"/>
-        <line x1="90" y1="310" x2="90" y2="490" style="stroke:#F5A623;stroke-width:4;stroke-linecap:round;stroke-dasharray:3 7"/>
+        <line x1="90" y1="310" x2="90" y2="490" style="stroke:#F5A623;stroke-width:7;stroke-linecap:round;stroke-dasharray:3 7"/>
         <line x1="90" y1="490" x2="395" y2="75" style="stroke:#3E4863;stroke-width:3;stroke-linecap:round"/>
         <line x1="90" y1="490" x2="638" y2="478" style="stroke:#3E4863;stroke-width:7;stroke-linecap:round"/>
       </svg>
 
-      <div class="node" style="width:48px;height:48px;left:66px;top:106px;background:#2A1216;border:2px solid #E5484D;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);{{ m1.ring }}" onClick="{{ m1.pick }}"></div>
+      <div class="node" data-id="m1" style="width:48px;height:48px;left:66px;top:106px;background:#2A1216;border:2px solid #E5484D;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></div>
       <div class="nodelabel" style="left:16px;top:157px;color:#E5484D;font-weight:600">OUTSIDERS</div>
 
-      <div class="node" style="width:44px;height:44px;left:68px;top:288px;background:#2A1216;border:2px solid #E5484D;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);{{ m2.ring }}" onClick="{{ m2.pick }}"></div>
+      <div class="node" data-id="m2" style="width:44px;height:44px;left:68px;top:288px;background:#2A1216;border:2px solid #E5484D;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></div>
       <div class="nodelabel" style="left:4px;top:335px;color:#E5484D;font-weight:600">confirmed CVS #2</div>
 
-      <div class="node" style="width:44px;height:44px;left:68px;top:468px;background:#2A2013;border:2px solid #F5A623;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);{{ m3.ring }}" onClick="{{ m3.pick }}"></div>
+      <div class="node" data-id="m3" style="width:44px;height:44px;left:68px;top:468px;background:#2A2013;border:2px solid #F5A623;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)"></div>
       <div class="nodelabel" style="left:30px;top:515px;color:#F5A623;font-weight:600">SIP trunk</div>
 
-      <div class="node" style="width:30px;height:30px;left:380px;top:60px;background:#132033;border:2px solid #E5484D;{{ p1.ring }}" onClick="{{ p1.pick }}"></div>
-      <div class="nodelabel" style="left:398px;top:50px">Magnus Billing</div>
+      <div class="node" data-id="p1" style="width:34px;height:34px;left:378px;top:58px;background:#171B22;border:2px solid #9199A8;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></div>
+      <div class="nodelabel" style="left:398px;top:48px">Magnus Billing <span style="color:#5D6472">· monitored</span></div>
 
-      <div class="node" style="width:34px;height:34px;left:520px;top:50px;background:#132033;border:2px solid #4C8DFF;{{ p2.ring }}" onClick="{{ p2.pick }}"></div>
+      <div class="node" data-id="p2" style="width:34px;height:34px;left:520px;top:50px;background:#132033;border:2px solid #4C8DFF"></div>
       <div class="nodelabel" style="left:540px;top:40px">cloud host</div>
 
-      <div class="node" style="width:22px;height:22px;left:460px;top:150px;background:#132033;border:2px solid #4C8DFF;{{ p3.ring }}" onClick="{{ p3.pick }}"></div>
+      <div class="node" data-id="p3" style="width:22px;height:22px;left:460px;top:150px;background:#132033;border:2px solid #4C8DFF"></div>
       <div class="nodelabel" style="left:450px;top:174px">GlobalTelehost</div>
 
-      <div class="node" style="width:20px;height:20px;left:600px;top:140px;background:#132033;border:2px solid #4C8DFF;{{ p4.ring }}" onClick="{{ p4.pick }}"></div>
+      <div class="node" data-id="p4" style="width:20px;height:20px;left:600px;top:140px;background:#132033;border:2px solid #4C8DFF"></div>
       <div class="nodelabel" style="left:615px;top:146px">cloud host</div>
 
-      <div class="node" style="width:30px;height:30px;left:400px;top:260px;background:#1C1530;border:2px solid #8B5CF6;{{ p5.ring }}" onClick="{{ p5.pick }}"></div>
+      <div class="node" data-id="p10" style="width:28px;height:28px;left:248px;top:228px;background:#0F2A27;border:2px solid #2DD4BF"></div>
+      <div class="nodelabel" style="left:206px;top:260px">residential ISP pool</div>
+
+      <div class="node" data-id="p5" style="width:30px;height:30px;left:400px;top:260px;background:#1C1530;border:2px solid #8B5CF6"></div>
       <div class="nodelabel" style="left:338px;top:250px">satellite (CO)</div>
 
-      <div class="node" style="width:20px;height:20px;left:540px;top:280px;background:#1C1530;border:2px solid #8B5CF6;{{ p6.ring }}" onClick="{{ p6.pick }}"></div>
+      <div class="node" data-id="p6" style="width:20px;height:20px;left:540px;top:280px;background:#1C1530;border:2px solid #8B5CF6"></div>
       <div class="nodelabel" style="left:558px;top:286px">satellite</div>
 
-      <div class="node" style="width:16px;height:16px;left:460px;top:350px;background:#1C1530;border:2px solid #8B5CF6;{{ p7.ring }}" onClick="{{ p7.pick }}"></div>
+      <div class="node" data-id="p7" style="width:16px;height:16px;left:460px;top:350px;background:#1C1530;border:2px solid #8B5CF6"></div>
       <div class="nodelabel" style="left:434px;top:370px">satellite</div>
 
-      <div class="node" style="width:26px;height:26px;left:280px;top:430px;background:#2A2013;border:2px solid #F5A623;{{ p9.ring }}" onClick="{{ p9.pick }}"></div>
+      <div class="node" data-id="p9" style="width:26px;height:26px;left:280px;top:430px;background:#2A2013;border:2px solid #F5A623"></div>
       <div class="nodelabel" style="left:260px;top:460px">T-Mobile</div>
 
-      <div class="node" style="width:36px;height:36px;left:620px;top:460px;background:#171B22;border:2px dashed #5D6472;{{ p8.ring }}" onClick="{{ p8.pick }}"></div>
-      <div class="nodelabel" style="left:600px;top:500px">AS20122 ×10</div>
+      <div class="node" data-id="p8" style="width:36px;height:36px;left:620px;top:460px;background:#171B22;border:2px dashed #5D6472"></div>
+      <div class="nodelabel" style="left:600px;top:500px">AS20122 ×10 <span style="color:#F5A623">· needs ASN</span></div>
 
     </div>
 
@@ -118,32 +122,40 @@ button.reset{all:unset;cursor:pointer}
       <div class="card" style="padding:16px 18px">
         <div style="font-size:12px;font-weight:600;margin-bottom:10px;color:#9199A8">Legend</div>
         <div style="display:flex;flex-direction:column;gap:7px;font-size:12px">
-          <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:50%;background:#2A1216;border:2px solid #E5484D;display:inline-block;flex-shrink:0"></span>Monitored — confirmed CVS</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;background:#2A1216;border:2px solid #E5484D;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);display:inline-block;flex-shrink:0"></span>Monitored — confirmed CVS</div>
           <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border:2px solid #F5A623;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);display:inline-block;flex-shrink:0"></span>Monitored — SIP trunk</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;background:#171B22;border:2px solid #9199A8;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);display:inline-block;flex-shrink:0"></span>Monitored — watchlist only</div>
           <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:50%;background:#132033;border:2px solid #4C8DFF;display:inline-block;flex-shrink:0"></span>Peer — cloud</div>
           <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:50%;background:#1C1530;border:2px solid #8B5CF6;display:inline-block;flex-shrink:0"></span>Peer — satellite</div>
           <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:50%;background:#2A2013;border:2px solid #F5A623;display:inline-block;flex-shrink:0"></span>Peer — mobile</div>
-          <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:50%;background:#171B22;border:2px dashed #5D6472;display:inline-block;flex-shrink:0"></span>Peer — unflagged</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:50%;background:#0F2A27;border:2px solid #2DD4BF;display:inline-block;flex-shrink:0"></span>Peer — residential ISP</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:50%;background:#171B22;border:2px dashed #5D6472;display:inline-block;flex-shrink:0"></span>Peer — unclassified</div>
           <div style="height:1px;background:#262B35;margin:4px 0"></div>
           <div style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:2px;background:#F5A623;display:inline-block;flex-shrink:0"></span>Monitored ↔ monitored</div>
           <div style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:3px;background:#3E4863;display:inline-block;flex-shrink:0"></span>Monitored ↔ peer (width ~ bytes)</div>
         </div>
       </div>
 
-      <div class="card" style="padding:16px 18px;min-height:220px">
-        <sc-if value="{{ hasInfo }}" hint-placeholder-val="{{ false }}">
-          <div style="font-size:14px;font-weight:600;margin-bottom:2px">{{ info.label }}</div>
-          <div class="mono" style="font-size:12px;color:#9199A8;margin-bottom:10px">{{ info.ip }}</div>
-          <div style="font-size:12px;color:#9199A8;margin-bottom:10px">{{ info.role }}</div>
-          <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px">
-            <sc-for list="{{ tagsList }}" as="tag" hint-placeholder-count="2"><span class="chip">{{ tag }}</span></sc-for>
-          </div>
-          <div style="font-size:12px;color:#5D6472;margin-bottom:10px">{{ info.bytes }}</div>
-          <div style="font-size:12px;line-height:1.5;color:#B7BCC6">{{ info.note }}</div>
-        </sc-if>
-        <sc-if value="{{ noInfo }}" hint-placeholder-val="{{ true }}">
-          <div style="font-size:13px;color:#5D6472;line-height:1.5">Click a node on the left to inspect it — monitored-IP tags, provider classification, and a short note on why it's in the graph.</div>
-        </sc-if>
+      <div class="card" style="padding:16px 18px;min-height:200px">
+        <div id="info-empty" style="font-size:13px;color:#5D6472;line-height:1.5">Click a node on the left to inspect it — monitored-IP tags, provider classification, and a short note on why it's in the graph.</div>
+        <div id="info" style="display:none">
+          <div id="i-label" style="font-size:14px;font-weight:600;margin-bottom:2px"></div>
+          <div id="i-ip" class="mono" style="font-size:12px;color:#9199A8;margin-bottom:10px"></div>
+          <div id="i-role" style="font-size:12px;color:#9199A8;margin-bottom:10px"></div>
+          <div id="i-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
+          <div id="i-bytes" style="font-size:12px;color:#5D6472;margin-bottom:10px"></div>
+          <div id="i-note" style="font-size:12px;line-height:1.5;color:#B7BCC6"></div>
+        </div>
+      </div>
+
+      <div class="card" style="padding:16px 18px">
+        <div style="font-size:12px;font-weight:600;margin-bottom:10px;color:#F5A623">Data notes</div>
+        <div style="display:flex;flex-direction:column;gap:9px">
+          <div class="dn"><span>①</span><span><b>Every monitored↔monitored edge is stored twice</b> — once from each side's pull (17.52 MB / 17.51 MB for the trunk ↔ CVS #2 pair). Key on the unordered pair and keep one, don't sum.</span></div>
+          <div class="dn"><span>②</span><span><b>The edge view carries no provider flags</b> — <span class="mono">tagged_entity_contacts_daily</span> kept only the four tag flags, so peer color needs a join back to <span class="mono">flow_rollup_daily</span>.</span></div>
+          <div class="dn"><span>③</span><span><b>No rollup view carries ASN</b> — the AS20122 cluster collapse needs <span class="mono">peer_asn</span> added to <span class="mono">flow_rollup_hourly</span>, or a <span class="mono">flow_records</span> lookup.</span></div>
+          <div class="dn"><span>④</span><span><b>216.126.227.152 is on the watchlist</b> (<span class="mono">msk:voip_analysis</span>) — drawn as a plain peer in the first draft; it's a monitored node and its OUTSIDERS edge is monitored↔monitored.</span></div>
+        </div>
       </div>
 
     </div>
@@ -152,39 +164,36 @@ button.reset{all:unset;cursor:pointer}
 
 </div>
 </div>
-</x-dc>
-<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1000}}'>
-class Component extends DCLogic {
-  renderVals() {
-    const INFO = {
-      m1: {label:'OUTSIDERS', ip:'143.198.172.85', role:'Monitored IP — confirmed CVS', tags:['msk:voip_analysis','infrastructure_type:criminal_voip_service'], bytes:'17-day continuous activity', note:'Persistent SIP 5060 registration plus 16,667 distinct RTP sessions to the Magnus Billing host, weekday-biased.'},
-      m2: {label:'Unnamed CVS #2', ip:'192.248.178.127', role:'Monitored IP — confirmed CVS', tags:['msk:voip_analysis','infrastructure_type:criminal_voip_service'], bytes:'6,954 rollup rows', note:'1,089 of its rows show the peer side tagged infrastructure:sip_trunk — talks directly to the trunk node.'},
-      m3: {label:'SIP trunk node', ip:'143.198.176.127', role:'Monitored IP — SIP trunk', tags:['msk:voip_analysis','infrastructure:sip_trunk'], bytes:'26,596 rollup rows', note:'1,227 of its own rows show the peer as a confirmed CVS — reads as a relay, not an endpoint.'},
-      p1: {label:'Magnus Billing host', ip:'216.126.227.152', role:'Peer — cloud + bulletproof hosting', tags:['AS14956 RouterHosting LLC','US'], bytes:'6.5 MB / 34,188 flows (7d)', note:'Independently flagged by Spamhaus ASN-DROP and the hrbrmstr BPH watch, not just this project’s own classifier.'},
-      p2: {label:'Cloud host', ip:'50.116.38.139', role:'Peer — cloud', tags:[], bytes:'19.0 MB / 7d', note:'Top RTP peer by volume this week.'},
-      p3: {label:'GlobalTelehost Corp.', ip:'23.162.200.132', role:'Peer — cloud (AS62563, CA)', tags:[], bytes:'—', note:'Graduated from the agentic review queue tonight.'},
-      p4: {label:'Cloud host', ip:'3.235.74.192', role:'Peer — cloud', tags:[], bytes:'367 KB / 7d', note:''},
-      p5: {label:'Satellite ISP', ip:'45.226.112.91', role:'Peer — satellite (AS265861, CO)', tags:[], bytes:'18.1 MB / 7d', note:'Sistemas Satelitales de Colombia.'},
-      p6: {label:'Satellite ISP', ip:'45.226.115.144', role:'Peer — satellite (AS265861, CO)', tags:[], bytes:'1.8 MB / 7d', note:''},
-      p7: {label:'Satellite ISP', ip:'45.226.112.202', role:'Peer — satellite (AS265861, CO)', tags:[], bytes:'360 KB / 7d', note:''},
-      p9: {label:'T-Mobile USA', ip:'AS21928', role:'Peer — mobile carrier', tags:[], bytes:'264 distinct peer IPs (7d)', note:'Shows talked_to_confirmed_cvs = true for this window.'},
-      p8: {label:'AS20122 cluster', ip:'10 IPs · 208.69.81–82.x', role:'Peer — unflagged (NOS Network Operations Group)', tags:[], bytes:'~3.0 MB combined / 7d', note:'Near-identical per-IP volume across all 10 — the shape of a wholesale SBC pool. Not yet confirmed either way.'}
-    };
-    const sel = (this.state && this.state.selected) || null;
-    const info = sel ? INFO[sel] : null;
-    const ring = (id) => sel === id ? 'box-shadow:0 0 0 3px #E7E9ED, 0 0 0 7px rgba(231,233,237,0.22);' : '';
-    const mk = (id) => ({ pick: () => this.setState({ selected: id }), ring: ring(id) });
-    return {
-      hasInfo: !!info,
-      noInfo: !info,
-      info: info || { label:'', ip:'', role:'', bytes:'', note:'' },
-      tagsList: info ? info.tags : [],
-      m1: mk('m1'), m2: mk('m2'), m3: mk('m3'),
-      p1: mk('p1'), p2: mk('p2'), p3: mk('p3'), p4: mk('p4'),
-      p5: mk('p5'), p6: mk('p6'), p7: mk('p7'), p9: mk('p9'), p8: mk('p8')
-    };
-  }
-}
+
+<script>
+const INFO = {
+  m1: {label:'OUTSIDERS', ip:'143.198.172.85', role:'Monitored IP — confirmed CVS', tags:['msk:voip_analysis','infrastructure_type:criminal_voip_service'], bytes:'20.7 MB / 7d · 17.2 MB BPH contact / 30d', note:'Persistent SIP 5060 registration plus 16,667 distinct RTP sessions to the Magnus Billing host, weekday-biased. Signaling collapsed ~98% after Sep 28 while media held.'},
+  m2: {label:'Unnamed CVS #2', ip:'192.248.178.127', role:'Monitored IP — confirmed CVS', tags:['msk:voip_analysis','infrastructure_type:criminal_voip_service'], bytes:'18.8 MB / 7d', note:'17.5 MB of that is one edge to the SIP trunk node — talks directly to the trunk.'},
+  m3: {label:'SIP trunk node', ip:'143.198.176.127', role:'Monitored IP — SIP trunk', tags:['msk:voip_analysis','infrastructure:sip_trunk'], bytes:'26.7 MB / 7d · 308 unclassified peers', note:'Reads as a relay, not an endpoint: the confirmed CVS on one side, a 308-peer unclassified fan-out (incl. the AS20122 pool) on the other.'},
+  p1: {label:'Magnus Billing host', ip:'216.126.227.152', role:'Monitored IP (watchlist only) — also cloud + bulletproof hosting as a peer', tags:['msk:voip_analysis','AS14956 RouterHosting LLC','US'], bytes:'7.6 MB / 7d', note:'On the watchlist itself — the first draft drew it as a plain peer. Its edge to OUTSIDERS appears twice in tagged_entity_contacts_daily (7.43 MB from one side, 6.61 MB from the other). Independently flagged by Spamhaus ASN-DROP and the hrbrmstr BPH watch.'},
+  p2: {label:'Cloud host', ip:'50.116.38.139', role:'Peer — cloud', tags:[], bytes:'19.0 MB / 7d', note:'Top RTP peer by volume this week.'},
+  p3: {label:'GlobalTelehost Corp.', ip:'23.162.200.132', role:'Peer — cloud (AS62563, CA)', tags:[], bytes:'—', note:'Graduated from the agentic review queue Oct 8. Rollup rows older than the 3-day refresh window still show it unclassified.'},
+  p4: {label:'Cloud host', ip:'3.235.74.192', role:'Peer — cloud', tags:[], bytes:'367 KB / 7d', note:''},
+  p10: {label:'Residential ISP pool', ip:'multiple /24s', role:'Peer — residential ISP (peer_is_residential_isp)', tags:['AS7018','AS22773'], bytes:'6.2 MB / 7d to OUTSIDERS', note:'New category (migration 0065, Oct 2026). Callers, not infrastructure — 30% of OUTSIDERS\' 7d bytes touch residential ranges.'},
+  p5: {label:'Satellite ISP', ip:'45.226.112.91', role:'Peer — satellite (AS265861, CO)', tags:[], bytes:'18.1 MB / 7d', note:'Sistemas Satelitales de Colombia.'},
+  p6: {label:'Satellite ISP', ip:'45.226.115.144', role:'Peer — satellite (AS265861, CO)', tags:[], bytes:'1.8 MB / 7d', note:''},
+  p7: {label:'Satellite ISP', ip:'45.226.112.202', role:'Peer — satellite (AS265861, CO)', tags:[], bytes:'360 KB / 7d', note:''},
+  p9: {label:'T-Mobile USA', ip:'AS21928', role:'Peer — mobile carrier', tags:[], bytes:'264 distinct peer IPs (7d)', note:'Shows talked_to_confirmed_cvs = true for this window.'},
+  p8: {label:'AS20122 cluster', ip:'10 IPs · 208.69.81–82.x', role:'Peer — unclassified (NOS Network Operations Group)', tags:[], bytes:'~3.0 MB combined / 7d · 284–343 KB each', note:'Near-identical per-IP volume across all 10, 7 of 7 days — the shape of a wholesale SBC pool. Top of the Unclassified tab; collapsing it here needs ASN, which no rollup view carries.'}
+};
+document.querySelectorAll('.node').forEach(n => n.addEventListener('click', () => {
+  document.querySelectorAll('.node').forEach(x => x.classList.remove('sel'));
+  n.classList.add('sel');
+  const i = INFO[n.dataset.id];
+  document.getElementById('info-empty').style.display = 'none';
+  document.getElementById('info').style.display = 'block';
+  document.getElementById('i-label').textContent = i.label;
+  document.getElementById('i-ip').textContent = i.ip;
+  document.getElementById('i-role').textContent = i.role;
+  document.getElementById('i-bytes').textContent = i.bytes;
+  document.getElementById('i-note').textContent = i.note;
+  document.getElementById('i-tags').innerHTML = i.tags.map(t => '<span class="chip">' + t + '</span>').join('');
+}));
 </script>
 </body>
 </html>

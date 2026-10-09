@@ -8,6 +8,14 @@ needs, where that data already exists in `netflow-rollups`, and what's
 still an open question. Written so the mocks can be deleted or redrawn
 later without losing the thinking behind them.
 
+**Revised 2026-10-09** — a sixth screen (Watchlist) and changes to the
+other five, driven by mapping the seven views in `netflow-rollups`'
+public schema onto the screens. The mocks now carry live 7d/30d
+aggregates from the local database as of that date (except where a
+screen says "illustrative"). §1–§5 below describe the 2026-10-08
+draft; the revision section at the end describes what changed and why,
+and supersedes §1–§5 where they conflict.
+
 Global pattern across every screen: left sidebar nav (Overview / Flow
 graph / Top talkers / Candidates), a 24h/7d/30d range toggle in the
 header (not wired in the mock — what "range" means against hourly vs.
@@ -137,3 +145,154 @@ two operations.
 
 None of these block starting on the lowest-risk screen (Candidate
 review); they matter most for Flow graph and Entity detail.
+
+## Revision 2026-10-09 — the netflow-rollups views, mapped onto the screens
+
+`netflow-rollups` has seven views in `public` (migrations 0005–0067):
+the two base rollups `flow_rollup_hourly` / `flow_rollup_daily`
+(keyed `monitored_ip, peer_ip, protocol, port_family` plus 15
+`peer_is_*` / tag flags), and five derived daily continuous aggregates
+built on `flow_rollup_daily`. The five split cleanly by what they're
+keyed on, and that split is what reshaped the screens:
+
+| view | keyed on | what it is | goes on |
+|---|---|---|---|
+| `monitored_ip_provider_mix_daily` | day, monitored_ip, category | bytes touching each peer category (unpivoted flags) | Overview chart (fleet sum), Watchlist column, Entity detail chart |
+| `port_family_mix_daily` | day, monitored_ip, port_family | bytes per port family | Watchlist (RTP share), Entity detail "by plane" chart |
+| `bph_contact_daily` | day, monitored_ip | the `bph` slice of the mix view, as a plain view | Overview trend, Watchlist column, Entity detail tile + sparkline |
+| `tagged_entity_contacts_daily` | day, monitored_ip, peer_ip, protocol, port_family | every row where either side is confirmed-CVS or SIP-trunk, with the four tag flags | Flow graph edges |
+| `unclassified_peer_contacts_daily` | day, monitored_ip, peer_ip | peers with every `peer_is_*` flag false | Top talkers "Unclassified" tab, Entity detail peer filter, Overview tile, Candidate evidence |
+
+Plus the two portscan tables (not views): `scan_snapshots` (raw) and
+`scan_fingerprints` — one row per `(monitored_ip, source, day)` with a
+hash of the non-ephemeral facts, deliberately written even when the hash
+is unchanged so "stable for N days" is a stored fact. Daily censys +
+shodan sweep since 2026-10-02. The first draft's Device-fingerprint tab
+was already real data from these; this revision adds a Fingerprint
+column to the Watchlist, a fleet-wide drift card to the Overview, and
+the full hash history to Entity detail.
+
+Three of the five are **monitored-IP-centric with no peer dimension**;
+the 2026-10-08 mocks were peer-centric (Top talkers, Candidates, graph
+spokes) and had nowhere to put them except Entity detail, one IP at a
+time. Hence:
+
+### What changed per screen
+
+- **Watchlist (new).** One row per `monitored_ips` entry — 15 today —
+  with tags, 7d bytes, RTP share, dominant peer category, BPH 30d,
+  unclassified-peer count, last seen. It's the one table that uses all
+  three per-IP views at once, and the click-through the Overview tiles
+  lacked. Added to the nav between Overview and Flow graph.
+- **Top talkers → "Unclassified" tab.** Straight from
+  `unclassified_peer_contacts_daily`. The migration comment calls it
+  "the bucket the next classification candidate comes from"; four of
+  the ten By-IP rows in the first draft were already "unflagged". As
+  its own tab it's an explicit work queue and closes a visible loop:
+  Unclassified → classify → Candidate review → approve → peer leaves
+  the list. Live: 1,754 peers / 7.6 MB in 7d; eight of the top ten are
+  `208.69.81–82.x` at 284–343 KB each, 7 of 7 days — the SBC-pool shape.
+- **Overview.** The "RTP by peer category" chart is retitled "Traffic
+  touching each peer category" and served from the mix view, because
+  the view (a) isn't port-family-scoped, (b) includes
+  `confirmed_cvs`/`sip_trunk` as categories (intra-watchlist traffic),
+  and (c) counts a multi-flag peer in every category it matches — bars
+  overlap and don't sum to 100%. RTP is 86% of all bytes, so the shape
+  barely moves; the RTP-scoped version stays on Top talkers. Added a
+  30d BPH-contact trend (the view exists specifically for "its own
+  trend line"; live data shows a ×5 step on Sep 23 when 143.198.172.85
+  joined) and an "Unclassified peers (7d)" tile.
+- **Entity detail (monitored-IP variant).** The single "vs. primary
+  peer" chart is replaced by a stacked daily chart from
+  `port_family_mix_daily` — media / signaling / admin plane / other.
+  That is founding question #2 ("can an administrator be identified")
+  as a chart; the deliberate `voip_signaling` vs `voip_admin` split in
+  `port_families` exists for it. Live data for OUTSIDERS shows
+  signaling collapsing ~98% after Sep 28 while media holds. Added a
+  provider-mix card with a "callers vs. infrastructure" grouping
+  toggle (satellite/mobile/residential/cell-IoT vs.
+  cloud/bph/proxy/wholesale — a UI grouping, not a view column), a BPH
+  tile + sparkline, and an Unclassified filter on Top peers. The peer-IP
+  variant of this page gets none of the three per-IP cards — they're
+  keyed by `monitored_ip`.
+- **Flow graph.** Edges come from `tagged_entity_contacts_daily`, which
+  covers the whole star around each tagged node (every row where
+  *either* side is tagged), not just monitored↔monitored. Three
+  corrections to the first draft: `216.126.227.152` (the "Magnus
+  Billing host") is on the watchlist itself, so it's a monitored node
+  and its OUTSIDERS edge is monitored↔monitored; a residential-ISP peer
+  category now exists (migration 0065); and a "Data notes" card lists
+  the gotchas below.
+- **Candidate review.** Each card gets an evidence block (triggering
+  peer's monitored IPs touched, bytes/flows, days seen, port families)
+  so the analyst sees the data next to the model's reasoning —
+  `CLAUDE.md` §5's "keep the evidence, not a pointer". An info strip
+  states what Approve actually writes and that history doesn't
+  reclassify (below).
+
+### Gotchas the views impose (not UI choices)
+
+1. **No rollup view carries ASN.** `flow_rollup_hourly`'s GROUP BY has
+   no `peer_asn`; ASN exists only in raw `flow_records` and
+   `asn_classification_candidates.asn`. Blocks the By-ASN tab, the
+   graph's ASN-cluster collapse, the Candidate column on the
+   Unclassified tab, and "other IPs in ASN" on candidate cards. Fix is
+   upstream: add `peer_asn` to the hourly rollup's grouping (cheap —
+   near-static per IP), or accept a `flow_records` scan.
+2. **Every monitored↔monitored conversation is stored twice** in the
+   rollups and in `tagged_entity_contacts_daily`, once from each side's
+   pull (17.52 MB / 17.51 MB for the trunk ↔ CVS #2 pair). Key graph
+   edges on the unordered IP pair; don't sum.
+3. **`tagged_entity_contacts_daily` dropped the `peer_is_*` provider
+   flags** — it kept only the four tag flags. Peer-node color needs a
+   join back to `flow_rollup_daily`, or the flags added upstream.
+4. **Provider-mix categories overlap.** Present as "share that touched
+   X", never as a composition, or derive a composition from
+   `flow_rollup_daily` with an explicit primary-category rule.
+5. **Daily views can't do 24h.** Every derived view is 1-day buckets
+   with a 1-hour `end_offset` and 30-minute refresh — "today" is always
+   partial and up to ~90 min stale. Only `flow_rollup_hourly`-backed
+   widgets can honor the 24h pill. This answers open question #5: make
+   the range toggle per-widget, or drop 24h globally and badge daily
+   widgets with freshness. The mocks dim 24h and badge each card with
+   its source view.
+6. **Approving a candidate doesn't reclassify history.** Continuous
+   aggregates re-materialize only the last 3 days (hourly: 3 hours).
+   The peer stays "unclassified" for older rows until a manual refresh.
+   Show candidate status inline on the Unclassified tab, or say so in
+   the UI.
+7. **A silent collection gap is invisible unless the UI shows "last
+   scan".** As of 2026-10-09, `143.198.172.85` — the confirmed CVS —
+   has no portscan row since Oct 7 while all 14 others were swept Oct 9.
+   Nothing errors; the sweep just didn't reach it. Every fingerprint
+   widget should carry the per-IP last-scan date and flag it when it
+   falls behind the fleet. (Why it stopped is a netflow-rollups
+   question, not a dashboard one — but the dashboard is where someone
+   would notice.) Same applies to `216.126.227.152`, which has exactly
+   one scan: "first scan" is a different state from "stable".
+
+### Open questions added by this revision
+
+6. Will `netflow-rollups` add `peer_asn` to `flow_rollup_hourly` (and
+   the provider flags to `tagged_entity_contacts_daily`)? Both are
+   small upstream changes that unblock three screens; the alternative
+   is this dashboard reading `flow_records` directly.
+7. Migration 0058 creates a `dashboard_app` role for "the analyst
+   dashboard (netflow-rollups-dashboard, a separate repo/service)" with
+   SELECT on everything and INSERT/UPDATE on
+   `asn_classification_candidates` + the `*_providers` tables. Is
+   `analysis-layer` that repo, or is there a third one? And those write
+   grants conflict with `CLAUDE.md` §1's "does not modify data from the
+   sources it reads" — §5 of this doc already accepts the candidate
+   write; `CLAUDE.md` should say so too. (Also: the role's INSERT grant
+   and the candidates table's `suggested_table` CHECK both predate
+   `residential_isp_providers`, `reverse_proxy_providers` and
+   `bph_providers`.)
+8. The "callers vs. infrastructure" grouping on Entity detail is a UI
+   decision over the flag list. If it's useful, should it become a
+   view column upstream (one more unpivot tuple), or stay here?
+
+The 2026-10-08 open questions 1–4 are unchanged. The mocks' invented
+numbers are replaced by live aggregates everywhere except the candidate
+evidence blocks, the watchlist-activity feed (still no source table),
+and the graph layout itself.
