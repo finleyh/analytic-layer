@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CVS Watch — Entity detail</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#0B0D10;color:#E7E9ED;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.mono{font-family:'IBM Plex Mono',monospace}
+a{color:#4C8DFF;text-decoration:none}
+a:hover{color:#78AAFF}
+.navlink{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;font-size:14px;font-weight:500;color:#9199A8}
+.navlink:hover{background:#171B22;color:#E7E9ED}
+.navlink.active{background:#1B2029;color:#E7E9ED}
+.card{background:#141821;border:1px solid #262B35;border-radius:10px}
+.chip{font-size:11px;font-family:'IBM Plex Mono',monospace;background:#1B2029;border:1px solid #262B35;color:#9199A8;padding:3px 8px;border-radius:5px;display:inline-block}
+.badge{font-size:11px;font-weight:600;padding:4px 10px;border-radius:5px;display:inline-block}
+th{text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em;color:#5D6472;text-transform:uppercase;padding:0 16px 10px 16px;border-bottom:1px solid #262B35}
+td{padding:13px 16px;font-size:13px;border-bottom:1px solid #1B2029}
+tr:last-child td{border-bottom:none}
+.tab{all:unset;cursor:pointer;font-size:13px;font-weight:500;padding:9px 4px;color:#5D6472;border-bottom:2px solid transparent}
+.tab.active{color:#E7E9ED;border-bottom:2px solid #4C8DFF}
+</style>
+</helmet>
+
+<div style="display:flex;width:100%;min-height:100vh;background:#0B0D10">
+
+<div style="width:240px;flex-shrink:0;background:#0F1217;border-right:1px solid #262B35;display:flex;flex-direction:column;padding:24px 16px;box-sizing:border-box;gap:4px">
+  <div style="display:flex;align-items:center;gap:10px;padding:8px 8px 22px 8px">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4C8DFF" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9" stroke-opacity="0.45"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke-opacity="0.45"/></svg>
+    <span style="font-size:15px;font-weight:600;letter-spacing:0.2px">CVS Watch</span>
+  </div>
+  <a href="Main.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 001 1h3v-6h6v6h3a1 1 0 001-1v-9"/></svg>Overview</a>
+  <a href="FlowGraph.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.6"/><circle cx="18" cy="6" r="2.6"/><circle cx="12" cy="18" r="2.6"/><path d="M8.2 7.3l2.9 8.6M15.8 7.3l-2.9 8.6"/></svg>Flow graph</a>
+  <a href="TopTalkers.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V13M10 20V6M16 20v-9M4 20h16"/></svg>Top talkers</a>
+  <a href="CandidateReview.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l2.2-5h13.6L21 8M3 8v10.5A1.5 1.5 0 004.5 20h15a1.5 1.5 0 001.5-1.5V8M3 8h6.2l.9 3h3.8l.9-3H21"/></svg>Candidates</a>
+  <div style="flex:1"></div>
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-top:1px solid #262B35;margin-top:8px">
+    <div style="width:28px;height:28px;border-radius:50%;background:#1B2029;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#9199A8;flex-shrink:0">JF</div>
+    <div style="font-size:12px;color:#9199A8;line-height:1.4">J. Finley<br><span style="color:#5D6472">Analyst</span></div>
+  </div>
+</div>
+
+<div style="flex:1 1 0;min-width:0;padding:36px 44px;box-sizing:border-box">
+
+  <div style="font-size:12px;color:#5D6472;margin-bottom:10px"><a href="Main.dc.html">Overview</a> / Entity</div>
+
+  <div style="display:flex;align-items:center;gap:14px;margin-bottom:6px;flex-wrap:wrap">
+    <h1 class="mono" style="margin:0;font-size:24px;font-weight:600">143.198.172.85</h1>
+    <span class="badge" style="background:#2A1216;color:#E5484D;border:1px solid #5A2327">CONFIRMED CVS</span>
+    <span style="font-size:14px;color:#9199A8">"OUTSIDERS"</span>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:24px">
+    <span class="chip">msk:voip_analysis</span>
+    <span class="chip" style="color:#E5484D;border-color:#5A2327">infrastructure_type:criminal_voip_service</span>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(min(190px, 100%), 1fr));gap:16px;margin-bottom:28px">
+    <div class="card" style="padding:16px 20px"><div style="font-size:12px;color:#5D6472;margin-bottom:6px">First seen</div><div style="font-size:15px;font-weight:600" class="mono">2026-09-22</div></div>
+    <div class="card" style="padding:16px 20px"><div style="font-size:12px;color:#5D6472;margin-bottom:6px">Last seen</div><div style="font-size:15px;font-weight:600" class="mono">2026-10-08 19:45 UTC</div></div>
+    <div class="card" style="padding:16px 20px"><div style="font-size:12px;color:#5D6472;margin-bottom:6px">Status</div><div style="font-size:15px;font-weight:600;color:#3DD68C">active</div></div>
+    <div class="card" style="padding:16px 20px"><div style="font-size:12px;color:#5D6472;margin-bottom:6px">RTP sessions (17d)</div><div style="font-size:15px;font-weight:600" class="mono">16,667</div></div>
+  </div>
+
+  <div style="display:flex;gap:28px;border-bottom:1px solid #262B35;margin-bottom:22px">
+    <button class="tab" style="{{ netflowTabStyle }}" onClick="{{ showNetflow }}">Netflow</button>
+    <button class="tab" style="{{ fingerprintTabStyle }}" onClick="{{ showFingerprint }}">Device fingerprint</button>
+  </div>
+
+  <sc-if value="{{ onNetflow }}" hint-placeholder-val="{{ true }}">
+
+    <div class="card" style="padding:22px 24px;margin-bottom:24px">
+      <div style="font-size:13px;font-weight:600;margin-bottom:2px">Daily flow volume — primary relationship</div>
+      <div style="font-size:12px;color:#5D6472;margin-bottom:18px">vs. 216.126.227.152 (Magnus Billing host, AS14956 RouterHosting LLC) · 2026-09-22 → 2026-10-08</div>
+      <div style="display:flex;align-items:flex-end;gap:5px;height:140px">
+        <div style="flex:1;height:1%;background:#2B3146;border-radius:2px 2px 0 0" title="Sep 22 · 50 flows"></div>
+        <div style="flex:1;height:44%;background:#4C8DFF;border-radius:2px 2px 0 0" title="Sep 23 · 4,367 flows"></div>
+        <div style="flex:1;height:62%;background:#4C8DFF;border-radius:2px 2px 0 0" title="Sep 24 · 6,203 flows"></div>
+        <div style="flex:1;height:78%;background:#4C8DFF;border-radius:2px 2px 0 0" title="Sep 25 · 7,762 flows"></div>
+        <div style="flex:1;height:40%;background:#2B3146;border-radius:2px 2px 0 0" title="Sep 26 (Sat) · 4,017 flows"></div>
+        <div style="flex:1;height:17%;background:#2B3146;border-radius:2px 2px 0 0" title="Sep 27 (Sun) · 1,738 flows"></div>
+        <div style="flex:1;height:51%;background:#4C8DFF;border-radius:2px 2px 0 0" title="Sep 28 · 5,130 flows"></div>
+        <div style="flex:1;height:60%;background:#4C8DFF;border-radius:2px 2px 0 0" title="Sep 29 · 6,018 flows"></div>
+        <div style="flex:1;height:55%;background:#4C8DFF;border-radius:2px 2px 0 0" title="Sep 30 · 5,502 flows"></div>
+        <div style="flex:1;height:62%;background:#4C8DFF;border-radius:2px 2px 0 0" title="Oct 1 · 6,168 flows"></div>
+        <div style="flex:1;height:59%;background:#4C8DFF;border-radius:2px 2px 0 0" title="Oct 2 · 5,850 flows"></div>
+        <div style="flex:1;height:21%;background:#2B3146;border-radius:2px 2px 0 0" title="Oct 3 (Sat) · 2,085 flows"></div>
+        <div style="flex:1;height:17%;background:#2B3146;border-radius:2px 2px 0 0" title="Oct 4 (Sun) · 1,666 flows"></div>
+        <div style="flex:1;height:58%;background:#4C8DFF;border-radius:2px 2px 0 0" title="Oct 5 · 5,799 flows"></div>
+        <div style="flex:1;height:33%;background:#4C8DFF;border-radius:2px 2px 0 0" title="Oct 6 · 3,312 flows"></div>
+        <div style="flex:1;height:100%;background:#4C8DFF;border-radius:2px 2px 0 0" title="Oct 7 · 9,970 flows"></div>
+        <div style="flex:1;height:36%;background:#4C8DFF;border-radius:2px 2px 0 0" title="Oct 8 (partial) · 3,586 flows"></div>
+      </div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:10px;color:#5D6472"><span>Sep 22</span><span>weekends dip, never to zero</span><span>Oct 8</span></div>
+    </div>
+
+    <div class="card">
+      <div style="padding:18px 20px 4px 20px;font-size:13px;font-weight:600">Top peers</div>
+      <table style="width:100%;border-collapse:collapse;margin-top:8px">
+        <tr><th>Peer</th><th>Category</th><th>Port families</th><th style="text-align:right">Bytes</th><th style="text-align:right">Flows</th></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">216.126.227.152</a></td><td><span style="color:#E5484D">cloud + bph</span></td><td style="color:#9199A8">rtp_media, voip_signaling</td><td style="text-align:right" class="mono">6.5 MB</td><td style="text-align:right" class="mono">34,188</td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">50.116.38.139</a></td><td><span style="color:#4C8DFF">cloud</span></td><td style="color:#9199A8">rtp_media</td><td style="text-align:right" class="mono">2.1 MB</td><td style="text-align:right" class="mono">9,840</td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">45.226.112.91</a></td><td><span style="color:#8B5CF6">satellite</span></td><td style="color:#9199A8">rtp_media</td><td style="text-align:right" class="mono">1.4 MB</td><td style="text-align:right" class="mono">6,210</td></tr>
+      </table>
+    </div>
+
+  </sc-if>
+
+  <sc-if value="{{ onFingerprint }}" hint-placeholder-val="{{ false }}">
+
+    <div class="card" style="padding:22px 24px;margin-bottom:24px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px">
+        <div style="font-size:13px;font-weight:600">Open services — last scan</div>
+        <div style="font-size:12px;color:#5D6472" class="mono">2026-10-07 02:00 UTC</div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:18px">
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px"><span style="width:7px;height:7px;border-radius:50%;background:#3DD68C;flex-shrink:0"></span><span style="color:#9199A8">Censys fingerprint stable — identical hash Oct 6 → Oct 7</span></div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:12px"><span style="width:7px;height:7px;border-radius:50%;background:#F5A623;flex-shrink:0"></span><span style="color:#9199A8">Shodan fingerprint changed — port 3000/tcp dropped between Oct 6 and Oct 7</span></div>
+      </div>
+      <table style="width:100%;border-collapse:collapse">
+        <tr><th>Source</th><th>Port</th><th>Protocol</th><th>Service</th><th>Software</th></tr>
+        <tr style="background:#132033"><td class="mono" style="color:#9199A8">censys</td><td class="mono">5060/udp</td><td style="color:#9199A8">SIP</td><td style="color:#9199A8">—</td><td class="mono" style="color:#4C8DFF;font-weight:600">asterisk</td></tr>
+        <tr><td class="mono" style="color:#9199A8">censys</td><td class="mono">22/tcp</td><td style="color:#9199A8">SSH</td><td style="color:#9199A8">—</td><td style="color:#5D6472">—</td></tr>
+        <tr><td class="mono" style="color:#9199A8">censys</td><td class="mono">80/tcp</td><td style="color:#9199A8">HTTP</td><td style="color:#9199A8">http_server</td><td style="color:#5D6472">—</td></tr>
+        <tr><td class="mono" style="color:#9199A8">shodan</td><td class="mono">3001/tcp</td><td style="color:#9199A8">HTTP</td><td style="color:#9199A8">—</td><td style="color:#5D6472">—</td></tr>
+        <tr style="opacity:0.5"><td class="mono" style="color:#9199A8">shodan</td><td class="mono" style="text-decoration:line-through">3000/tcp</td><td style="color:#9199A8">HTTP</td><td style="color:#9199A8">—</td><td><span class="chip" style="color:#F5A623;border-color:#5A4423">dropped Oct 7</span></td></tr>
+      </table>
+    </div>
+
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1280}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const tab = (this.state && this.state.tab) || 'netflow';
+    const activeStyle = 'color:#E7E9ED;border-bottom:2px solid #4C8DFF';
+    const inactiveStyle = 'color:#5D6472;border-bottom:2px solid transparent';
+    return {
+      onNetflow: tab === 'netflow',
+      onFingerprint: tab === 'fingerprint',
+      netflowTabStyle: tab === 'netflow' ? activeStyle : inactiveStyle,
+      fingerprintTabStyle: tab === 'fingerprint' ? activeStyle : inactiveStyle,
+      showNetflow: () => this.setState({ tab: 'netflow' }),
+      showFingerprint: () => this.setState({ tab: 'fingerprint' })
+    };
+  }
+}
+</script>
+</body>
+</html>

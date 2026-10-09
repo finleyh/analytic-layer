@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CVS Watch — Top talkers</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+</head>
+<body>
+<x-dc>
+<helmet>
+<style>
+body{margin:0;background:#0B0D10;color:#E7E9ED;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.mono{font-family:'IBM Plex Mono',monospace}
+a{color:#4C8DFF;text-decoration:none}
+a:hover{color:#78AAFF}
+.navlink{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;font-size:14px;font-weight:500;color:#9199A8}
+.navlink:hover{background:#171B22;color:#E7E9ED}
+.navlink.active{background:#1B2029;color:#E7E9ED}
+.card{background:#141821;border:1px solid #262B35;border-radius:10px}
+.pill{font-size:12px;font-weight:500;padding:5px 12px;border-radius:999px;border:1px solid #262B35;color:#9199A8;background:transparent}
+.pill.active{background:#1B2029;border-color:#3A4254;color:#E7E9ED}
+.seg{all:unset;cursor:pointer;font-size:13px;font-weight:500;padding:8px 18px;color:#9199A8;border:1px solid #262B35}
+.chip{font-size:11px;font-weight:500;padding:3px 9px;border-radius:5px;display:inline-block}
+th{text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em;color:#5D6472;text-transform:uppercase;padding:0 16px 10px 16px;border-bottom:1px solid #262B35}
+td{padding:13px 16px;font-size:13px;border-bottom:1px solid #1B2029}
+tr:last-child td{border-bottom:none}
+</style>
+</helmet>
+
+<div style="display:flex;width:100%;min-height:100vh;background:#0B0D10">
+
+<div style="width:240px;flex-shrink:0;background:#0F1217;border-right:1px solid #262B35;display:flex;flex-direction:column;padding:24px 16px;box-sizing:border-box;gap:4px">
+  <div style="display:flex;align-items:center;gap:10px;padding:8px 8px 22px 8px">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4C8DFF" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9" stroke-opacity="0.45"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke-opacity="0.45"/></svg>
+    <span style="font-size:15px;font-weight:600;letter-spacing:0.2px">CVS Watch</span>
+  </div>
+  <a href="Main.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 001 1h3v-6h6v6h3a1 1 0 001-1v-9"/></svg>Overview</a>
+  <a href="FlowGraph.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.6"/><circle cx="18" cy="6" r="2.6"/><circle cx="12" cy="18" r="2.6"/><path d="M8.2 7.3l2.9 8.6M15.8 7.3l-2.9 8.6"/></svg>Flow graph</a>
+  <a href="TopTalkers.dc.html" class="navlink active"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V13M10 20V6M16 20v-9M4 20h16"/></svg>Top talkers</a>
+  <a href="CandidateReview.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l2.2-5h13.6L21 8M3 8v10.5A1.5 1.5 0 004.5 20h15a1.5 1.5 0 001.5-1.5V8M3 8h6.2l.9 3h3.8l.9-3H21"/></svg>Candidates</a>
+  <div style="flex:1"></div>
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-top:1px solid #262B35;margin-top:8px">
+    <div style="width:28px;height:28px;border-radius:50%;background:#1B2029;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#9199A8;flex-shrink:0">JF</div>
+    <div style="font-size:12px;color:#9199A8;line-height:1.4">J. Finley<br><span style="color:#5D6472">Analyst</span></div>
+  </div>
+</div>
+
+<div style="flex:1 1 0;min-width:0;padding:36px 44px;box-sizing:border-box">
+
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:16px">
+    <div>
+      <h1 style="margin:0 0 4px 0;font-size:22px;font-weight:600">Top talkers</h1>
+      <div style="font-size:13px;color:#5D6472">port_family = rtp_media · monitored-to-monitored traffic excluded</div>
+    </div>
+    <div style="display:flex;gap:6px">
+      <button class="pill">24h</button>
+      <button class="pill active">7d</button>
+      <button class="pill">30d</button>
+    </div>
+  </div>
+
+  <div style="display:flex;margin-bottom:20px">
+    <button class="seg" style="{{ ipSegStyle }};border-radius:6px 0 0 6px" onClick="{{ showByIp }}">By IP</button>
+    <button class="seg" style="{{ asnSegStyle }};border-radius:0 6px 6px 0;border-left:none" onClick="{{ showByAsn }}">By ASN</button>
+  </div>
+
+  <sc-if value="{{ byIp }}" hint-placeholder-val="{{ true }}">
+    <div class="card">
+      <table style="width:100%;border-collapse:collapse">
+        <tr><th>Peer IP</th><th>Category</th><th style="text-align:right">Bytes</th><th style="text-align:right">Flows</th><th>Last seen</th></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">50.116.38.139</a></td><td><span class="chip" style="background:#132033;color:#4C8DFF">cloud</span></td><td style="text-align:right" class="mono">19.0 MB</td><td style="text-align:right" class="mono">100,159</td><td class="mono" style="color:#9199A8">Oct 8, 19:00</td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">45.226.112.91</a></td><td><span class="chip" style="background:#1C1530;color:#8B5CF6">satellite</span></td><td style="text-align:right" class="mono">18.1 MB</td><td style="text-align:right" class="mono">100,739</td><td class="mono" style="color:#9199A8">Oct 7, 10:00</td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">216.126.227.152</a></td><td><span class="chip" style="background:#2A1216;color:#E5484D">cloud+bph</span></td><td style="text-align:right" class="mono">6.5 MB</td><td style="text-align:right" class="mono">34,188</td><td class="mono" style="color:#9199A8">Oct 8, 19:00</td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">45.226.115.144</a></td><td><span class="chip" style="background:#1C1530;color:#8B5CF6">satellite</span></td><td style="text-align:right" class="mono">1.8 MB</td><td style="text-align:right" class="mono">9,648</td><td class="mono" style="color:#9199A8">Oct 8, 19:00</td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">170.81.198.236</a></td><td><span class="chip" style="background:#171B22;color:#5D6472">unflagged</span></td><td style="text-align:right" class="mono">968 KB</td><td style="text-align:right" class="mono">4,963</td><td class="mono" style="color:#9199A8">Oct 8, 19:00</td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">162.33.177.141</a></td><td><span class="chip" style="background:#171B22;color:#5D6472">unflagged</span></td><td style="text-align:right" class="mono">549 KB</td><td style="text-align:right" class="mono">9,353</td><td class="mono" style="color:#9199A8">Oct 8, 19:00</td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">66.56.12.130</a></td><td><span class="chip" style="background:#171B22;color:#5D6472">unflagged</span></td><td style="text-align:right" class="mono">513 KB</td><td style="text-align:right" class="mono">2,633</td><td class="mono" style="color:#9199A8">Oct 8, 18:00</td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">208.69.82.149</a></td><td><span class="chip" style="background:#171B22;color:#5D6472">unflagged</span></td><td style="text-align:right" class="mono">382 KB</td><td style="text-align:right" class="mono">1,986</td><td class="mono" style="color:#9199A8">Oct 8, 18:00</td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">3.235.74.192</a></td><td><span class="chip" style="background:#132033;color:#4C8DFF">cloud</span></td><td style="text-align:right" class="mono">367 KB</td><td style="text-align:right" class="mono">4,556</td><td class="mono" style="color:#9199A8">Oct 8, 19:00</td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">45.226.112.202</a></td><td><span class="chip" style="background:#1C1530;color:#8B5CF6">satellite</span></td><td style="text-align:right" class="mono">351 KB</td><td style="text-align:right" class="mono">3,298</td><td class="mono" style="color:#9199A8">Oct 7, 23:00</td></tr>
+      </table>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{ byAsn }}" hint-placeholder-val="{{ false }}">
+    <div class="card">
+      <table style="width:100%;border-collapse:collapse">
+        <tr><th>ASN</th><th>Org</th><th>Category</th><th style="text-align:right">Bytes</th><th style="text-align:right">Peer IPs</th><th>Confirmed-CVS link</th></tr>
+        <tr><td class="mono">AS265861</td><td>Sistemas Satelitales de Colombia</td><td><span class="chip" style="background:#1C1530;color:#8B5CF6">satellite</span></td><td style="text-align:right" class="mono">21.4 MB</td><td style="text-align:right" class="mono">4</td><td style="color:#5D6472">—</td></tr>
+        <tr><td class="mono">AS63949</td><td style="color:#5D6472">unresolved</td><td><span class="chip" style="background:#171B22;color:#5D6472">unflagged</span></td><td style="text-align:right" class="mono">20.1 MB</td><td style="text-align:right" class="mono">2</td><td style="color:#5D6472">—</td></tr>
+        <tr><td class="mono">AS6167</td><td style="color:#5D6472">unresolved</td><td><span class="chip" style="background:#171B22;color:#5D6472">unflagged</span></td><td style="text-align:right" class="mono">3.8 MB</td><td style="text-align:right" class="mono">275</td><td style="color:#E5484D;font-weight:600">yes</td></tr>
+        <tr><td class="mono">AS21928</td><td>T-Mobile USA</td><td><span class="chip" style="background:#2A2013;color:#F5A623">mobile</span></td><td style="text-align:right" class="mono">2.9 MB</td><td style="text-align:right" class="mono">264</td><td style="color:#E5484D;font-weight:600">yes</td></tr>
+        <tr><td class="mono">AS20122</td><td>NOS Network Operations Group</td><td><span class="chip" style="background:#171B22;color:#5D6472">unflagged</span></td><td style="text-align:right" class="mono">2.58 MB</td><td style="text-align:right" class="mono">10</td><td style="color:#5D6472">—</td></tr>
+      </table>
+    </div>
+  </sc-if>
+
+</div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":1080}}'>
+class Component extends DCLogic {
+  renderVals() {
+    const view = (this.state && this.state.view) || 'ip';
+    const activeSeg = 'background:#1B2029;border-color:#3A4254;color:#E7E9ED';
+    const inactiveSeg = 'background:transparent;border-color:#262B35;color:#9199A8';
+    return {
+      byIp: view === 'ip',
+      byAsn: view === 'asn',
+      ipSegStyle: (view === 'ip' ? activeSeg : inactiveSeg) + ';border-radius:6px 0 0 6px',
+      asnSegStyle: (view === 'asn' ? activeSeg : inactiveSeg) + ';border-radius:0 6px 6px 0;border-left:none',
+      showByIp: () => this.setState({ view: 'ip' }),
+      showByAsn: () => this.setState({ view: 'asn' })
+    };
+  }
+}
+</script>
+</body>
+</html>
