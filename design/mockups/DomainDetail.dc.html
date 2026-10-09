@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CVS Watch — Domain detail</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+body{margin:0;background:#0B0D10;color:#E7E9ED;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.mono{font-family:'IBM Plex Mono',monospace}
+a{color:#4C8DFF;text-decoration:none}
+a:hover{color:#78AAFF}
+.navlink{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;font-size:14px;font-weight:500;color:#9199A8}
+.navlink:hover{background:#171B22;color:#E7E9ED}
+.navlink.active{background:#1B2029;color:#E7E9ED}
+.card{background:#141821;border:1px solid #262B35;border-radius:10px}
+.src{font-size:10px;font-family:'IBM Plex Mono',monospace;color:#5D6472;background:#0F1217;border:1px solid #1B2029;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.chip{font-size:11px;font-family:'IBM Plex Mono',monospace;background:#1B2029;border:1px solid #262B35;color:#9199A8;padding:3px 8px;border-radius:5px;display:inline-block}
+.badge{font-size:11px;font-weight:600;padding:4px 10px;border-radius:5px;display:inline-block}
+.btn{all:unset;cursor:pointer;font-size:13px;font-weight:500;padding:9px 16px;border-radius:6px;text-align:center;border:1px solid #262B35;color:#E7E9ED;background:#1B2029}
+.btn:hover{background:#222837}
+.btn.primary{background:#132033;border-color:#1E3A5F;color:#4C8DFF}
+th{text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em;color:#5D6472;text-transform:uppercase;padding:0 14px 10px 14px;border-bottom:1px solid #262B35}
+td{padding:11px 14px;font-size:13px;border-bottom:1px solid #1B2029;vertical-align:top}
+tr:last-child td{border-bottom:none}
+.fpc{height:34px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;border:1px solid #262B35;background:#171B22;color:#9199A8;position:relative;padding:0 4px;white-space:nowrap;overflow:hidden}
+.fpc.same{background:#153226;border-color:#1E4D37;color:#3DD68C}
+.fpc.chg{background:#2A2013;border-color:#5A4423;color:#F5A623;font-weight:600}
+.fpc.forced::after{content:'';position:absolute;top:4px;right:4px;width:5px;height:5px;border-radius:50%;background:#4C8DFF}
+.diff{display:grid;grid-template-columns:110px 24px 1fr;gap:10px;align-items:baseline;padding:9px 0;border-bottom:1px solid #1B2029;font-size:13px}
+.diff:last-child{border-bottom:none}
+.diff .when{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9199A8}
+.diff .op{font-family:'IBM Plex Mono',monospace;font-weight:700;text-align:center}
+.run{display:inline-block;width:12px;height:18px;border-radius:3px;margin-right:3px;vertical-align:middle}
+.lg{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#9199A8;margin-right:14px}
+.note{font-size:11px;color:#5D6472;line-height:1.5;margin-top:14px;padding-top:12px;border-top:1px solid #1B2029}
+.dn{font-size:12px;color:#9199A8;line-height:1.5;display:flex;gap:8px}
+.dn b{color:#E7E9ED;font-weight:600}
+.k{font-size:10px;color:#5D6472;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px}
+</style>
+</head>
+<body>
+
+<div style="display:flex;width:100%;min-height:100vh;background:#0B0D10">
+
+<div style="width:240px;flex-shrink:0;background:#0F1217;border-right:1px solid #262B35;display:flex;flex-direction:column;padding:24px 16px;box-sizing:border-box;gap:4px">
+  <div style="display:flex;align-items:center;gap:10px;padding:8px 8px 22px 8px">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4C8DFF" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9" stroke-opacity="0.45"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke-opacity="0.45"/></svg>
+    <span style="font-size:15px;font-weight:600;letter-spacing:0.2px">CVS Watch</span>
+  </div>
+  <a href="Main.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 001 1h3v-6h6v6h3a1 1 0 001-1v-9"/></svg>Overview</a>
+  <a href="Watchlist.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Watchlist</a>
+  <a href="Domains.dc.html" class="navlink active"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg>Domains</a>
+  <a href="FlowGraph.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.6"/><circle cx="18" cy="6" r="2.6"/><circle cx="12" cy="18" r="2.6"/><path d="M8.2 7.3l2.9 8.6M15.8 7.3l-2.9 8.6"/></svg>Flow graph</a>
+  <a href="TopTalkers.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V13M10 20V6M16 20v-9M4 20h16"/></svg>Top talkers</a>
+  <a href="CandidateReview.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l2.2-5h13.6L21 8M3 8v10.5A1.5 1.5 0 004.5 20h15a1.5 1.5 0 001.5-1.5V8M3 8h6.2l.9 3h3.8l.9-3H21"/></svg>Candidates</a>
+  <div style="flex:1"></div>
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-top:1px solid #262B35;margin-top:8px">
+    <div style="width:28px;height:28px;border-radius:50%;background:#1B2029;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#9199A8;flex-shrink:0">JF</div>
+    <div style="font-size:12px;color:#9199A8;line-height:1.4">J. Finley<br><span style="color:#5D6472">Analyst</span></div>
+  </div>
+</div>
+
+<div style="flex:1 1 0;min-width:0;padding:36px 44px;box-sizing:border-box">
+
+  <div style="font-size:12px;color:#5D6472;margin-bottom:10px"><a href="Watchlist.dc.html">Watchlist</a> / <a href="Watchlist.dc.html#domains">Domains</a> / Entity</div>
+
+  <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:24px">
+    <div>
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:8px;flex-wrap:wrap">
+        <h1 class="mono" style="margin:0;font-size:24px;font-weight:600">panel.m3zapp.com</h1>
+        <span class="badge" style="background:#153226;color:#3DD68C;border:1px solid #1E4D37">ACTIVE</span>
+        <span style="font-size:13px;color:#9199A8">Domain-Name · observable</span>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+        <span class="chip">monitor:monthly</span>
+        <span class="chip" style="color:#5D6472">no lifecycle:* label</span>
+        <a href="https://opencti.trashcollector.dev/dashboard/observations/observables/73ab9637-933e-4f79-b523-b38b1ddd00ff" class="chip" style="color:#4C8DFF;border-color:#1E3A5F">OpenCTI ↗</a>
+        <span class="src">spoiler-alert /monitored/73ab9637…</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span id="rc-result"></span>
+      <button class="btn" id="btn-trigger" title="POST /trigger — check on the next scheduler tick">Queue for next tick</button>
+      <button class="btn primary" id="btn-recheck" title="POST /recheck — runs the checks synchronously, applies the lifecycle, records who forced it">Recheck now</button>
+    </div>
+  </div>
+
+  <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(min(160px, 100%), 1fr));gap:16px;margin-bottom:28px">
+    <div class="card" style="padding:16px 20px"><div class="k">Last checked</div><div style="font-size:15px;font-weight:600" class="mono">2026-10-08 21:05 UTC</div><div style="font-size:11px;color:#5D6472;margin-top:3px">forced by fh</div></div>
+    <div class="card" style="padding:16px 20px"><div class="k">Next due</div><div style="font-size:15px;font-weight:600" class="mono">2026-11-07 21:05</div><div style="font-size:11px;color:#5D6472;margin-top:3px">monthly · 30d cadence</div></div>
+    <div class="card" style="padding:16px 20px"><div class="k">Consecutive failures</div><div style="font-size:15px;font-weight:600;color:#3DD68C" class="mono">0</div><div style="font-size:11px;color:#5D6472;margin-top:3px">2 → zombie · 6 more → retired</div></div>
+    <div class="card" style="padding:16px 20px"><div class="k">Expires</div><div style="font-size:15px;font-weight:600" class="mono">2027-09-14</div><div style="font-size:11px;color:#5D6472;margin-top:3px">WHOIS/RDAP · 340 days</div></div>
+    <div class="card" style="padding:16px 20px"><div class="k">Check runs</div><div style="font-size:15px;font-weight:600" class="mono">19</div><div style="font-size:11px;color:#5D6472;margin-top:3px">11 dns_records · 8 domain_expiry</div></div>
+    <div class="card" style="padding:16px 20px;border-color:#5A4423"><div class="k">A record</div><div style="font-size:15px;font-weight:600;color:#F5A623" class="mono">changed Oct 1</div><div style="font-size:11px;color:#5D6472;margin-top:3px">DigitalOcean → parking lander</div></div>
+  </div>
+
+  <div class="card" style="padding:22px 24px;margin-bottom:24px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;gap:12px;flex-wrap:wrap">
+      <div style="font-size:13px;font-weight:600">A-record timeline — one cell per dns_records run</div>
+      <span class="src">/monitored/{id} · history[].observations.records.A</span>
+    </div>
+    <div style="font-size:12px;color:#5D6472;margin-bottom:14px">spoiler-alert no longer writes A/AAAA to OpenCTI (its decision 26) — this history is the only record of where the name pointed, and when it moved.</div>
+    <div style="margin-bottom:10px">
+      <span class="lg"><i class="run" style="background:#153226;border:1px solid #1E4D37"></i>same A set as previous run</span>
+      <span class="lg"><i class="run" style="background:#2A2013;border:1px solid #5A4423"></i>changed</span>
+      <span class="lg"><i style="width:5px;height:5px;border-radius:50%;background:#4C8DFF;display:inline-block"></i>forced recheck (forced_by)</span>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(11,1fr);gap:5px">
+      <div class="fpc" title="Sep 1 13:21 · scheduled · A=164.92.90.138">164.92.90.138</div>
+      <div class="fpc same forced" title="Sep 1 14:16 · forced by fh · A=164.92.90.138">164.92.90.138</div>
+      <div class="fpc chg" title="Oct 1 14:17 · scheduled (monthly) · A=2.59.170.20, 104.219.250.37">2 IPs ▲</div>
+      <div class="fpc same forced" title="Oct 8 18:56 · forced by fh">same</div>
+      <div class="fpc same forced" title="Oct 8 20:13 · forced by fh">same</div>
+      <div class="fpc same forced" title="Oct 8 20:14 · forced by fh">same</div>
+      <div class="fpc same forced" title="Oct 8 20:14 · forced by fh">same</div>
+      <div class="fpc same forced" title="Oct 8 20:14 · forced by fh">same</div>
+      <div class="fpc same forced" title="Oct 8 20:14 · forced by fh">same</div>
+      <div class="fpc same forced" title="Oct 8 20:14 · forced by fh">same</div>
+      <div class="fpc same forced" title="Oct 8 21:05 · forced by fh">same</div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(11,1fr);gap:5px;margin-top:5px;font-size:10px;color:#5D6472;text-align:center" class="mono">
+      <div>Sep 1</div><div>Sep 1</div><div style="color:#F5A623">Oct 1</div><div>Oct 8</div><div>Oct 8</div><div>Oct 8</div><div>Oct 8</div><div>Oct 8</div><div>Oct 8</div><div>Oct 8</div><div>Oct 8</div>
+    </div>
+    <div style="margin-top:18px">
+      <div class="diff"><span class="when">Oct 1 14:17</span><span class="op" style="color:#E5484D">−</span><span><span class="mono">164.92.90.138</span> <span style="color:#9199A8">— DigitalOcean (AS14061), the same provider as most of the IP watchlist</span></span></div>
+      <div class="diff"><span class="when"></span><span class="op" style="color:#3DD68C">+</span><span><span class="mono">104.219.250.37</span>, <span class="mono">2.59.170.20</span> <span style="color:#9199A8">— with NS moved to <span class="mono">ns1/ns2.lander.d.parity.domains</span>: a registrar parking lander</span></span></div>
+    </div>
+    <div class="note">A VoIP billing <em>panel</em> moving from a VPS to a parking page means the panel is gone and the name is parked — but spoiler-alert won't demote it: the name still resolves and still has its own NS, so the check says <span class="mono">ok</span>, not <span class="mono">parked</span>. Reading "moved onto a lander" off the A history is a judgment the lifecycle doesn't make — exactly the shape of thing a rule or an analyst should turn into a queue entry (<span class="mono">CLAUDE.md</span> §8 #4). Eight of the eleven runs are from one minute on Oct 8, forced by <span class="mono">fh</span> — recheck-button testing, but it shows the actor stamp already lives in the data.</div>
+  </div>
+
+  <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:24px">
+
+    <div class="card" style="flex:1 1 380px;min-width:0;padding:22px 24px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;gap:12px;flex-wrap:wrap">
+        <div style="font-size:13px;font-weight:600">Current records — Oct 8 21:05 UTC</div>
+        <span class="src">dns_records · domain_expiry</span>
+      </div>
+      <table style="width:100%;border-collapse:collapse">
+        <tr><th>Type</th><th>Value</th></tr>
+        <tr><td class="mono" style="color:#9199A8">A</td><td class="mono">104.219.250.37<br>2.59.170.20</td></tr>
+        <tr><td class="mono" style="color:#9199A8">NS</td><td class="mono" style="font-size:12px">ns1.lander.d.parity.domains.<br>ns2.lander.d.parity.domains.</td></tr>
+        <tr><td class="mono" style="color:#9199A8">AAAA · MX · TXT · CNAME</td><td style="color:#5D6472">none</td></tr>
+        <tr><td class="mono" style="color:#9199A8">EXPIRATION_DATE</td><td class="mono">2027-09-14T18:05:53Z <span style="color:#5D6472;font-size:11px">· same as m3zapp.com</span></td></tr>
+      </table>
+      <div class="note">Resolvers: Quad9 + Cloudflare, ECS-free (decision 13). <span class="mono">domain_expiry</span> returned <span class="mono">empty</span> on seven consecutive runs and <span class="mono">ok</span> on the eighth — WHOIS/RDAP flakiness, treated upstream as an observation, not a failure (decision 20), so it never touches the lifecycle counter.</div>
+    </div>
+
+    <div class="card" style="flex:1 1 380px;min-width:0;padding:22px 24px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;gap:12px;flex-wrap:wrap">
+        <div style="font-size:13px;font-weight:600">Netflow cross-reference</div>
+        <span class="src">flow_rollup_daily · peer_ip ∈ A records</span>
+      </div>
+      <table style="width:100%;border-collapse:collapse">
+        <tr><th>A record</th><th>Seen as peer of</th><th style="text-align:right">Bytes · flows</th><th>Days</th></tr>
+        <tr><td class="mono">2.59.170.20</td><td><a href="EntityDetail.dc.html" class="mono">165.227.194.81</a><div style="font-size:11px;color:#5D6472">web_admin</div></td><td class="mono" style="text-align:right">330 B · 3</td><td class="mono" style="font-size:12px;color:#9199A8">Sep 28 – Oct 8</td></tr>
+        <tr><td class="mono">104.219.250.37</td><td><a href="EntityDetail.dc.html" class="mono">165.227.194.81</a><div style="font-size:11px;color:#5D6472">web_admin · peer_is_cloud</div></td><td class="mono" style="text-align:right">52 B · 1</td><td class="mono" style="font-size:12px;color:#9199A8">Oct 2</td></tr>
+        <tr style="opacity:0.55"><td class="mono" style="text-decoration:line-through">164.92.90.138</td><td style="color:#5D6472">never seen as a peer</td><td class="mono" style="text-align:right;color:#5D6472">—</td><td style="color:#5D6472">—</td></tr>
+      </table>
+      <div class="note">The watchlist box visited the lander after the move, and never the old panel. <span class="mono">165.227.194.81</span> is the one monitored IP every domain-resolved peer traces back to — OpenCTI calls it "distributed as a SIP IP by OUTSIDERZ"; netflow shows 0% RTP, 758 unclassified peers, 1,081 reverse-proxy peers and website fetches. The sources disagree about what it is. The direct join (A record = a watchlist IP) is empty for every monitored domain today.</div>
+    </div>
+
+  </div>
+
+  <div style="display:flex;gap:24px;flex-wrap:wrap">
+
+    <div class="card" style="flex:1 1 440px;min-width:0;padding:22px 24px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:12px;gap:12px;flex-wrap:wrap">
+        <div style="font-size:13px;font-weight:600">Check runs — 19, oldest → newest</div>
+        <span class="src">history[] · module · status</span>
+      </div>
+      <div style="margin-bottom:8px"><span style="font-size:11px;color:#9199A8;display:inline-block;width:110px">dns_records</span>
+        <i class="run" style="background:#153226" title="Sep 1 ok"></i><i class="run" style="background:#153226" title="Sep 1 ok · forced"></i><i class="run" style="background:#2A2013;border:1px solid #5A4423" title="Oct 1 ok · A changed"></i><i class="run" style="background:#153226" title="Oct 8 ok · forced"></i><i class="run" style="background:#153226"></i><i class="run" style="background:#153226"></i><i class="run" style="background:#153226"></i><i class="run" style="background:#153226"></i><i class="run" style="background:#153226"></i><i class="run" style="background:#153226"></i><i class="run" style="background:#153226" title="Oct 8 21:05 ok · forced"></i>
+        <span style="font-size:11px;color:#5D6472;margin-left:6px">11 × ok</span></div>
+      <div><span style="font-size:11px;color:#9199A8;display:inline-block;width:110px">domain_expiry</span>
+        <i class="run" style="background:#1B2029;border:1px solid #262B35" title="Oct 8 empty"></i><i class="run" style="background:#1B2029;border:1px solid #262B35"></i><i class="run" style="background:#1B2029;border:1px solid #262B35"></i><i class="run" style="background:#1B2029;border:1px solid #262B35"></i><i class="run" style="background:#1B2029;border:1px solid #262B35"></i><i class="run" style="background:#1B2029;border:1px solid #262B35"></i><i class="run" style="background:#1B2029;border:1px solid #262B35" title="Oct 8 20:14 empty"></i><i class="run" style="background:#153226" title="Oct 8 21:05 ok · 2027-09-14"></i>
+        <span style="font-size:11px;color:#5D6472;margin-left:6px">7 × empty · 1 × ok</span></div>
+      <div style="margin-top:12px"><span class="lg"><i class="run" style="background:#153226"></i>ok</span><span class="lg"><i class="run" style="background:#2A2013;border:1px solid #5A4423"></i>ok, records changed</span><span class="lg"><i class="run" style="background:#1B2029;border:1px solid #262B35"></i>empty</span><span class="lg"><i class="run" style="background:#2A1216;border:1px solid #5A2327"></i>nxdomain / parked (none here)</span></div>
+      <div class="note">Lifecycle: <span class="mono">monitored → zombie → retired</span>. Two consecutive <span class="mono">nxdomain</span> or <span class="mono">parked</span> results demote to <span class="mono">monitor:zombie</span> + <span class="mono">lifecycle:&lt;cause&gt;</span> (120-day cadence); six more retire it to a tombstone rechecked yearly. The three <span class="mono">mundossp.com</span> / <span class="mono">plugvalley.ws</span> names on the Domains tab went that way on Oct 8 — this one hasn't failed once.</div>
+    </div>
+
+    <div class="card" style="flex:1 1 300px;min-width:0;padding:16px 18px">
+      <div style="font-size:12px;font-weight:600;margin-bottom:10px;color:#F5A623">Data notes</div>
+      <div style="display:flex;flex-direction:column;gap:9px">
+        <div class="dn"><span>①</span><span><b>REST-only source.</b> spoiler-alert's Postgres binds no host port, so there's no Trino catalog — this page is the first bespoke-access case (<span class="mono">CLAUDE.md</span> §4), read with this project's own <span class="mono">SPOILER_ALERT_API_TOKEN</span>.</span></div>
+        <div class="dn"><span>②</span><span><b>N+1 by design.</b> <span class="mono">/monitored</span> lists; A records need <span class="mono">/monitored/{id}</span> per domain. Fine at 16; ask for a bulk endpoint if the fleet grows.</span></div>
+        <div class="dn"><span>③</span><span><b>Lifecycle events aren't public.</b> The append-only <span class="mono">lifecycle_events</span> table is served only under the SSO-gated <span class="mono">/dashboard</span> prefix. The Overview feed derives them from state + history instead.</span></div>
+        <div class="dn"><span>④</span><span><b>Recheck now is a write to spoiler-alert's state</b> — it advances the failure counter on a real NXDOMAIN and can demote. Reads only otherwise; it never touches OpenCTI labels except through documented lifecycle transitions.</span></div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+</div>
+
+<script>
+const out = document.getElementById('rc-result');
+document.getElementById('btn-recheck').addEventListener('click', () => {
+  out.innerHTML = '<span class="chip" style="color:#3DD68C;border-color:#1E4D37">ok · A unchanged · forced_by J. Finley · 308 ms</span>';
+});
+document.getElementById('btn-trigger').addEventListener('click', () => {
+  out.innerHTML = '<span class="chip">queued · next tick ≤ 15 min</span>';
+});
+</script>
+</body>
+</html>

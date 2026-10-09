@@ -1,11 +1,13 @@
 # CVS Analyst Dashboard — mockups
 
-Six screens, dark SOC-console aesthetic (IBM Plex Sans/Mono, `#0B0D10`
-background): `Main.dc.html` (Overview), `Watchlist.dc.html` (Watchlist),
-`FlowGraph.dc.html` (Flow graph), `EntityDetail.dc.html` (Entity detail),
-`TopTalkers.dc.html` (Top talkers), `CandidateReview.dc.html` (Candidate
-review). Open any of them directly in a browser; the nav links between
-them work as plain relative links.
+Eight screens, dark SOC-console aesthetic (IBM Plex Sans/Mono, `#0B0D10`
+background): `Main.dc.html` (Overview), `Watchlist.dc.html` (Watchlist —
+IPs), `Domains.dc.html` (Domains — by owner / all / cross-links & gaps),
+`FlowGraph.dc.html` (Flow graph), `EntityDetail.dc.html` (Entity detail,
+IP), `DomainDetail.dc.html` (Entity detail, domain), `TopTalkers.dc.html`
+(Top talkers), `CandidateReview.dc.html` (Candidate review). Open any of
+them directly in a browser; the nav links between them work as plain
+relative links.
 
 **History.** The first five were built 2026-10-08 on claude.ai's Design
 canvas (https://claude.ai/artifact/X3BYdcRSddzPoy9RyNFrpq — that link now
@@ -34,8 +36,11 @@ tags, bytes, RTP share, BPH contact, unclassified-peer counts, the
 per-day charts on Overview and Entity detail, the Unclassified
 leaderboard, and everything portscan-related (the fingerprint-drift
 card, the Watchlist Fingerprint column, and the Entity-detail hash
-history and diffs from `scan_fingerprints`) are real. Still
-illustrative: the candidate evidence blocks (both candidates were
-already approved), the Watchlist-activity feed (no source table exists),
+history and diffs from `scan_fingerprints`) are real. The domain data
+(Overview strip, Watchlist Domains tab, Domain detail) is live from
+`spoiler-alert.trashcollector.dev` on the same date. Still illustrative:
+the candidate evidence blocks (both candidates were already approved),
+the IP-side entries in the Watchlist-activity feed (no source table
+exists; the domain-side entries are derived from real check history),
 and the graph layout and its node notes. Treat these as visual reference
 for building the real pages, not as a prototype to deploy.

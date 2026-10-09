@@ -296,3 +296,147 @@ The 2026-10-08 open questions 1–4 are unchanged. The mocks' invented
 numbers are replaced by live aggregates everywhere except the candidate
 evidence blocks, the watchlist-activity feed (still no source table),
 and the graph layout itself.
+
+## Second source, 2026-10-09 — spoiler-alert (domain proof-of-life)
+
+`spoiler-alert` (`~/projects/spoiler-alert`, live at
+`spoiler-alert.trashcollector.dev`) is passive proof-of-life monitoring
+for OpenCTI **domains** — its decision 26 moved IP monitoring to
+netflow-rollups, so the two are complementary by design. A
+`monitor:<cadence>` label on a Domain-Name drives `dns_records`
+(A/AAAA/NS/MX/TXT/CNAME/SOA → ok / nxdomain / parked / empty / timeout /
+error) and `domain_expiry` (WHOIS/RDAP); a lifecycle demotes dead
+domains to `monitor:zombie` + `lifecycle:<cause>` after 2 consecutive
+failures and retires them (tombstone, yearly recheck,
+`lifecycle:resurrected` if they come back). It is the first **REST-only**
+source — its Postgres binds no host port, so there is no Trino catalog
+to register; `CLAUDE.md` §4's bespoke-access fallback is now a real case.
+
+### API surface (all token-gated except `/health`)
+
+| endpoint | returns | used for |
+|---|---|---|
+| `/status` | per-cadence and per-state counts, `due_now`, `check_runs_24h`, `errors_24h`, `status_mix_24h`, retired/resurrected, sync state | Overview "Domain proof-of-life" strip |
+| `/monitored` (+ `cadence/state/type/overdue` filters) | `opencti_id`, `opencti_href`, `value`, `cadence`, `state`, `consecutive_failures`, `last_checked_at`, `next_due_at`, `domain_expires_at` | Watchlist → Domains tab |
+| `/monitored/{id}` | the above + `history[]` of runs with `module`, `status`, `observations.records` | Domain detail: A-record timeline, current records, run strip |
+| `/retired` | tombstones: `retired_at`, recheck dates, `resurrected_at` | Domains tab (retired rows) |
+| `/labels` | the cadence/cause label catalog, generated from settings | chip tooltips |
+| `POST /recheck/{id}` / `POST /trigger/{id}` | synchronous recheck (records `forced_by`) / queue for next tick | "Recheck now" on Domain detail |
+
+Live on 2026-10-09: 16 monitored (13 active, 3 zombie), 3 retired, 44
+checks/24h, 0 errors, results ok 21 / empty 17 / parked 6.
+
+### The join, measured
+
+spoiler-alert stopped writing A/AAAA results to OpenCTI (decision 26),
+so `observations.records.A` in its run history is the **only** record of
+which IPs a monitored domain resolved to, per check, over time. Joined
+against netflow-rollups on 2026-10-09:
+
+- **Direct (A record = a watchlist IP): none.** The investigation's own
+  domains — `tox3in.com`, `tox3.xyz`, `doomcall.pro`, `plugvalley.sh` —
+  all sit behind Cloudflare (`172.64.80.1`); `outsiderzvpn.com` and
+  `tox3.in` publish no A at all.
+- **Via peers (A record = a `flow_rollup_daily.peer_ip`): 5 of 16.**
+  `blueoceanglobe.net` (3 Wix IPs), `nexigo.com` / `nexipc.com` (one
+  Shopify IP), `m3zapp.com` / `panel.m3zapp.com` (two lander IPs) — all
+  small-byte `web_admin` contacts, and **every one of them with the same
+  monitored IP, `165.227.194.81`**. That's the Watchlist's outlier (0%
+  RTP, 758 unclassified peers, 1,081 reverse-proxy peers): it fetches
+  these domains' websites. Real signal, but it reads as "the watchlist
+  box visited where this domain is hosted", not "this domain fronts the
+  CVS". OpenCTI, meanwhile, describes that IP as "distributed as a SIP
+  IP by the criminal voip service OUTSIDERZ" and puts it inside the
+  OUTSIDERZ Infrastructure object — the TIP and the netflow disagree
+  about what this box *is*, and that disagreement is itself the kind of
+  thing the queue exists for.
+- **The best single finding is temporal, not a join:** `panel.m3zapp.com`
+  resolved to `164.92.90.138` (DigitalOcean, same provider as the
+  watchlist) until Oct 1, then moved to a `parity.domains` parking
+  lander. A VoIP billing panel moving to a parking page is a lifecycle
+  event worth a queue entry, and only the run history shows it.
+- The Cloudflare inference ("the CVS sits behind the proxied domains")
+  does not hold up: OUTSIDERS' 37 reverse-proxy peers are CDN fetches on
+  `web_admin` (Fastly, Cloudflare, GitHub Pages), none is `172.64.80.1`.
+- netflow-rollups' urlscan `domain_scans` has 10 domains; **zero
+  overlap** with spoiler-alert's 16. Two disjoint domain sets, worth
+  knowing before anyone assumes they're the same list.
+
+### Third source — OpenCTI GraphQL, read-only (same day)
+
+With an `OPENCTI_API_TOKEN` of this project's own in `.env`, the
+dashboard can ask OpenCTI 6.9.6 what each tracked object *belongs to*:
+`stixCyberObservable(id)` for labels, score, description, indicators,
+containers, notes and `stixCoreRelationships` (with
+`representative { main }` for the other side's display name), then
+`stixCoreObject(id)` for the owning Infrastructure / Organization and
+its full membership. This is the "what they relate to" layer neither
+collector has, and it is what turned a flat domain list into a page:
+
+- The 19 domains belong to **8 owning objects** — Infrastructure:
+  OUTSIDERZ aka SPOOF WORLD (also owns watchlist IPs 143.198.172.85 and
+  165.227.194.81), M3 VHISHING INFRA, PlugValley (+5 sub-infrastructures,
+  9 Telegram channels), doom voip, Tox Carding Forum; Organization
+  (`infrastructure:threatactor`): BlueOcean Inc (+ Nexigo), ZXTech (17
+  individuals, 20 companies). One domain is unaffiliated.
+- **The only graph path from a monitored domain to a monitored IP** is
+  `plugvalley.sh` →resolves-to→ `176.97.113.106` ("hosting plugvalley.sh",
+  `hosting:virtual_systems_ukraine`) ←derived-from← `162.243.77.115`.
+- **Monitoring gaps the graph exposes**: `tox3in.in`, `doomcall.app`,
+  `callspoofing.org` (the last labelled criminal_voip_service and related
+  to confirmed CVS 192.248.178.127) carry no `monitor:*` label;
+  `185.233.247.245`, `176.97.113.106`, `95.214.235.200` relate to
+  watchlist IPs and carry no `msk:voip_analysis`. "An object related to
+  tracked infrastructure has no tracker label" is a rule; its resolution
+  is a TIP label write (pillar #4).
+- **Graph hygiene**: `outsiderzvpn.com`, `m3zapp.com`, `plugvalley.ws`,
+  `status.plugvalley.pro` name their owner in `x_opencti_description`
+  but have no relationship to it; three `scope:derived` IPv4 observables
+  are leftovers from before spoiler-alert went domain-only.
+- **Open question #2 (where analyst prose lives) is partly answered**:
+  every watchlist IP already has an `x_opencti_description` and several
+  have Notes — the Flow graph's "note" field can read from OpenCTI
+  rather than needing a table here.
+- The TIP and the netflow disagree about `165.227.194.81` (OpenCTI: "a
+  SIP IP distributed by OUTSIDERZ"; netflow: 0% RTP, website fetches).
+  Surfacing that disagreement is exactly the queue's job.
+
+### What changed in the mocks
+
+- **Overview**: a "Domain proof-of-life" strip from `/status`; the
+  activity feed now carries the Oct 8 demotions/retirements and the
+  `panel.m3zapp.com` A-record move (derived — see gotcha 8).
+- **Domains (new page, in the nav)**: three views — *By owner* (one card
+  per Infrastructure/Organization: its domains with state, cadence,
+  next check and A record; its links to the IP watchlist; everything
+  else related to it in OpenCTI, grouped by type), *All domains* (the
+  table: owner, state, last/next check, expiry, current A, netflow
+  peer), and *Cross-links & gaps* (the five IP↔domain links, the
+  monitoring-gap queue candidates, the derived lifecycle timeline).
+  The Watchlist page is IP-only again and links here.
+- **Domain detail (new page)**: `panel.m3zapp.com` — state/cadence/cause
+  chips, OpenCTI link, A-record timeline (same green/orange idiom as the
+  fingerprint hash strip), current records, run-status strip, netflow
+  cross-reference, Recheck now.
+
+### Gotchas and open questions this adds
+
+8. **Lifecycle events have no public endpoint.** The append-only
+   `lifecycle_events` table — exactly the activity log open question #3
+   asks for — is served only under `/dashboard/data`, which sits behind
+   Authentik in prod and returns an SSO redirect to a token caller. One
+   small upstream ask (a token-readable `/events`) makes the Overview
+   feed real for domains.
+9. **`monitor:monthly` on IPs has no machine consumer.** netflow-rollups
+   mirrors every OpenCTI label (migration 0055) but only surfaces two as
+   rollup flags; spoiler-alert ignores IPv4 objects. The Watchlist chip
+   shows a label nothing acts on — either drop it from the UI or treat
+   it as human-only intent.
+10. **Credential**: this project now holds its own
+    `SPOILER_ALERT_API_TOKEN` in `.env` (gitignored), per `CLAUDE.md`'s
+    never-another-project's-credential rule. Reads are N+1 (`/monitored`
+    then `/monitored/{id}` per domain for A records) — fine at 16, worth
+    a bulk endpoint if the fleet grows.
+11. **Stay on the documented endpoints.** `/dashboard/data` returns
+    everything in one call but is `include_in_schema=False` and
+    SSO-gated — not a contract.
