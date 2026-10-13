@@ -419,7 +419,71 @@ collector has, and it is what turned a flat domain list into a page:
   fingerprint hash strip), current records, run-status strip, netflow
   cross-reference, Recheck now.
 
+## Geo view, 2026-10-13 — and what moved upstream over the weekend
+
+netflow-rollups (Oct 10–11) added `sip_peer_candidates` / `sip_peers`
+(a nightly heuristic classifying every monitored↔peer pair with both SIP
+and RTP legs as trunk / client / prober / media_only / unclear, with ~20
+explicit feature columns; 130 pending rows on Oct 13), `sip_peer_scans` +
+`sip_peer_identities` (passive Shodan/Censys, ASN/RIPEstat/PeeringDB/rDNS
+for trunk-like peers — which closes `CLAUDE.md` §8.3's "what triggers
+on-demand enrichment" question: the heuristic does), and geo columns on
+every provider table (0069/0070). spoiler-alert (Oct 10) added
+nameserver-based parking detection (`PARKING_NAMESERVERS`, dedicated
+parkers only) and lets parked tombstones resurrect (decision 27).
+
+The analyst's working hypothesis: operators route through **overseas SIP
+upstreams to evade US telco fraud teams**. `Geo.dc.html` is built to
+test it against the data it has:
+
+- **Snapshot supports the pattern.** 45% of trunk-role media (168 of 372
+  MB over 30d) goes to non-US peers: DE 86, CO 79, GB 1.7, DO 1.4, MX
+  0.3. Concentrated: `146.190.124.95` sends 51% of its trunk media to a
+  Colombian satellite ISP (AS265861, p95 concurrency 24, zero overnight
+  share in Bogotá time); `143.198.176.127` sends 97% to Germany.
+- **But "overseas" is two tactics**, roughly half each by bytes: foreign
+  *carriers* as upstreams (CO satellite, DO Servimast/Altice, MX) vs.
+  the operators' *own switches hosted abroad* (Vultr/Hetzner DE,
+  DigitalOcean GB). The DE "upstream" of the SIP trunk node is
+  `192.248.178.127` — the confirmed CVS on Vultr Frankfurt, whose rDNS is
+  `callspoofing.org`. Provider-table flags separate the two; a
+  country-only view conflates them.
+- **The 63-day history shows a steady mode, not a shift.** Weekly non-US
+  share of UDP media is ~40–45% every week since Aug 10 (one 84% week is
+  a single 150 MB burst to the DE node); per IP it's flatter still. If a
+  shift happened it predates the netflow backfill, or is relative to
+  other operators' baselines this watchlist can't see. The page says so.
+- **Geo coverage is cloud-heavy**: lat/lon on 6,453 / 6,530 cloud rows
+  but 3 / 23 wholesale-VoIP and 1 / 30 mobile. Country-level views are
+  honest today; a dot map is not.
+
+Screen: a per-monitored-IP 100%-stacked bar by (peer country × provider
+class) with non-US segments marked; the weekly non-US trend (overall +
+four small multiples) from a `flow_records` backfill; country tiles
+(not a map); the 30 trunk identities with ASN holder, PeeringDB type,
+rDNS, media, `overnight_share` as a "sleeps?" bar, concurrency, call
+median, scan presence.
+
 ### Gotchas and open questions this adds
+
+12. **Rollups drop country and ASN.** `flow_records` carries
+    `src/dst_country` and `src/dst_asn` on every row; `flow_rollup_hourly`
+    groups neither away. Adding `peer_country` and `peer_asn` to its
+    GROUP BY (near-static per IP, so cardinality barely moves) makes the
+    Geo trend a live continuous aggregate and unblocks By-ASN, the graph
+    cluster, and candidate context in one change. Until then: one-off
+    180-day scans (~2 s for 63 days).
+13. **A second, bigger candidate queue.** 130 pending `sip_peer_candidates`
+    vs. 2 ASN candidates — the Candidate-review screen needs a queue
+    switcher and real triage ordering (§10's "without smuggling in a
+    score" question is now concrete). Not yet in the mocks.
+14. **The analysis pillar's first example moved upstream.** "Server vs.
+    VoIP client" is now mechanical in netflow-rollups; what stays with
+    this project is the non-mechanical call the migration names —
+    criminal infrastructure vs. legitimate customer — plus a candidate
+    rule: a new trunk-role pair in a country the monitored IP never used
+    before (`first_day`, `peer_country`) is the "tactics shift" detector
+    the trend chart can't be yet.
 
 8. **Lifecycle events have no public endpoint.** The append-only
    `lifecycle_events` table — exactly the activity log open question #3

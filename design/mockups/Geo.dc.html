@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>CVS Watch — Geo</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<style>
+body{margin:0;background:#0B0D10;color:#E7E9ED;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+.mono{font-family:'IBM Plex Mono',monospace}
+a{color:#4C8DFF;text-decoration:none}
+a:hover{color:#78AAFF}
+.navlink{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;font-size:14px;font-weight:500;color:#9199A8}
+.navlink:hover{background:#171B22;color:#E7E9ED}
+.navlink.active{background:#1B2029;color:#E7E9ED}
+.card{background:#141821;border:1px solid #262B35;border-radius:10px}
+.src{font-size:10px;font-family:'IBM Plex Mono',monospace;color:#5D6472;background:#0F1217;border:1px solid #1B2029;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.chip{font-size:10px;font-family:'IBM Plex Mono',monospace;background:#1B2029;border:1px solid #262B35;color:#9199A8;padding:1px 6px;border-radius:4px;display:inline-block;margin:2px 3px 0 0}
+.k{font-size:10px;color:#5D6472;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px}
+th{text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em;color:#5D6472;text-transform:uppercase;padding:0 10px 10px 10px;border-bottom:1px solid #262B35;white-space:nowrap}
+td{padding:9px 10px;font-size:12px;border-bottom:1px solid #1B2029;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:#171B22}
+.sub{font-size:11px;color:#5D6472;display:block;margin-top:2px}
+.note{font-size:11px;color:#5D6472;line-height:1.5;padding:12px 20px 14px 20px;border-top:1px solid #1B2029}
+.lg{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#9199A8;margin-right:14px}
+.lg i{width:10px;height:10px;border-radius:2px;display:inline-block}
+.row{display:grid;grid-template-columns:150px 1fr 70px;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid #1B2029}
+.row:last-child{border-bottom:none}
+.bar{display:flex;height:22px;border-radius:4px;overflow:hidden;background:#1B2029}
+.seg{display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#0B0D10;font-weight:600;overflow:hidden;white-space:nowrap;border-right:1px solid #0B0D10}
+.seg.abroad{box-shadow:inset 0 -3px 0 #E7E9ED}
+.trk{display:flex;align-items:flex-end;gap:4px;height:70px}
+.trk div{flex:1;border-radius:2px 2px 0 0;position:relative}
+.trk div span{position:absolute;top:-14px;left:0;right:0;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#9199A8}
+.tile{border:1px solid #262B35;border-radius:8px;padding:12px 14px;background:#171B22;min-width:0}
+.sleep{display:inline-block;width:60px;height:6px;background:#1B2029;border-radius:3px;overflow:hidden;vertical-align:middle;margin-right:6px}
+.sleep i{display:block;height:100%;background:#8B5CF6}
+.dn{font-size:12px;color:#9199A8;line-height:1.5;display:flex;gap:8px}
+.dn b{color:#E7E9ED;font-weight:600}
+.cls{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;display:inline-block;white-space:nowrap}
+</style>
+</head>
+<body>
+
+<div style="display:flex;width:100%;min-height:100vh;background:#0B0D10">
+
+<div style="width:240px;flex-shrink:0;background:#0F1217;border-right:1px solid #262B35;display:flex;flex-direction:column;padding:24px 16px;box-sizing:border-box;gap:4px">
+  <div style="display:flex;align-items:center;gap:10px;padding:8px 8px 22px 8px">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4C8DFF" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9" stroke-opacity="0.45"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke-opacity="0.45"/></svg>
+    <span style="font-size:15px;font-weight:600;letter-spacing:0.2px">CVS Watch</span>
+  </div>
+  <a href="Main.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-7 9 7"/><path d="M5 10v9a1 1 0 001 1h3v-6h6v6h3a1 1 0 001-1v-9"/></svg>Overview</a>
+  <a href="Watchlist.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>Watchlist</a>
+  <a href="Domains.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg>Domains</a>
+  <a href="Geo.dc.html" class="navlink active"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.5-7-11.5a7 7 0 0114 0C19 14.5 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>Geo</a>
+  <a href="FlowGraph.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="6" cy="6" r="2.6"/><circle cx="18" cy="6" r="2.6"/><circle cx="12" cy="18" r="2.6"/><path d="M8.2 7.3l2.9 8.6M15.8 7.3l-2.9 8.6"/></svg>Flow graph</a>
+  <a href="TopTalkers.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V13M10 20V6M16 20v-9M4 20h16"/></svg>Top talkers</a>
+  <a href="CandidateReview.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l2.2-5h13.6L21 8M3 8v10.5A1.5 1.5 0 004.5 20h15a1.5 1.5 0 001.5-1.5V8M3 8h6.2l.9 3h3.8l.9-3H21"/></svg>Candidates</a>
+  <div style="flex:1"></div>
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-top:1px solid #262B35;margin-top:8px">
+    <div style="width:28px;height:28px;border-radius:50%;background:#1B2029;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#9199A8;flex-shrink:0">JF</div>
+    <div style="font-size:12px;color:#9199A8;line-height:1.4">J. Finley<br><span style="color:#5D6472">Analyst</span></div>
+  </div>
+</div>
+
+<div style="flex:1 1 0;min-width:0;padding:36px 44px;box-sizing:border-box">
+
+  <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:16px">
+    <div>
+      <h1 style="margin:0 0 4px 0;font-size:22px;font-weight:600">Geo — where the SIP media goes</h1>
+      <div style="font-size:13px;color:#5D6472">Working hypothesis: operators route through overseas SIP upstreams to stay away from US telco fraud teams. This page shows the <em>where</em>; it can't show the <em>why</em>.</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <span class="src">sip_peer_candidates · sip_peer_identities · *_providers geo</span>
+      <span class="src">flow_records backfill · 63d · UDP ≠ 5060</span>
+    </div>
+  </div>
+
+  <div class="card" style="padding:14px 22px;margin-bottom:22px;display:flex;align-items:center;gap:30px;flex-wrap:wrap">
+    <div><div class="k">SIP peer pairs</div><div style="font-size:20px;font-weight:600">130</div><div style="font-size:11px;color:#9199A8">30 trunk · 3 client · 34 prober · 63 unclear</div></div>
+    <div><div class="k">Trunk media, 30d</div><div style="font-size:20px;font-weight:600">372 MB</div><div style="font-size:11px;color:#9199A8">to 6 countries</div></div>
+    <div><div class="k">Trunk media to non-US peers</div><div style="font-size:20px;font-weight:600;color:#F5A623">45%</div><div style="font-size:11px;color:#9199A8">168 MB · DE 86 · CO 79 · GB 1.7 · DO 1.4 · MX 0.3</div></div>
+    <div><div class="k">…of which: own switches abroad</div><div style="font-size:20px;font-weight:600">52%</div><div style="font-size:11px;color:#9199A8">cloud-flagged peers (Vultr, Hetzner, DO, Azure)</div></div>
+    <div><div class="k">…of which: foreign carriers</div><div style="font-size:20px;font-weight:600">48%</div><div style="font-size:11px;color:#9199A8">satellite / mobile / residential / unclassified</div></div>
+    <div><div class="k">9-week trend, non-US share</div><div style="font-size:20px;font-weight:600;color:#9199A8">flat</div><div style="font-size:11px;color:#9199A8">~40–45% every week since Aug 10 — a steady mode, not a shift</div></div>
+  </div>
+
+  <div class="card" style="padding:20px 22px;margin-bottom:22px">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px">
+      <div style="font-size:13px;font-weight:600">Each monitored IP's trunk media, by peer country and what kind of network the peer is</div>
+      <span class="src">sip_peer_candidates role=trunk · media_bytes · peer_country · sip_peer_identities.provider_tables</span>
+    </div>
+    <div style="font-size:12px;color:#5D6472;margin-bottom:12px">Color = provider class of the peer. White underline = outside the US. The two "overseas" tactics look different here: a foreign <em>carrier</em> (purple/teal/orange abroad) vs. the operator's <em>own switch</em> hosted abroad (blue abroad).</div>
+    <div style="margin-bottom:10px">
+      <span class="lg"><i style="background:#4C8DFF"></i>cloud / hosting (their own node)</span>
+      <span class="lg"><i style="background:#8B5CF6"></i>satellite</span>
+      <span class="lg"><i style="background:#F59E0B"></i>mobile</span>
+      <span class="lg"><i style="background:#2DD4BF"></i>residential ISP</span>
+      <span class="lg"><i style="background:#E5484D"></i>bulletproof + cloud</span>
+      <span class="lg"><i style="background:#5D6472"></i>no provider table</span>
+      <span class="lg"><i style="background:#1B2029;border:1px solid #3A4254;box-shadow:inset 0 -3px 0 #E7E9ED"></i>non-US</span>
+    </div>
+    <div id="bars"></div>
+    <div class="note" style="padding-left:0;padding-right:0">Read across: <span class="mono">146.190.124.95</span> is the carrier case — half its media goes to a Colombian satellite ISP that sleeps in Bogotá time. <span class="mono">143.198.176.127</span> (the SIP trunk node) is the hosting case — 97% abroad, but the peer is <span class="mono">192.248.178.127</span>, your own confirmed CVS on Vultr Frankfurt (rDNS <span class="mono">callspoofing.org</span>). <span class="mono">143.198.172.85</span> (OUTSIDERS) is 96% US — Comcast/Charter/Verizon residential and a Dominican trickle. Pairs below 0.1 MB are folded into the smallest segments.</div>
+  </div>
+
+  <div style="display:flex;gap:22px;flex-wrap:wrap;margin-bottom:22px">
+
+    <div class="card" style="flex:1 1 520px;min-width:0;padding:20px 22px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px">
+        <div style="font-size:13px;font-weight:600">Non-US share of media bytes, by week</div>
+        <span class="src">flow_records backfill · the rollups drop country</span>
+      </div>
+      <div style="font-size:12px;color:#5D6472;margin-bottom:22px">The hypothesis chart. Flat across the whole window — if a shift happened, it predates Aug 10 (the netflow backfill's reach) or is relative to other operators' baselines this watchlist doesn't see.</div>
+      <div id="trend"></div>
+      <div class="note" style="padding-left:0;padding-right:0">Needs <span class="mono">peer_country</span> carried through <span class="mono">flow_rollup_hourly</span> to be a live chart — the same one-line GROUP BY change as <span class="mono">peer_asn</span>; both are already on every <span class="mono">flow_records</span> row. Until then this is a one-off 180-day scan (fast enough: ~2 s for 63 days). The Sep 7 spike is a single 150 MB week to the DE node.</div>
+    </div>
+
+    <div class="card" style="flex:1 1 360px;min-width:0;padding:20px 22px">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px">
+        <div style="font-size:13px;font-weight:600">Peer countries — all 130 pairs</div>
+        <span class="src">country level · lat/lon not drawable yet</span>
+      </div>
+      <div style="font-size:12px;color:#5D6472;margin-bottom:14px">Tile area ~ log(media). A proper choropleth needs a world topojson; a dot map is <em>not</em> honest yet — coordinates exist on 6,453 / 6,530 cloud rows but 3 / 23 wholesale-VoIP and 1 / 30 mobile, so it would show the clouds and hide the carriers.</div>
+      <div id="tiles" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px"></div>
+    </div>
+
+  </div>
+
+  <div class="card" style="margin-bottom:22px;overflow-x:auto">
+    <div style="padding:18px 20px 6px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
+      <div style="font-size:13px;font-weight:600">Trunk identities — the 30 trunk-role peers, with who they are and whether they sleep</div>
+      <span class="src">sip_peer_identities · ASN / RIPEstat / PeeringDB / rDNS · overnight_share in the peer's local time</span>
+    </div>
+    <table id="trunks" style="width:100%;border-collapse:collapse;margin-top:8px;min-width:1100px">
+      <tr><th>Peer</th><th>↔ monitored</th><th>CC · tz</th><th>Class</th><th>ASN holder</th><th>PeeringDB</th><th>rDNS</th><th style="text-align:right">Media</th><th>Sleeps?</th><th style="text-align:right">p95 conc</th><th style="text-align:right">call med</th><th>Scans</th></tr>
+    </table>
+    <div class="note">"Sleeps?" = share of media in the peer's local 00:00–06:00 (<span class="mono">overnight_share</span>, bar = 0–25%). Businesses sleep (CO satellite 0.00, Linode 0.00); machines don't (the DE node 0.23, Hetzner 0.12) — a cheap carrier-vs-node discriminator and timezone evidence in one number. Empty where the pair is below the trunk-sized media floor (shape features cost a <span class="mono">flow_records</span> scan each). 18 of 33 enriched peers have rDNS, 28 a PeeringDB record, 15 are dark to both scan sources.</div>
+  </div>
+
+  <div class="card" style="padding:16px 18px">
+    <div style="font-size:12px;font-weight:600;margin-bottom:10px;color:#F5A623">Data notes</div>
+    <div style="display:flex;flex-direction:column;gap:9px">
+      <div class="dn"><span>①</span><span><b>Two "overseas" tactics, not one.</b> Foreign carriers as upstreams (CO satellite AS265861, DO Servimast / Altice, MX) vs. the operators' own switches hosted abroad (Vultr / Hetzner DE, DigitalOcean GB). The provider flags separate them; a country-only view conflates them and would overstate "foreign carrier" by about half.</span></div>
+      <div class="dn"><span>②</span><span><b>Pattern, not shift — on this data.</b> Every monitored IP's non-US share is flat week over week since Aug 10. The chart that would prove a change needs a longer baseline than the 60-day backfill, or a comparison set of operators who <em>don't</em> do this.</span></div>
+      <div class="dn"><span>③</span><span><b>Upstream ask: <span class="mono">peer_country</span> and <span class="mono">peer_asn</span> on <span class="mono">flow_rollup_hourly</span>.</b> Both are on every raw flow row and dropped by the GROUP BY. Adding them turns this page's trend into a live continuous aggregate and unblocks the By-ASN tab, the graph cluster, and candidate context in one change.</span></div>
+      <div class="dn"><span>④</span><span><b>Geo coverage is cloud-heavy.</b> Lat/lon lives on the provider tables (migration 0069) and the nightly geocode-backfill fills it, but carriers — the interesting ones here — are mostly country-only so far. Country-level views are honest today; dots are not.</span></div>
+      <div class="dn"><span>⑤</span><span><b>What this feeds the queue.</b> A <em>new</em> trunk-role pair in a country the monitored IP has never used before is a one-shot rule over <span class="mono">sip_peer_candidates</span> (first_day, peer_country) — the "tactics shift" detector the trend chart can't be yet. And the carrier-vs-node judgment on a confirmed trunk is the analysis-pillar call that stays human (or agent) — the heuristic deliberately stops short of it.</span></div>
+    </div>
+  </div>
+
+</div>
+</div>
+
+<script>
+const CLS = { cloud:['#4C8DFF','cloud'], satellite:['#8B5CF6','satellite'], mobile:['#F59E0B','mobile'], residential:['#2DD4BF','residential'], bph:['#E5484D','bph+cloud'], none:['#5D6472','unclassified'] };
+const cls = p => !p ? 'none' : p.includes('bph') ? 'bph' : p.includes('satellite') ? 'satellite' : p.includes('mobile') ? 'mobile' : p.includes('residential') ? 'residential' : p.includes('cloud') ? 'cloud' : 'none';
+// monitored, peer, cc, mb, night, p95, callmed, sib, tz, asn, holder, pdb, rdns, ptabs, sh, cs
+const T = [
+ ['192.248.178.127','143.198.176.127','US',84.39,0.03,20,36,0,-5,14061,'DigitalOcean, LLC','Content','','cloud',1,1],
+ ['143.198.176.127','192.248.178.127','DE',84.38,0.23,20,36,0,1,20473,'The Constant Company (Vultr)','NSP','callspoofing.org','cloud',1,1],
+ ['146.190.124.95','45.226.112.91','CO',74.81,0.00,24,29,5,-5,265861,'Sistemas Satelitales de Colombia','','','satellite',0,0],
+ ['146.190.124.95','50.116.38.139','US',58.97,0.00,21,30,0,-5,63949,'Akamai Connected Cloud (Linode)','Content','50-116-38-139.ip.linodeusercontent.com','cloud',1,1],
+ ['216.126.227.152','143.198.172.85','US',19.13,0.01,17,34,0,-5,14061,'DigitalOcean, LLC','Content','','cloud',0,1],
+ ['143.198.172.85','216.126.227.152','US',18.30,0.01,17,34,1,-5,14956,'RouterHosting LLC','','152.227.126.216.static.cloudzy.com','bph,cloud',1,1],
+ ['146.190.124.95','139.144.17.68','US',14.00,0.01,15,28,0,-5,63949,'Akamai Connected Cloud (Linode)','Content','139-144-17-68.ip.linodeusercontent.com','cloud',1,1],
+ ['146.190.124.95','45.226.115.144','CO',4.09,null,0,null,0,-5,265861,'Sistemas Satelitales de Colombia','','','satellite',0,0],
+ ['146.190.124.95','3.235.74.192','US',2.25,0.00,5,29,0,-5,14618,'Amazon.com, Inc.','','ec2-3-235-74-192.compute-1.amazonaws.com','cloud',1,1],
+ ['143.198.176.127','162.33.177.141','US',1.96,0.00,5,28,1,-5,399629,'BL Networks','','','',1,1],
+ ['192.248.178.127','165.232.104.188','GB',1.54,0.00,4,26,0,0,14061,'DigitalOcean, LLC','Content','','cloud',1,1],
+ ['143.198.176.127','157.90.226.70','DE',1.41,0.12,1,25,0,1,24940,'Hetzner Online GmbH','Content','static.70.226.90.157.clients.your-server.de','cloud',1,1],
+ ['143.198.172.85','66.56.12.130','US',0.95,0.01,1,41,0,-5,7922,'Comcast Cable','Cable/DSL/ISP','c-66-56-12-130.hsd1.ga.comcast.net','residential',0,0],
+ ['143.198.176.127','162.33.178.144','US',0.86,0.01,2,25,0,-5,399629,'BL Networks','','','',1,1],
+ ['192.248.178.127','129.212.182.225','US',0.65,0.02,2,37,0,-5,14061,'DigitalOcean, LLC','Content','','cloud',1,1],
+ ['143.198.172.85','38.252.230.85','DO',0.60,null,0,null,1,-4,272886,'Servimast JPM SRL','Network Services','','',1,1],
+ ['165.227.194.81','38.252.230.81','DO',0.41,null,0,null,1,-4,272886,'Servimast JPM SRL','Network Services','','',1,1],
+ ['143.198.172.85','190.94.20.18','DO',0.38,null,0,null,0,-4,28118,'Altice Dominicana S.A.','Cable/DSL/ISP','wimax-20-18.tricom.net','mobile,residential',0,0],
+ ['143.198.172.85','153.54.137.151','US',0.33,null,0,null,0,-5,272096,'PacketHub S.A.','','','cloud',0,0],
+ ['143.198.172.85','96.58.144.188','US',0.30,0.00,2,35,0,-5,33363,'Charter Communications','Cable/DSL/ISP','syn-096-058-144-188.res.spectrum.com','residential',0,0],
+ ['146.190.124.95','158.23.180.16','MX',0.28,0.00,2,31,0,-6,8075,'Microsoft Corporation','Content','','cloud',1,1],
+ ['143.198.172.85','68.204.88.138','US',0.27,0.00,2,41,0,-5,33363,'Charter Communications','Cable/DSL/ISP','syn-068-204-088-138.res.spectrum.com','residential',0,0],
+ ['143.198.172.85','70.19.107.5','US',0.27,null,0,null,0,-5,701,'Verizon Business (UUNET)','NSP','pool-70-19-107-5.nycmny.fios.verizon.net','',1,1],
+ ['143.198.172.85','73.138.114.160','US',0.26,null,0,null,0,-5,7922,'Comcast Cable','Cable/DSL/ISP','c-73-138-114-160.hsd1.fl.comcast.net','residential',0,0],
+ ['143.198.172.85','73.137.217.89','US',0.24,0.00,2,47,0,-5,7922,'Comcast Cable','Cable/DSL/ISP','c-73-137-217-89.hsd1.ga.comcast.net','residential',0,0],
+ ['165.227.194.81','174.225.16.131','US',0.23,null,0,null,1,-5,6167,'Verizon Wireless (Cellco)','','131.sub-174-225-16.myvzw.com','mobile',0,0],
+ ['143.198.172.85','73.176.18.50','US',0.22,null,0,null,0,-5,7922,'Comcast Cable','Cable/DSL/ISP','c-73-176-18-50.hsd1.il.comcast.net','residential',0,0],
+ ['143.198.172.85','37.19.221.163','US',0.22,null,0,null,5,-5,212238,'Datacamp Limited (CDNEXT)','','unn-37-19-221-163.datapacket.com','cloud',0,0],
+ ['192.248.178.127','165.232.102.136','GB',0.17,0.13,2,24,0,0,14061,'DigitalOcean, LLC','Content','','cloud',1,1],
+ ['185.134.23.8','161.35.127.38','US',0.14,0.01,2,38,0,-5,14061,'DigitalOcean, LLC','Content','','cloud',1,1]
+];
+const NAMES = {'143.198.172.85':'OUTSIDERS','143.198.176.127':'SIP trunk node','192.248.178.127':'CVS #2 (Vultr DE)','216.126.227.152':'Magnus Billing host','165.227.194.81':'OUTSIDERZ "SIP IP"'};
+
+// stacked bars per monitored IP
+const byMon = {};
+T.forEach(r => { const [m,,cc,mb,,,,,,,,,,pt] = r; const key = cc + '|' + cls(pt); byMon[m] = byMon[m] || {}; byMon[m][key] = (byMon[m][key] || 0) + mb; });
+document.getElementById('bars').innerHTML = Object.entries(byMon).map(([m, segs]) => {
+  const total = Object.values(segs).reduce((a,b)=>a+b,0);
+  const nonUS = Object.entries(segs).filter(([k]) => !k.startsWith('US|')).reduce((a,[,v])=>a+v,0);
+  const parts = Object.entries(segs).sort((a,b)=>b[1]-a[1]).map(([k,v]) => { const [cc,c] = k.split('|'); const w = Math.max(100*v/total, 2.5); return '<div class="seg' + (cc!=='US' ? ' abroad' : '') + '" style="width:' + w + '%;background:' + CLS[c][0] + '" title="' + cc + ' · ' + CLS[c][1] + ' · ' + v.toFixed(1) + ' MB">' + (w > 9 ? cc + ' ' + v.toFixed(0) : cc) + '</div>'; }).join('');
+  return '<div class="row"><div><a href="EntityDetail.dc.html" class="mono" style="font-size:12px">' + m + '</a>' + (NAMES[m] ? '<span class="sub">' + NAMES[m] + '</span>' : '') + '<span class="sub">' + total.toFixed(1) + ' MB trunk media</span></div><div class="bar">' + parts + '</div><div class="mono" style="text-align:right;font-size:13px;font-weight:600;color:' + (nonUS/total > 0.3 ? '#F5A623' : '#9199A8') + '">' + Math.round(100*nonUS/total) + '%<span class="sub" style="font-weight:400">abroad</span></div></div>';
+}).join('');
+
+// trend
+const W = ['Aug 10','Aug 17','Aug 24','Aug 31','Sep 7','Sep 14','Sep 21','Sep 28','Oct 5'];
+const ALL = {mb:[6.3,3.7,8.7,12.2,216.3,88.7,119.3,154.8,100.8], pct:[59,42,42,46,84,42,40,40,32]};
+const PER = [
+ ['146.190.124.95', [47,47,48,48,51,51,52,52,52], 'CO satellite, every week'],
+ ['143.198.176.127', [72,72,71,66,99,73,71,71,71], 'DE — own node on Vultr'],
+ ['143.198.172.85', [null,null,null,28,null,5,6,10,8], 'DO / JM / BS trickle'],
+ ['192.248.178.127', [null,1,0,2,31,7,2,0,1], 'GB only']
+];
+const col = p => p == null ? '#1B2029' : p >= 60 ? '#F5A623' : p >= 30 ? '#8B5CF6' : '#3A4254';
+const strip = (pct, h) => '<div class="trk" style="height:' + h + 'px">' + pct.map((p,i) => '<div style="height:' + (p == null ? 2 : Math.max(p, 2)) + '%;background:' + col(p) + '" title="' + W[i] + ' · ' + (p == null ? 'no media' : p + '% non-US') + '"><span>' + (p == null ? '·' : p) + '</span></div>').join('') + '</div>';
+document.getElementById('trend').innerHTML =
+  '<div class="k">All monitored IPs — % of media bytes to non-US peers (labels), bar = share</div>' + strip(ALL.pct, 80) +
+  '<div style="display:flex;justify-content:space-between;font-size:10px;color:#5D6472;margin:6px 0 18px 0" class="mono"><span>Aug 10</span><span>MB/week: ' + ALL.mb.join(' · ') + '</span><span>Oct 5</span></div>' +
+  '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">' + PER.map(([ip, pct, note]) => '<div><div class="mono" style="font-size:11px;margin-bottom:14px">' + ip + '<span class="sub">' + note + '</span></div>' + strip(pct, 50) + '</div>').join('') + '</div>';
+
+// country tiles: cc, pairs, trunks, clients, probers, mb, mons
+const CC = [['US',79,20,0,14,207.46,7],['DE',23,2,0,18,86.02,8],['CO',3,2,1,0,80.02,1],['DO',8,3,0,0,1.93,2],['GB',5,2,0,0,1.87,2],['CA',7,0,1,1,0.33,5],['MX',1,1,0,0,0.28,1],['RO',1,0,1,0,0.18,1],['JM',1,0,0,0,0.11,1],['FR',2,0,0,1,0.03,2]];
+const NAME = {US:'United States',DE:'Germany',CO:'Colombia',DO:'Dominican Rep.',GB:'United Kingdom',CA:'Canada',MX:'Mexico',RO:'Romania',JM:'Jamaica',FR:'France'};
+document.getElementById('tiles').innerHTML = CC.map(([cc,pairs,tr,cl,pr,mb,mons]) => { const s = Math.max(0, Math.log10(mb + 0.01) + 2) / 4.4; const bg = cc === 'US' ? '#132033' : mb > 1 ? '#2A2013' : '#171B22'; const bd = cc === 'US' ? '#1E3A5F' : mb > 1 ? '#5A4423' : '#262B35';
+  return '<div class="tile" style="background:' + bg + ';border-color:' + bd + ';grid-column:span ' + (mb > 50 ? 2 : 1) + '"><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="mono" style="font-size:15px;font-weight:600">' + cc + '</span><span class="mono" style="font-size:11px;color:#9199A8">' + (mb >= 1 ? mb.toFixed(0) + ' MB' : (mb*1000).toFixed(0) + ' KB') + '</span></div><div style="font-size:11px;color:#5D6472;margin-top:2px">' + NAME[cc] + '</div><div style="font-size:11px;color:#9199A8;margin-top:8px">' + pairs + ' pairs · ' + mons + ' monitored IP' + (mons>1?'s':'') + '</div><div style="margin-top:4px">' + (tr ? '<span class="chip" style="color:#F5A623;border-color:#5A4423">trunk ×' + tr + '</span>' : '') + (cl ? '<span class="chip" style="color:#3DD68C;border-color:#1E4D37">client ×' + cl + '</span>' : '') + (pr ? '<span class="chip">prober ×' + pr + '</span>' : '') + '</div></div>'; }).join('');
+
+// trunk table
+document.getElementById('trunks').insertAdjacentHTML('beforeend', T.map(r => { const [m,p,cc,mb,night,p95,callmed,sib,tz,asn,holder,pdb,rdns,pt,sh,cs] = r; const c = cls(pt);
+  return '<tr' + (cc !== 'US' ? ' style="background:#15140F"' : '') + '><td class="mono"><a href="EntityDetail.dc.html">' + p + '</a>' + (sib ? '<span class="sub">+' + sib + ' sibling IP' + (sib>1?'s':'') + '</span>' : '') + '</td><td class="mono" style="color:#9199A8">' + m + '</td><td class="mono"' + (cc !== 'US' ? ' style="color:#F5A623;font-weight:600"' : '') + '>' + cc + ' <span style="color:#5D6472;font-weight:400">UTC' + (tz >= 0 ? '+' : '') + tz + '</span></td><td><span class="cls" style="background:' + CLS[c][0] + '22;color:' + CLS[c][0] + '">' + CLS[c][1] + '</span></td><td style="white-space:nowrap">' + holder + '<span class="sub mono">AS' + asn + '</span></td><td style="color:#9199A8;white-space:nowrap">' + (pdb || '—') + '</td><td class="mono" style="font-size:11px;color:' + (rdns === 'callspoofing.org' ? '#E5484D' : '#9199A8') + '">' + (rdns || '—') + '</td><td class="mono" style="text-align:right">' + mb.toFixed(1) + ' MB</td><td>' + (night == null ? '<span style="color:#5D6472">—</span>' : '<span class="sleep"><i style="width:' + Math.min(100, night*400) + '%"></i></span><span class="mono" style="font-size:11px">' + night.toFixed(2) + '</span>') + '</td><td class="mono" style="text-align:right">' + (p95 || '—') + '</td><td class="mono" style="text-align:right">' + (callmed ?? '—') + '</td><td class="mono" style="font-size:11px;color:#5D6472">' + (sh ? 'S' : '·') + (cs ? 'C' : '·') + '</td></tr>'; }).join(''));
+</script>
+</body>
+</html>

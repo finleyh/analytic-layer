@@ -1,13 +1,17 @@
 # CVS Analyst Dashboard — mockups
 
-Eight screens, dark SOC-console aesthetic (IBM Plex Sans/Mono, `#0B0D10`
+Nine screens, dark SOC-console aesthetic (IBM Plex Sans/Mono, `#0B0D10`
 background): `Main.dc.html` (Overview), `Watchlist.dc.html` (Watchlist —
 IPs), `Domains.dc.html` (Domains — by owner / all / cross-links & gaps),
+`Geo.dc.html` (Geo — where each monitored IP's SIP media goes, by peer
+country and provider class; weekly non-US trend; trunk identities),
 `FlowGraph.dc.html` (Flow graph), `EntityDetail.dc.html` (Entity detail,
 IP), `DomainDetail.dc.html` (Entity detail, domain), `TopTalkers.dc.html`
 (Top talkers), `CandidateReview.dc.html` (Candidate review). Open any of
 them directly in a browser; the nav links between them work as plain
-relative links.
+relative links. Geo data (2026-10-13) comes from netflow-rollups'
+`sip_peer_candidates` / `sip_peer_identities` and a one-off
+`flow_records` backfill — all live.
 
 **History.** The first five were built 2026-10-08 on claude.ai's Design
 canvas (https://claude.ai/artifact/X3BYdcRSddzPoy9RyNFrpq — that link now
