@@ -38,6 +38,33 @@ tr:hover td{background:#171B22}
 .dn{font-size:12px;color:#9199A8;line-height:1.5;display:flex;gap:8px}
 .dn b{color:#E7E9ED;font-weight:600}
 .cls{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;display:inline-block;white-space:nowrap}
+.ctl{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid #1B2029}
+.ctl .grp{display:flex;align-items:center;gap:6px}
+.ctl label{font-size:10px;color:#5D6472;text-transform:uppercase;letter-spacing:0.04em;margin-right:4px}
+.tog{all:unset;cursor:pointer;font-size:11px;font-weight:500;padding:5px 11px;border-radius:999px;border:1px solid #262B35;color:#9199A8;background:transparent}
+.tog.on{background:#1B2029;border-color:#3A4254;color:#E7E9ED}
+.tog.role.on{border-color:currentColor}
+select.sel{background:#0F1217;color:#E7E9ED;border:1px solid #262B35;border-radius:6px;padding:5px 8px;font-size:12px;font-family:'IBM Plex Mono',monospace}
+input[type=range]{accent-color:#4C8DFF;width:160px}
+#map{width:100%;height:540px;display:block;background:#0B0D10;cursor:grab}
+#map:active{cursor:grabbing}
+.country{fill:#13161C;stroke:#262B35;stroke-width:0.5}
+.country.lit{stroke:#3A4254}
+.arc{fill:none;stroke-linecap:round;opacity:0.85;pointer-events:stroke}
+.arc:hover{opacity:1;stroke:#E7E9ED!important}
+.arc.dim{opacity:0.12}
+.node{stroke:#0B0D10;stroke-width:1}
+.tip{position:absolute;pointer-events:none;background:#171B22;border:1px solid #3A4254;border-radius:7px;padding:8px 10px;font-size:11px;line-height:1.5;color:#E7E9ED;max-width:280px;z-index:5;display:none;box-shadow:0 6px 20px rgba(0,0,0,0.5)}
+.tip .mono{color:#9199A8}
+.side{width:300px;flex-shrink:0;border-left:1px solid #1B2029;display:flex;flex-direction:column;max-height:540px;overflow:auto}
+.side .hd{padding:14px 16px 10px 16px;border-bottom:1px solid #1B2029}
+.srow{display:flex;justify-content:space-between;gap:8px;padding:8px 16px;border-bottom:1px solid #1B2029;font-size:12px;cursor:pointer}
+.srow:hover,.srow.on{background:#171B22}
+.srow .cc{font-family:'IBM Plex Mono',monospace;font-weight:600;width:28px}
+.srow .mb{font-family:'IBM Plex Mono',monospace;color:#9199A8;white-space:nowrap}
+.peer{padding:6px 16px 6px 44px;border-bottom:1px solid #1B2029;font-size:11px;color:#9199A8;line-height:1.45}
+.peer .mono{color:#E7E9ED}
+@media (max-width:1100px){.side{width:100%;border-left:none;border-top:1px solid #1B2029;max-height:320px}}
 </style>
 </head>
 <body>
@@ -74,6 +101,28 @@ tr:hover td{background:#171B22}
       <span class="src">sip_peer_candidates · sip_peer_identities · *_providers geo</span>
       <span class="src">flow_records backfill · 63d · UDP ≠ 5060</span>
     </div>
+  </div>
+
+  <div class="card" style="margin-bottom:22px;overflow:hidden">
+    <div class="ctl">
+      <div class="grp"><label>Mode</label><button class="tog on" data-mode="roles">SIP peer roles · 30d</button><button class="tog" data-mode="weekly">All UDP media · by week</button></div>
+      <div class="grp" id="rolectl"><label>Roles</label><button class="tog role on" data-role="trunk" style="color:#F5A623">trunk</button><button class="tog role on" data-role="client" style="color:#3DD68C">client</button><button class="tog role" data-role="prober" style="color:#9199A8">prober</button><button class="tog role" data-role="unclear" style="color:#5D6472">unclear</button></div>
+      <div class="grp"><label>Monitored IP</label><select class="sel" id="monsel"><option value="">all 15</option></select></div>
+      <div class="grp" id="weekctl" style="display:none"><label>Week of</label><input type="range" id="wk" min="0" max="8" value="8"><span class="mono" id="wklbl" style="font-size:12px;width:48px">Oct 5</span><button class="tog" id="play">▶ play</button></div>
+      <div class="grp"><button class="tog" id="hideus">hide US → US</button><button class="tog" id="reset">reset view</button></div>
+      <div style="flex:1"></div>
+      <span class="src">d3 · world-atlas 110m · endpoints at country centroids (jittered)</span>
+    </div>
+    <div style="display:flex;flex-wrap:wrap;position:relative">
+      <div style="flex:1 1 640px;min-width:0;position:relative">
+        <svg id="map"></svg>
+        <div id="mapmsg" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#5D6472;font-size:13px;pointer-events:none">loading world outline…</div>
+        <div style="position:absolute;left:14px;bottom:12px;display:flex;flex-direction:column;gap:5px;pointer-events:none" id="maplegend"></div>
+        <div class="tip" id="tip"></div>
+      </div>
+      <div class="side" id="side"></div>
+    </div>
+    <div class="note">Arcs are great circles from the monitored IP's home country (from its own <span class="mono">flow_records</span> country field) to the peer's country; width ~ log bytes; a white-bordered diamond is a monitored IP (red = confirmed CVS, orange = SIP trunk). Country fill ~ log bytes in the current selection. <b style="color:#9199A8">Roles mode</b> draws the 130 classified SIP peer pairs, colored by what kind of network the peer is. <b style="color:#9199A8">Weekly mode</b> draws every UDP media flow (≠ 5060) for the chosen week from the 63-day backfill — scrub or play it to watch who talks to whom over time. Scroll to zoom, drag to pan, hover anything, click a country to list its peers on the right. Everything sits at a country centroid because that's the geo the data honestly supports today; see Data notes below for what a real dot map needs.</div>
   </div>
 
   <div class="card" style="padding:14px 22px;margin-bottom:22px;display:flex;align-items:center;gap:30px;flex-wrap:wrap">
@@ -225,6 +274,134 @@ document.getElementById('tiles').innerHTML = CC.map(([cc,pairs,tr,cl,pr,mb,mons]
 // trunk table
 document.getElementById('trunks').insertAdjacentHTML('beforeend', T.map(r => { const [m,p,cc,mb,night,p95,callmed,sib,tz,asn,holder,pdb,rdns,pt,sh,cs] = r; const c = cls(pt);
   return '<tr' + (cc !== 'US' ? ' style="background:#15140F"' : '') + '><td class="mono"><a href="EntityDetail.dc.html">' + p + '</a>' + (sib ? '<span class="sub">+' + sib + ' sibling IP' + (sib>1?'s':'') + '</span>' : '') + '</td><td class="mono" style="color:#9199A8">' + m + '</td><td class="mono"' + (cc !== 'US' ? ' style="color:#F5A623;font-weight:600"' : '') + '>' + cc + ' <span style="color:#5D6472;font-weight:400">UTC' + (tz >= 0 ? '+' : '') + tz + '</span></td><td><span class="cls" style="background:' + CLS[c][0] + '22;color:' + CLS[c][0] + '">' + CLS[c][1] + '</span></td><td style="white-space:nowrap">' + holder + '<span class="sub mono">AS' + asn + '</span></td><td style="color:#9199A8;white-space:nowrap">' + (pdb || '—') + '</td><td class="mono" style="font-size:11px;color:' + (rdns === 'callspoofing.org' ? '#E5484D' : '#9199A8') + '">' + (rdns || '—') + '</td><td class="mono" style="text-align:right">' + mb.toFixed(1) + ' MB</td><td>' + (night == null ? '<span style="color:#5D6472">—</span>' : '<span class="sleep"><i style="width:' + Math.min(100, night*400) + '%"></i></span><span class="mono" style="font-size:11px">' + night.toFixed(2) + '</span>') + '</td><td class="mono" style="text-align:right">' + (p95 || '—') + '</td><td class="mono" style="text-align:right">' + (callmed ?? '—') + '</td><td class="mono" style="font-size:11px;color:#5D6472">' + (sh ? 'S' : '·') + (cs ? 'C' : '·') + '</td></tr>'; }).join(''));
+</script>
+
+<script src="vendor/d3.v7.min.js"></script>
+<script src="vendor/topojson-client.v3.min.js"></script>
+<script>
+// ---------- interactive map ----------
+// monitored IP -> home country (its own country field on flow_records, last 7d)
+const HOME = {'64.225.32.104':'US','128.199.103.165':'SG','137.184.173.234':'CA','138.68.150.143':'GB','143.198.172.85':'US','143.198.176.127':'US','146.190.124.95':'US','147.182.250.67':'US','162.243.77.115':'US','165.227.194.81':'US','167.71.112.11':'US','185.134.23.8':'GB','192.248.178.127':'DE','209.38.67.66':'US','216.126.227.152':'US'};
+const KIND = {'143.198.172.85':'cvs','192.248.178.127':'cvs','143.198.176.127':'trunk'};
+// sip_peer_candidates aggregated: monitored, cc, role, pairs, mb
+const PAIRS = [['64.225.32.104','GB','unclear',1,0.08],['64.225.32.104','DE','prober',4,0.02],['64.225.32.104','FR','unclear',1,0.02],['137.184.173.234','RO','client',1,0.18],['137.184.173.234','DE','prober',3,0.01],['137.184.173.234','CA','unclear',1,0.01],['143.198.172.85','US','trunk',10,21.35],['143.198.172.85','US','unclear',20,2.03],['143.198.172.85','DO','trunk',2,0.97],['143.198.172.85','DO','unclear',5,0.55],['143.198.172.85','JM','unclear',1,0.11],['143.198.172.85','DE','unclear',1,0.02],['143.198.172.85','FR','prober',1,0.01],['143.198.176.127','DE','trunk',2,85.79],['143.198.176.127','US','trunk',2,2.82],['143.198.176.127','US','unclear',1,0.18],['143.198.176.127','DE','unclear',1,0.09],['143.198.176.127','DE','prober',4,0.01],['146.190.124.95','CO','trunk',2,78.90],['146.190.124.95','US','trunk',3,75.23],['146.190.124.95','CO','client',1,1.11],['146.190.124.95','MX','trunk',1,0.28],['146.190.124.95','US','unclear',3,0.10],['146.190.124.95','CA','unclear',1,0.08],['146.190.124.95','DE','prober',2,0.01],['147.182.250.67','CA','client',1,0.06],['165.227.194.81','US','unclear',18,1.03],['165.227.194.81','DO','trunk',1,0.41],['165.227.194.81','US','trunk',1,0.23],['165.227.194.81','DE','unclear',1,0.06],['165.227.194.81','US','prober',1,0.00],['167.71.112.11','DE','prober',4,0.01],['185.134.23.8','US','trunk',1,0.14],['185.134.23.8','US','unclear',1,0.08],['185.134.23.8','US','prober',1,0.01],['185.134.23.8','CA','unclear',1,0.00],['185.134.23.8','CA','prober',1,0.00],['192.248.178.127','US','trunk',2,85.04],['192.248.178.127','GB','trunk',2,1.70],['192.248.178.127','CA','unclear',2,0.17],['192.248.178.127','GB','unclear',2,0.08],['192.248.178.127','US','unclear',2,0.05],['192.248.178.127','US','prober',12,0.04],['209.38.67.66','DE','prober',1,0.00],['216.126.227.152','US','trunk',1,19.13]];
+// weekly UDP media (≠5060) per monitored IP and peer country, 63-day flow_records backfill: week, monitored, cc, mb
+const WEEKS = ['Aug 10','Aug 17','Aug 24','Aug 31','Sep 7','Sep 14','Sep 21','Sep 28','Oct 5'];
+const FLOWS = [[0,'138.68.150.143','US',0.013],[0,'143.198.176.127','DE',1.581],[0,'143.198.176.127','US',0.619],[0,'143.198.176.127','CA',0.011],[0,'146.190.124.95','US',1.625],[0,'146.190.124.95','CO',1.437],[0,'165.227.194.81','CA',0.530],[0,'165.227.194.81','US',0.323],[0,'165.227.194.81','NL',0.171],[0,'165.227.194.81','BG',0.018],[1,'138.68.150.143','US',0.016],[1,'143.198.176.127','DE',1.121],[1,'143.198.176.127','US',0.437],[1,'143.198.176.127','CA',0.014],[1,'146.190.124.95','US',0.472],[1,'146.190.124.95','CO',0.415],[1,'165.227.194.81','US',0.095],[1,'192.248.178.127','US',1.111],[1,'192.248.178.127','SG',0.012],[2,'138.68.150.143','US',0.025],[2,'143.198.176.127','DE',2.425],[2,'143.198.176.127','US',1.010],[2,'143.198.176.127','CA',0.018],[2,'146.190.124.95','US',1.278],[2,'146.190.124.95','CO',1.203],[2,'165.227.194.81','US',0.310],[2,'192.248.178.127','US',2.426],[3,'64.225.32.104','GB',0.012],[3,'138.68.150.143','US',0.052],[3,'143.198.176.127','DE',1.723],[3,'143.198.176.127','US',0.878],[3,'146.190.124.95','US',4.189],[3,'146.190.124.95','CO',3.847],[3,'165.227.194.81','US',1.338],[3,'165.227.194.81','DE',0.013],[3,'185.134.23.8','US',0.012],[3,'192.248.178.127','US',0.132],[3,'209.38.67.66','US',0.011],[4,'64.225.32.104','GB',0.037],[4,'137.184.173.234','CA',0.039],[4,'138.68.150.143','US',0.408],[4,'138.68.150.143','AU',0.027],[4,'138.68.150.143','GB',0.011],[4,'143.198.176.127','DE',150.562],[4,'143.198.176.127','FI',8.458],[4,'143.198.176.127','US',2.434],[4,'143.198.176.127','SG',1.821],[4,'146.190.124.95','CO',18.576],[4,'146.190.124.95','US',17.883],[4,'146.190.124.95','MX',0.074],[4,'146.190.124.95','CA',0.020],[4,'147.182.250.67','CA',0.042],[4,'147.182.250.67','US',0.016],[4,'165.227.194.81','US',11.931],[4,'165.227.194.81','JM',0.174],[4,'165.227.194.81','DO',0.125],[4,'165.227.194.81','DE',0.048],[4,'165.227.194.81','CH',0.012],[4,'165.227.194.81','CA',0.012],[4,'185.134.23.8','US',0.166],[4,'192.248.178.127','US',2.244],[4,'192.248.178.127','GB',0.998],[4,'192.248.178.127','CA',0.021],[4,'209.38.67.66','US',0.079],[4,'216.126.227.152','US',0.014],[5,'64.225.32.104','GB',0.016],[5,'64.225.32.104','FR',0.010],[5,'128.199.103.165','FR',0.015],[5,'137.184.173.234','CA',0.043],[5,'138.68.150.143','US',0.423],[5,'138.68.150.143','AU',0.033],[5,'138.68.150.143','GB',0.022],[5,'138.68.150.143','FR',0.010],[5,'143.198.172.85','US',0.016],[5,'143.198.176.127','DE',16.189],[5,'143.198.176.127','US',5.859],[5,'143.198.176.127','CA',0.022],[5,'146.190.124.95','CO',18.297],[5,'146.190.124.95','US',17.737],[5,'146.190.124.95','MX',0.081],[5,'146.190.124.95','CA',0.025],[5,'147.182.250.67','CA',0.067],[5,'165.227.194.81','US',10.823],[5,'165.227.194.81','DO',0.653],[5,'165.227.194.81','DE',0.396],[5,'165.227.194.81','JM',0.157],[5,'165.227.194.81','CZ',0.022],[5,'165.227.194.81','NL',0.021],[5,'165.227.194.81','CA',0.020],[5,'185.134.23.8','US',0.097],[5,'192.248.178.127','US',16.251],[5,'192.248.178.127','GB',1.165],[5,'192.248.178.127','CA',0.063],[5,'209.38.67.66','US',0.031],[5,'216.126.227.152','US',0.035],[5,'216.126.227.152','DE',0.015],[6,'64.225.32.104','GB',0.034],[6,'137.184.173.234','CA',0.039],[6,'138.68.150.143','US',0.392],[6,'138.68.150.143','AU',0.060],[6,'138.68.150.143','GB',0.032],[6,'143.198.172.85','US',12.262],[6,'143.198.172.85','DO',0.760],[6,'143.198.172.85','BS',0.041],[6,'143.198.172.85','JM',0.033],[6,'143.198.172.85','GB',0.011],[6,'143.198.176.127','DE',25.699],[6,'143.198.176.127','US',10.614],[6,'143.198.176.127','CA',0.050],[6,'146.190.124.95','CO',19.902],[6,'146.190.124.95','US',18.352],[6,'146.190.124.95','MX',0.063],[6,'146.190.124.95','CA',0.024],[6,'147.182.250.67','CA',0.043],[6,'147.182.250.67','BR',0.015],[6,'165.227.194.81','US',0.086],[6,'185.134.23.8','US',0.086],[6,'192.248.178.127','US',25.214],[6,'192.248.178.127','GB',0.498],[6,'192.248.178.127','CA',0.043],[6,'209.38.67.66','US',0.054],[6,'216.126.227.152','US',4.812],[7,'137.184.173.234','CA',0.045],[7,'138.68.150.143','US',0.235],[7,'138.68.150.143','AU',0.029],[7,'138.68.150.143','GB',0.020],[7,'143.198.172.85','US',16.835],[7,'143.198.172.85','DO',1.610],[7,'143.198.172.85','CA',0.178],[7,'143.198.172.85','JM',0.059],[7,'143.198.172.85','IT',0.052],[7,'143.198.172.85','NL',0.010],[7,'143.198.176.127','DE',28.731],[7,'143.198.176.127','US',11.912],[7,'143.198.176.127','CA',0.037],[7,'146.190.124.95','CO',30.707],[7,'146.190.124.95','US',28.802],[7,'146.190.124.95','MX',0.073],[7,'146.190.124.95','CA',0.023],[7,'147.182.250.67','CA',0.052],[7,'147.182.250.67','BR',0.018],[7,'165.227.194.81','US',0.123],[7,'192.248.178.127','US',28.537],[7,'192.248.178.127','GB',0.035],[7,'192.248.178.127','CA',0.027],[7,'209.38.67.66','US',0.088],[7,'216.126.227.152','US',6.460],[8,'64.225.32.104','GB',0.037],[8,'137.184.173.234','CA',0.026],[8,'138.68.150.143','US',0.062],[8,'138.68.150.143','DE',0.015],[8,'138.68.150.143','AU',0.014],[8,'143.198.172.85','US',22.505],[8,'143.198.172.85','DO',1.449],[8,'143.198.172.85','CA',0.267],[8,'143.198.172.85','JM',0.139],[8,'143.198.172.85','JP',0.044],[8,'143.198.172.85','DE',0.017],[8,'143.198.176.127','DE',17.052],[8,'143.198.176.127','US',7.124],[8,'143.198.176.127','CA',0.022],[8,'146.190.124.95','CO',13.226],[8,'146.190.124.95','US',12.110],[8,'146.190.124.95','MX',0.074],[8,'147.182.250.67','CA',0.074],[8,'147.182.250.67','US',0.024],[8,'165.227.194.81','US',0.063],[8,'167.71.112.11','US',0.040],[8,'167.71.112.11','FR',0.013],[8,'185.134.23.8','US',0.050],[8,'192.248.178.127','US',16.996],[8,'192.248.178.127','GB',0.091],[8,'192.248.178.127','CA',0.043],[8,'209.38.67.66','US',0.056],[8,'216.126.227.152','US',9.090]];
+const ISO = {US:840,DE:276,CO:170,DO:214,GB:826,CA:124,MX:484,RO:642,JM:388,FR:250,NL:528,BG:100,SG:702,FI:246,CH:756,AU:36,BR:76,CZ:203,IT:380,BS:44,JP:392,ES:724,IN:356,RU:643,PK:586,SE:752,BE:56,PA:591,AR:32,PE:604,PH:608,VN:704,ZA:710,TR:792,UA:804,PL:616,HK:344,ID:360,IE:372,PT:620,AT:40,DK:208,NO:578,IL:376,AE:784,TH:764,MY:458,NZ:554,VE:862,EC:218,GT:320,HN:340,PR:630,TT:780,HT:332,CU:192,CR:188,KR:410,TW:158,CL:152,MD:498,SI:705,JO:400,BD:50,RS:688,AL:8};
+const CNAME = {US:'United States',DE:'Germany',CO:'Colombia',DO:'Dominican Republic',GB:'United Kingdom',CA:'Canada',MX:'Mexico',RO:'Romania',JM:'Jamaica',FR:'France',NL:'Netherlands',BG:'Bulgaria',SG:'Singapore',FI:'Finland',CH:'Switzerland',AU:'Australia',BR:'Brazil',CZ:'Czechia',IT:'Italy',BS:'Bahamas',JP:'Japan'};
+const ROLEC = {trunk:'#F5A623',client:'#3DD68C',prober:'#9199A8',unclear:'#3A4254'};
+// class per (monitored, peer cc) for trunk pairs, from identities
+const PAIRCLS = {}; T.forEach(r => { const k = r[0] + '|' + r[2]; const c = cls(r[13]); PAIRCLS[k] = PAIRCLS[k] || {}; PAIRCLS[k][c] = (PAIRCLS[k][c] || 0) + r[3]; });
+
+const S = { mode:'roles', roles:new Set(['trunk','client']), mon:'', week:8, hideUS:false, country:null };
+const svg = d3.select('#map'); const tip = document.getElementById('tip'); const side = document.getElementById('side');
+const mons = Object.keys(HOME); document.getElementById('monsel').innerHTML += mons.map(m => '<option value="' + m + '">' + m + (NAMES[m] ? ' — ' + NAMES[m] : '') + '</option>').join('');
+let proj, path, g, feats = {}, zoomBehavior;
+const MW = () => svg.node().clientWidth || 900, H = 540;
+
+function hash(s){ let h = 0; for (const ch of s) h = (h * 31 + ch.charCodeAt(0)) >>> 0; return h; }
+// 110m outline has no microstates; place those by hand so nothing silently vanishes
+const SMALL = {SG:[103.82,1.35], HK:[114.17,22.30], BH:[50.55,26.05], MT:[14.40,35.90], AW:[-69.97,12.52], BB:[-59.55,13.19], MV:[73.50,3.20], SC:[55.49,-4.68], AD:[1.52,42.51], LI:[9.55,47.15], MC:[7.42,43.73], XK:[20.90,42.60], CW:[-68.97,12.17], KY:[-81.25,19.32], VG:[-64.62,18.42], GI:[-5.35,36.14], MO:[113.55,22.19], BM:[-64.75,32.30]};
+function centroid(cc){ const f = feats[ISO[cc]]; return f ? d3.geoCentroid(f) : (SMALL[cc] || null); }
+function jitter(cc, key, r){ const c = centroid(cc); if (!c) return null; const a = (hash(key) % 360) * Math.PI / 180; return [c[0] + r * Math.cos(a), c[1] + r * 0.6 * Math.sin(a)]; }
+function monPt(m){ const c = centroid(HOME[m]); if (!c) return null; const i = mons.filter(x => HOME[x] === HOME[m]).indexOf(m); if (!i) return c; const a = i * 1.1; return [c[0] + 2.4 * Math.cos(a), c[1] + 1.6 * Math.sin(a)]; }
+
+function edges(){
+  if (S.mode === 'roles') {
+    const agg = {};
+    PAIRS.forEach(([m, cc, role, n, mb]) => { if (!S.roles.has(role)) return; if (S.mon && m !== S.mon) return; if (S.hideUS && HOME[m] === 'US' && cc === 'US') return;
+      const k = m + '|' + cc; agg[k] = agg[k] || {m, cc, mb:0, pairs:0, roles:{}}; agg[k].mb += mb; agg[k].pairs += n; agg[k].roles[role] = (agg[k].roles[role] || 0) + n; });
+    return Object.values(agg);
+  }
+  return FLOWS.filter(([w, m, cc]) => w === S.week && (!S.mon || m === S.mon) && !(S.hideUS && HOME[m] === 'US' && cc === 'US')).map(([w, m, cc, mb]) => ({m, cc, mb, pairs:null}));
+}
+function edgeColor(e){
+  if (S.mode === 'weekly') return e.cc !== HOME[e.m] ? '#F5A623' : '#4C8DFF';
+  const pc = PAIRCLS[e.m + '|' + e.cc];
+  if (pc && S.roles.has('trunk')) { const top = Object.entries(pc).sort((a,b)=>b[1]-a[1])[0][0]; return CLS[top][0]; }
+  const top = Object.entries(e.roles).sort((a,b)=>b[1]-a[1])[0][0]; return ROLEC[top];
+}
+const wscale = d3.scaleLog().domain([0.01, 200]).range([0.7, 8]).clamp(true);
+
+function render(){
+  if (!g) return;
+  const E = edges().filter(e => monPt(e.m) && centroid(e.cc));
+  const byCC = {}; E.forEach(e => { byCC[e.cc] = (byCC[e.cc] || 0) + e.mb; });
+  const maxMB = Math.max(0.01, ...Object.values(byCC));
+  const fill = d3.scaleLog().domain([0.01, maxMB]).range([0, 1]).clamp(true);
+  g.selectAll('.country').attr('class', d => 'country' + (byCC[d.cc2] ? ' lit' : '')).attr('fill', d => byCC[d.cc2] ? d3.interpolateRgb('#171B22', '#1E3A5F')(fill(byCC[d.cc2])) : '#13161C');
+  const arcs = g.select('.arcs').selectAll('path').data(E, e => e.m + '|' + e.cc);
+  arcs.exit().remove();
+  arcs.enter().append('path').attr('class', 'arc').merge(arcs)
+    .attr('d', e => { const a = monPt(e.m), b = jitter(e.cc, e.m + e.cc, 1.8); if (!a || !b) return null; if (e.cc === HOME[e.m]) { const bb = [b[0] + 1.2, b[1] - 1.2]; return path({type:'LineString', coordinates: d3.range(0, 1.0001, 0.05).map(t => { const p = d3.geoInterpolate(a, bb)(t); return [p[0], p[1] + Math.sin(t * Math.PI) * 2.2]; })}); }
+      const ip = d3.geoInterpolate(a, b); return path({type:'LineString', coordinates: d3.range(0, 1.0001, 1/40).map(ip)}); })
+    .attr('stroke', edgeColor).attr('stroke-width', e => wscale(e.mb)).attr('class', e => 'arc' + (S.country && e.cc !== S.country ? ' dim' : ''))
+    .on('mousemove', (ev, e) => showTip(ev, '<b>' + e.m + '</b> → <b>' + e.cc + '</b> ' + (CNAME[e.cc] || '') + '<br><span class="mono">' + e.mb.toFixed(2) + ' MB' + (e.pairs ? ' · ' + e.pairs + ' pair' + (e.pairs>1?'s':'') + ' · ' + Object.entries(e.roles).map(([r,n]) => r + ' ×' + n).join(', ') : ' · ' + WEEKS[S.week]) + '</span>' + (PAIRCLS[e.m + '|' + e.cc] ? '<br><span class="mono">' + Object.entries(PAIRCLS[e.m + '|' + e.cc]).map(([c,v]) => CLS[c][1] + ' ' + v.toFixed(1) + ' MB').join(' · ') + '</span>' : '')))
+    .on('mouseleave', hideTip).on('click', (ev, e) => { S.country = S.country === e.cc ? null : e.cc; render(); });
+  const nodes = g.select('.nodes').selectAll('path').data(mons.filter(m => (!S.mon || m === S.mon) && monPt(m)), m => m);
+  nodes.exit().remove();
+  nodes.enter().append('path').attr('class', 'node').merge(nodes)
+    .attr('transform', m => { const p = proj(monPt(m)); return 'translate(' + p[0] + ',' + p[1] + ')'; })
+    .attr('d', d3.symbol().type(d3.symbolDiamond).size(m => KIND[m] ? 110 : 60))
+    .attr('fill', m => KIND[m] === 'cvs' ? '#E5484D' : KIND[m] === 'trunk' ? '#F5A623' : '#9199A8').attr('stroke', '#E7E9ED')
+    .on('mousemove', (ev, m) => showTip(ev, '<b>' + m + '</b>' + (NAMES[m] ? ' — ' + NAMES[m] : '') + '<br><span class="mono">home ' + HOME[m] + ' · click to focus</span>')).on('mouseleave', hideTip)
+    .on('click', (ev, m) => { S.mon = S.mon === m ? '' : m; document.getElementById('monsel').value = S.mon; render(); });
+  renderSide(E, byCC);
+  document.getElementById('maplegend').innerHTML = (S.mode === 'roles'
+    ? Object.entries(CLS).map(([k,[c,n]]) => '<span class="lg" style="margin:0"><i style="background:' + c + '"></i>' + n + '</span>').join('') + '<span class="lg" style="margin:0"><i style="background:#3DD68C"></i>client (no identity)</span>'
+    : '<span class="lg" style="margin:0"><i style="background:#4C8DFF"></i>domestic</span><span class="lg" style="margin:0"><i style="background:#F5A623"></i>cross-border</span>') + '<span class="lg" style="margin:0"><i style="background:#E5484D;transform:rotate(45deg);border-radius:0"></i>monitored IP</span>';
+}
+function renderSide(E, byCC){
+  const tot = E.reduce((a,e)=>a+e.mb,0); const abroad = E.filter(e => e.cc !== HOME[e.m]).reduce((a,e)=>a+e.mb,0);
+  let own = 0, carrier = 0; if (S.mode === 'roles') E.forEach(e => { if (e.cc === HOME[e.m]) return; const pc = PAIRCLS[e.m + '|' + e.cc]; if (!pc) { carrier += e.mb; return; } Object.entries(pc).forEach(([c,v]) => { if (c === 'cloud' || c === 'bph') own += v; else carrier += v; }); });
+  const rows = Object.entries(byCC).sort((a,b)=>b[1]-a[1]);
+  side.innerHTML = '<div class="hd"><div style="font-size:13px;font-weight:600">' + (S.mode === 'roles' ? 'SIP peer pairs · 30d' : 'UDP media · week of ' + WEEKS[S.week]) + (S.mon ? ' · ' + S.mon : '') + '</div><div style="font-size:11px;color:#9199A8;margin-top:4px" class="mono">' + tot.toFixed(1) + ' MB · <span style="color:#F5A623">' + (tot ? Math.round(100*abroad/tot) : 0) + '% cross-border</span>' + (S.mode === 'roles' && abroad ? '<br>abroad: own nodes ' + Math.round(100*own/abroad) + '% · carriers ' + Math.round(100*carrier/abroad) + '%' : '') + '</div><div style="font-size:10px;color:#5D6472;margin-top:5px;line-height:1.4">cross-border = peer country ≠ the monitored IP\'s own country (so the DE-hosted node\'s US trunk counts). The strip below uses "non-US" — a different question, hence a different number.</div></div>' +
+    rows.map(([cc, mb]) => { const es = E.filter(e => e.cc === cc); const on = S.country === cc;
+      const peers = on && S.mode === 'roles' ? T.filter(r => r[2] === cc && (!S.mon || r[0] === S.mon) && S.roles.has('trunk')).map(r => '<div class="peer"><span class="mono">' + r[1] + '</span> ↔ ' + r[0] + '<br>' + r[10] + ' · ' + CLS[cls(r[13])][1] + (r[12] ? ' · ' + r[12] : '') + ' · <span class="mono">' + r[3].toFixed(1) + ' MB</span></div>').join('') + es.map(e => Object.entries(e.roles).filter(([r]) => r !== 'trunk').map(([r,n]) => '<div class="peer">' + e.m + ' · ' + n + ' ' + r + ' pair' + (n>1?'s':'') + ' (no identity row)</div>').join('')).join('') : on ? es.map(e => '<div class="peer">' + e.m + ' → ' + cc + ' <span class="mono">' + e.mb.toFixed(2) + ' MB</span></div>').join('') : '';
+      return '<div class="srow' + (on ? ' on' : '') + '" data-cc="' + cc + '"><span class="cc">' + cc + '</span><span style="flex:1;color:#9199A8">' + (CNAME[cc] || cc) + '<span class="sub">' + es.length + ' monitored IP' + (es.length>1?'s':'') + (S.mode === 'roles' ? ' · ' + es.reduce((a,e)=>a+e.pairs,0) + ' pairs' : '') + '</span></span><span class="mb">' + (mb >= 1 ? mb.toFixed(1) + ' MB' : (mb*1000).toFixed(0) + ' KB') + '</span></div>' + peers; }).join('');
+  side.querySelectorAll('.srow').forEach(r => r.addEventListener('click', () => { S.country = S.country === r.dataset.cc ? null : r.dataset.cc; render(); }));
+}
+function showTip(ev, html){ tip.innerHTML = html; tip.style.display = 'block'; const box = svg.node().parentElement.getBoundingClientRect(); tip.style.left = (ev.clientX - box.left + 14) + 'px'; tip.style.top = (ev.clientY - box.top + 14) + 'px'; }
+function hideTip(){ tip.style.display = 'none'; }
+
+async function initMap(){
+  try {
+    const world = await fetch('vendor/world-110m.json').then(r => r.ok ? r.json() : Promise.reject()).catch(() => fetch('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(r => r.json()));
+    const fc = topojson.feature(world, world.objects.countries);
+    const byNum = {}; Object.entries(ISO).forEach(([cc, n]) => byNum[n] = cc);
+    fc.features.forEach(f => { feats[+f.id] = f; f.cc2 = byNum[+f.id] || null; });
+    proj = d3.geoNaturalEarth1(); path = d3.geoPath(proj);
+    const fit = () => { const w = Math.max(320, MW()); svg.attr('viewBox', '0 0 ' + w + ' ' + H); proj.fitExtent([[10, 10], [w - 10, H - 10]], {type:'Sphere'}); g.select('.sphere').attr('d', path({type:'Sphere'})); g.selectAll('.country').attr('d', path); };
+    g = svg.append('g');
+    g.append('path').attr('class', 'sphere').attr('fill', '#0F1217').attr('stroke', '#262B35');
+    g.append('g').selectAll('path').data(fc.features).enter().append('path').attr('class', 'country')
+      .on('mousemove', (ev, d) => { if (!d.cc2) return; showTip(ev, '<b>' + (CNAME[d.cc2] || d.cc2) + '</b><br><span class="mono">click to list peers</span>'); }).on('mouseleave', hideTip)
+      .on('click', (ev, d) => { if (!d.cc2) return; S.country = S.country === d.cc2 ? null : d.cc2; render(); });
+    g.append('g').attr('class', 'arcs'); g.append('g').attr('class', 'nodes');
+    zoomBehavior = d3.zoom().scaleExtent([1, 8]).on('zoom', ev => g.attr('transform', ev.transform));
+    svg.call(zoomBehavior);
+    document.getElementById('mapmsg').style.display = 'none';
+    fit(); render();
+    let rt = null; new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(() => { fit(); render(); }, 120); }).observe(svg.node());
+  } catch (e) { document.getElementById('mapmsg').innerHTML = 'World outline unavailable — this mock loads d3 and world-atlas from cdn.jsdelivr.net, so it needs network access. (' + e.message + ')'; }
+}
+document.querySelectorAll('[data-mode]').forEach(b => b.addEventListener('click', () => { S.mode = b.dataset.mode; document.querySelectorAll('[data-mode]').forEach(x => x.classList.toggle('on', x === b)); document.getElementById('rolectl').style.display = S.mode === 'roles' ? 'flex' : 'none'; document.getElementById('weekctl').style.display = S.mode === 'weekly' ? 'flex' : 'none'; render(); }));
+document.querySelectorAll('[data-role]').forEach(b => b.addEventListener('click', () => { b.classList.toggle('on'); b.classList.contains('on') ? S.roles.add(b.dataset.role) : S.roles.delete(b.dataset.role); render(); }));
+document.getElementById('monsel').addEventListener('change', ev => { S.mon = ev.target.value; render(); });
+document.getElementById('wk').addEventListener('input', ev => { S.week = +ev.target.value; document.getElementById('wklbl').textContent = WEEKS[S.week]; render(); });
+let timer = null; document.getElementById('play').addEventListener('click', ev => { if (timer) { clearInterval(timer); timer = null; ev.target.textContent = '▶ play'; return; } ev.target.textContent = '■ stop'; timer = setInterval(() => { S.week = (S.week + 1) % 9; document.getElementById('wk').value = S.week; document.getElementById('wklbl').textContent = WEEKS[S.week]; render(); }, 1000); });
+document.getElementById('hideus').addEventListener('click', ev => { S.hideUS = !S.hideUS; ev.target.classList.toggle('on', S.hideUS); render(); });
+document.getElementById('reset').addEventListener('click', () => { S.country = null; S.mon = ''; document.getElementById('monsel').value = ''; if (zoomBehavior) svg.transition().duration(400).call(zoomBehavior.transform, d3.zoomIdentity); render(); });
+// Local vendor copies first (no external requests); CDN only if they're missing (e.g. the page is viewed somewhere relative paths don't resolve).
+const loadScript = src => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = () => rej(new Error('failed to load ' + src)); document.head.appendChild(s); });
+(async () => {
+  try {
+    if (typeof d3 === 'undefined') await loadScript('https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js');
+    if (typeof topojson === 'undefined') await loadScript('https://cdn.jsdelivr.net/npm/topojson-client@3/dist/topojson-client.min.js');
+    await initMap();
+  } catch (e) { document.getElementById('mapmsg').innerHTML = 'Map libraries unavailable — vendor/ copies not found and no network for the CDN fallback. (' + e.message + ')'; }
+})();
 </script>
 </body>
 </html>

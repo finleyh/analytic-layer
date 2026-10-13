@@ -3,8 +3,17 @@
 Nine screens, dark SOC-console aesthetic (IBM Plex Sans/Mono, `#0B0D10`
 background): `Main.dc.html` (Overview), `Watchlist.dc.html` (Watchlist —
 IPs), `Domains.dc.html` (Domains — by owner / all / cross-links & gaps),
-`Geo.dc.html` (Geo — where each monitored IP's SIP media goes, by peer
-country and provider class; weekly non-US trend; trunk identities),
+`Geo.dc.html` (Geo — an interactive world map of great-circle arcs from
+each monitored IP to its peer countries, with a SIP-peer-roles mode and a
+scrubbable weekly mode, role/IP filters, zoom, hover and a click-a-country
+peer list; then per-IP stacked bars by peer country and provider class,
+the weekly non-US trend, country tiles, trunk identities — the map uses
+d3 v7, topojson-client and the world-atlas 110 m outline, vendored under
+`vendor/` (395 KB total, no external requests; it falls back to
+cdn.jsdelivr.net only if the local copies can't be reached, e.g. when the
+file is opened somewhere relative paths don't resolve). For local viewing
+with a server, `.claude/launch.json` has a `mockups` config —
+`python3 -m http.server 8765 --directory design/mockups`),
 `FlowGraph.dc.html` (Flow graph), `EntityDetail.dc.html` (Entity detail,
 IP), `DomainDetail.dc.html` (Entity detail, domain), `TopTalkers.dc.html`
 (Top talkers), `CandidateReview.dc.html` (Candidate review). Open any of

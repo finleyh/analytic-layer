@@ -457,12 +457,32 @@ test it against the data it has:
   but 3 / 23 wholesale-VoIP and 1 / 30 mobile. Country-level views are
   honest today; a dot map is not.
 
-Screen: a per-monitored-IP 100%-stacked bar by (peer country × provider
-class) with non-US segments marked; the weekly non-US trend (overall +
-four small multiples) from a `flow_records` backfill; country tiles
-(not a map); the 30 trunk identities with ASN holder, PeeringDB type,
-rDNS, media, `overnight_share` as a "sleeps?" bar, concurrency, call
-median, scan presence.
+Screen: an **interactive map** (d3 + world-atlas 110m from jsdelivr) —
+great-circle arcs from each monitored IP's home country (its own
+`flow_records` country field) to peer countries, width ~ log bytes,
+country fill ~ log bytes, monitored IPs as diamonds (red = confirmed CVS,
+orange = SIP trunk). Two modes: *SIP peer roles · 30d* (the 130
+`sip_peer_candidates` pairs, arcs colored by the peer's provider class
+from `sip_peer_identities`, so a foreign carrier and an own-node-abroad
+look different) and *All UDP media · by week* (every ≠5060 UDP flow per
+week from the 63-day backfill, scrub or auto-play across the 9 weeks).
+Filters: role chips, monitored-IP select (or click a diamond), hide
+US→US; zoom/pan; hover tooltips on arcs, countries and nodes; click a
+country for a side-panel list of its peers with identity rows. All
+endpoints sit at jittered country centroids — the honest placement for
+the geo currently available. Below it: a per-monitored-IP 100%-stacked
+bar by (peer country × provider class) with non-US segments marked; the
+weekly non-US trend (overall + four small multiples); country tiles; the
+30 trunk identities with ASN holder, PeeringDB type, rDNS, media,
+`overnight_share` as a "sleeps?" bar, concurrency, call median, scan
+presence.
+
+What a real dot map needs, when the analyst wants it: lat/lon on the
+carrier provider rows (the geocode-backfill is filling them in), or a
+per-peer geo lookup in `sip_peer_identities` (RIPEstat's GeoLite
+endpoint is already wired for the provider tables). The rule candidate
+this view suggests — "new trunk-role pair in a country this monitored IP
+has never used" — is a one-shot condition over `sip_peer_candidates`.
 
 ### Gotchas and open questions this adds
 
