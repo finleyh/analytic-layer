@@ -484,6 +484,22 @@ endpoint is already wired for the provider tables). The rule candidate
 this view suggests — "new trunk-role pair in a country this monitored IP
 has never used" — is a one-shot condition over `sip_peer_candidates`.
 
+### Sankey (Flow graph page, second tab)
+
+Only SIP/VoIP traffic (`rtp_media`, `voip_signaling`, `voip_admin`), 30
+days, bytes as width: **peer class → peer IP → monitored IP → port
+family**. Four layers because that is the minimum that answers "what kind
+of network → which host → which of ours → media or signaling" while
+staying legible against 5,805 distinct peers (408 MB): the top 28 peers
+by bytes are individual nodes, every other peer collapses into one
+"other *class* ×N" node per class, and the 208.69.81–82.x pool (eight BL
+Networks hosts with near-identical volume to the SIP trunk node) is
+grouped by default. Monitored↔monitored conversations are stored twice
+upstream (one row per side's pull) and are counted once here. Role tags
+on peers come from `sip_peer_candidates`. Data is a single
+`flow_rollup_daily` aggregation; upstream could materialise it as a
+`sip_peer_bytes_30d` view if the dashboard wants it live.
+
 ### Gotchas and open questions this adds
 
 12. **Rollups drop country and ASN.** `flow_records` carries

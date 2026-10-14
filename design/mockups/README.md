@@ -14,7 +14,11 @@ cdn.jsdelivr.net only if the local copies can't be reached, e.g. when the
 file is opened somewhere relative paths don't resolve). For local viewing
 with a server, `.claude/launch.json` has a `mockups` config —
 `python3 -m http.server 8765 --directory design/mockups`),
-`FlowGraph.dc.html` (Flow graph), `EntityDetail.dc.html` (Entity detail,
+`FlowGraph.dc.html` (Flow graph — the hand-laid node graph, plus a
+**Sankey** tab: 30 days of SIP/VoIP bytes as peer class → peer IP →
+monitored IP → port family, top 28 peers individual and the other ~5,800
+collapsed per class, with filters, a min-link slider, hover tracing and
+click-to-pin; d3-sankey vendored), `EntityDetail.dc.html` (Entity detail,
 IP), `DomainDetail.dc.html` (Entity detail, domain), `TopTalkers.dc.html`
 (Top talkers), `CandidateReview.dc.html` (Candidate review). Open any of
 them directly in a browser; the nav links between them work as plain

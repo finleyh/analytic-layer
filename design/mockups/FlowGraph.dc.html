@@ -23,6 +23,28 @@ a:hover{color:#78AAFF}
 .nodelabel{position:absolute;font-size:11px;color:#9199A8;white-space:nowrap}
 .dn{font-size:12px;color:#9199A8;line-height:1.5;display:flex;gap:8px}
 .dn b{color:#E7E9ED;font-weight:600}
+.tab{all:unset;cursor:pointer;font-size:13px;font-weight:500;padding:9px 4px;color:#5D6472;border-bottom:2px solid transparent}
+.tab.active{color:#E7E9ED;border-bottom:2px solid #4C8DFF}
+.src{font-size:10px;font-family:'IBM Plex Mono',monospace;color:#5D6472;background:#0F1217;border:1px solid #1B2029;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.ctl{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid #1B2029}
+.ctl label{font-size:10px;color:#5D6472;text-transform:uppercase;letter-spacing:0.04em;margin-right:4px}
+.tog{all:unset;cursor:pointer;font-size:11px;font-weight:500;padding:5px 11px;border-radius:999px;border:1px solid #262B35;color:#9199A8;background:transparent}
+.tog.on{background:#1B2029;border-color:#3A4254;color:#E7E9ED}
+select.sel{background:#0F1217;color:#E7E9ED;border:1px solid #262B35;border-radius:6px;padding:5px 8px;font-size:12px;font-family:'IBM Plex Mono',monospace}
+input[type=range]{accent-color:#4C8DFF;width:140px}
+#sk{width:100%;display:block}
+.sk-link{fill:none;mix-blend-mode:screen;opacity:0.42;transition:opacity .12s}
+.sk-link.hl{opacity:0.9}.sk-link.dim{opacity:0.06}
+.sk-node rect{stroke:#0B0D10;stroke-width:1;cursor:pointer}
+.sk-node.dim rect{opacity:0.25}
+.sk-node text{font-size:10px;fill:#C9CED8;pointer-events:none}
+.sk-node.dim text{opacity:0.25}
+.sk-node .role{fill:#F5A623;font-weight:600}
+.sk-node .meta{fill:#5D6472}
+.lhd{font-size:10px;font-weight:600;letter-spacing:0.04em;color:#5D6472;text-transform:uppercase}
+.tip{position:absolute;pointer-events:none;background:#171B22;border:1px solid #3A4254;border-radius:7px;padding:8px 10px;font-size:11px;line-height:1.5;color:#E7E9ED;max-width:300px;z-index:5;display:none;box-shadow:0 6px 20px rgba(0,0,0,0.5)}
+.tip .mono{color:#9199A8}
+.note{font-size:11px;color:#5D6472;line-height:1.5;padding:12px 20px 14px 20px;border-top:1px solid #1B2029}
 </style>
 </head>
 <body>
@@ -62,6 +84,12 @@ a:hover{color:#78AAFF}
     </div>
   </div>
 
+  <div style="display:flex;gap:28px;border-bottom:1px solid #262B35;margin-bottom:22px">
+    <button class="tab active" data-tab="graph">Node graph</button>
+    <button class="tab" data-tab="sankey">Sankey — SIP/VoIP bytes, 30d</button>
+  </div>
+
+  <div id="tab-graph">
   <div style="display:flex;gap:24px;align-items:flex-start;flex-wrap:wrap">
 
     <div class="card" style="width:800px;max-width:100%;height:620px;position:relative;overflow:hidden;flex-shrink:0">
@@ -163,6 +191,27 @@ a:hover{color:#78AAFF}
     </div>
 
   </div>
+  </div>
+
+  <div id="tab-sankey" style="display:none">
+    <div class="card" style="overflow:hidden;margin-bottom:18px">
+      <div class="ctl">
+        <div style="display:flex;align-items:center;gap:6px"><label>Monitored IP</label><select class="sel" id="sk-mon"><option value="">all 15</option></select></div>
+        <div style="display:flex;align-items:center;gap:6px"><label>Port family</label><button class="tog on" data-fam="">all</button><button class="tog" data-fam="rtp_media" style="color:#4C8DFF">rtp_media</button><button class="tog" data-fam="voip_signaling" style="color:#D946EF">voip_signaling</button><button class="tog" data-fam="voip_admin" style="color:#F5A623">voip_admin</button></div>
+        <div style="display:flex;align-items:center;gap:6px"><label>Min link</label><input type="range" id="sk-min" min="0" max="6" step="1" value="2"><span class="mono" id="sk-minlbl" style="font-size:11px;width:60px">≥ 0.05 MB</span></div>
+        <button class="tog on" id="sk-pool">group the 208.69.81–82.x pool</button>
+        <button class="tog" id="sk-reset">clear highlight</button>
+        <div style="flex:1"></div>
+        <span class="src" id="sk-stats"></span>
+      </div>
+      <div style="position:relative">
+        <div style="display:grid;grid-template-columns:repeat(4,1fr);padding:10px 20px 0 20px"><span class="lhd">peer class</span><span class="lhd" style="text-align:center">peer IP · top 28 by bytes, rest collapsed</span><span class="lhd" style="text-align:center">monitored IP</span><span class="lhd" style="text-align:right">port family</span></div>
+        <svg id="sk"></svg>
+        <div class="tip" id="sk-tip"></div>
+      </div>
+      <div class="note">Width = bytes of <span class="mono">rtp_media</span> + <span class="mono">voip_signaling</span> + <span class="mono">voip_admin</span> over the last 30 days (<span class="mono">flow_rollup_daily</span>); every other port family is excluded. Left-to-right: what kind of network the peer is (<span class="mono">peer_is_*</span>, first match wins: monitored → bph → cloud → satellite → mobile → residential → wholesale → proxy → unclassified) → the peer host (top 28 by bytes individually, the other 5,777 collapsed into one node per class, labelled with the peer count) → which watched IP it talks to → whether that was media or signaling. A conversation between two monitored IPs is stored twice upstream, once per side's pull; it's counted once here, on the side with the lower address. Hover a node to trace everything through it, click to pin; the role tag on a peer comes from <span class="mono">sip_peer_candidates</span>. The 208.69.81–82.x pool is eight BL Networks hosts with near-identical volume to the SIP trunk node — grouped by default so they read as the one thing they probably are.</div>
+    </div>
+  </div>
 
 </div>
 </div>
@@ -196,6 +245,101 @@ document.querySelectorAll('.node').forEach(n => n.addEventListener('click', () =
   document.getElementById('i-note').textContent = i.note;
   document.getElementById('i-tags').innerHTML = i.tags.map(t => '<span class="chip">' + t + '</span>').join('');
 }));
+document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === b));
+  document.getElementById('tab-graph').style.display = b.dataset.tab === 'graph' ? 'block' : 'none';
+  document.getElementById('tab-sankey').style.display = b.dataset.tab === 'sankey' ? 'block' : 'none';
+  if (b.dataset.tab === 'sankey' && window.skDraw) skDraw();
+}));
+if (location.hash === '#sankey') document.querySelector('[data-tab=sankey]').click();
+</script>
+
+<script src="vendor/d3.v7.min.js"></script>
+<script src="vendor/d3-sankey.v0.12.min.js"></script>
+<script>
+// ---------- sankey: SIP/VoIP bytes, 30d ----------
+// monitored, peer, family, MB, flows, peer class, role (from sip_peer_candidates)
+// peers named other:<class>:<n> are the non-top-28 peers of that class for that monitored IP, collapsed upstream in SQL
+const SK = [
+['143.198.176.127','192.248.178.127','rtp_media',86.165,433461,'monitored','trunk'],['146.190.124.95','45.226.112.91','rtp_media',75.126,432371,'satellite','trunk'],['146.190.124.95','50.116.38.139','rtp_media',60.245,302133,'cloud','trunk'],['143.198.172.85','216.126.227.152','rtp_media',19.535,97875,'monitored','trunk'],['146.190.124.95','139.144.17.68','rtp_media',14.001,70247,'cloud','trunk'],['146.190.124.95','185.182.194.239','voip_signaling',13.436,26580,'unclassified',''],['146.190.124.95','45.226.115.144','rtp_media',5.264,26438,'satellite','trunk'],['146.190.124.95','190.2.155.71','voip_signaling',4.051,8103,'unclassified',''],['143.198.172.85','117.55.202.187','voip_signaling',3.317,5860,'unclassified',''],['143.198.172.85','136.175.82.92','voip_signaling',2.391,4248,'unclassified',''],['146.190.124.95','3.235.74.192','rtp_media',2.359,34884,'cloud','trunk'],['128.199.103.165','190.2.155.71','voip_signaling',2.040,4014,'unclassified',''],['143.198.176.127','162.33.177.141','rtp_media',1.988,33068,'unclassified','trunk'],['143.198.176.127','170.81.198.236','rtp_media',1.837,9199,'unclassified',''],['143.198.172.85','162.19.19.234','voip_signaling',1.793,3178,'cloud',''],['143.198.176.127','51.81.64.133','voip_signaling',1.752,3169,'cloud',''],['143.198.172.85','158.51.78.105','voip_signaling',1.707,3016,'residential',''],['192.248.178.127','165.232.104.188','rtp_media',1.535,7689,'cloud','trunk'],['146.190.124.95','206.0.24.6','voip_signaling',1.434,2023,'residential','client'],['143.198.176.127','208.69.82.149','rtp_media',1.431,7278,'unclassified',''],['143.198.176.127','157.90.226.70','rtp_media',1.410,7155,'cloud','trunk'],['143.198.176.127','208.69.81.188','rtp_media',1.336,6805,'unclassified',''],['143.198.176.127','208.69.81.220','rtp_media',1.327,6748,'unclassified',''],['143.198.176.127','208.69.81.171','rtp_media',1.327,6762,'unclassified',''],['143.198.176.127','208.69.81.187','rtp_media',1.314,6679,'unclassified',''],['143.198.176.127','208.69.82.187','rtp_media',1.292,6581,'unclassified',''],['143.198.176.127','208.69.82.148','rtp_media',1.292,6574,'unclassified',''],['143.198.176.127','208.69.81.172','rtp_media',1.280,6533,'unclassified',''],['146.190.124.95','206.0.24.6','rtp_media',1.135,16284,'residential','client'],['143.198.176.127','192.248.178.127','voip_signaling',1.098,1590,'monitored','trunk'],['128.199.103.165','185.182.194.239','voip_signaling',0.590,1149,'unclassified',''],['167.71.112.11','162.19.19.234','voip_signaling',0.577,1181,'cloud',''],['137.184.173.234','45.148.9.11','voip_signaling',0.545,1244,'bph','client'],['128.199.103.165','45.148.9.11','voip_signaling',0.500,1007,'bph',''],['167.71.112.11','45.148.9.11','voip_signaling',0.425,856,'bph',''],['137.184.173.234','45.148.9.11','rtp_media',0.177,361,'bph','client'],['64.225.32.104','45.148.9.11','voip_signaling',0.093,171,'bph',''],['143.198.176.127','162.33.177.141','voip_signaling',0.073,107,'unclassified','trunk'],['146.190.124.95','45.226.112.91','voip_signaling',0.072,114,'satellite','trunk'],['143.198.172.85','216.126.227.152','voip_signaling',0.063,91,'monitored','trunk'],['146.190.124.95','50.116.38.139','voip_signaling',0.062,88,'cloud','trunk'],['64.225.32.104','136.175.82.92','voip_signaling',0.021,39,'unclassified',''],['146.190.124.95','139.144.17.68','voip_signaling',0.020,30,'cloud','trunk'],['143.198.176.127','157.90.226.70','voip_signaling',0.020,31,'cloud','trunk'],['146.190.124.95','45.226.115.144','voip_signaling',0.019,30,'satellite','trunk'],['192.248.178.127','165.232.104.188','voip_signaling',0.013,23,'cloud','trunk'],['146.190.124.95','3.235.74.192','voip_signaling',0.012,18,'cloud','trunk'],['128.199.103.165','136.175.82.92','voip_signaling',0.003,7,'unclassified',''],['138.68.150.143','45.148.9.11','voip_signaling',0.002,4,'bph',''],
+['143.198.172.85','other:mobile:1642','rtp_media',22.489,112342,'mobile',''],['143.198.176.127','other:wholesale_voip:209','rtp_media',10.410,52147,'wholesale_voip',''],['165.227.194.81','other:mobile:838','rtp_media',8.388,41850,'mobile',''],['143.198.176.127','other:unclassified:829','rtp_media',8.146,41277,'unclassified',''],['143.198.172.85','other:residential:138','rtp_media',7.150,35851,'residential',''],['143.198.172.85','other:cloud:214','rtp_media',3.832,19091,'cloud',''],['143.198.172.85','other:unclassified:193','rtp_media',3.121,15586,'unclassified',''],['143.198.176.127','other:cloud:134','rtp_media',2.613,13023,'cloud',''],['192.248.178.127','other:cloud:115','voip_signaling',2.146,3708,'cloud',''],['185.134.23.8','other:cloud:27','voip_signaling',1.717,3333,'cloud',''],['165.227.194.81','other:unclassified:106','rtp_media',1.537,7668,'unclassified',''],['165.227.194.81','other:residential:87','rtp_media',1.363,6793,'residential',''],['143.198.172.85','other:unclassified:79','voip_signaling',1.347,2350,'unclassified',''],['192.248.178.127','other:cloud:66','rtp_media',1.289,8376,'cloud',''],['167.71.112.11','other:cloud:42','voip_signaling',1.210,2288,'cloud',''],['128.199.103.165','other:cloud:37','voip_signaling',1.122,2007,'cloud',''],['64.225.32.104','other:cloud:51','voip_signaling',0.897,1378,'cloud',''],['146.190.124.95','other:cloud:15','rtp_media',0.772,6833,'cloud',''],['165.227.194.81','other:cloud:74','rtp_media',0.764,3793,'cloud',''],['143.198.176.127','other:cloud:46','voip_signaling',0.763,1339,'cloud',''],['146.190.124.95','other:cloud:44','voip_signaling',0.689,1255,'cloud',''],['138.68.150.143','other:wholesale_voip:173','rtp_media',0.665,3329,'wholesale_voip',''],['64.225.32.104','other:unclassified:22','voip_signaling',0.614,725,'unclassified',''],['146.190.124.95','other:unclassified:9','voip_signaling',0.608,1095,'unclassified',''],['146.190.124.95','other:satellite:5','rtp_media',0.607,4539,'satellite',''],['138.68.150.143','other:unclassified:25','rtp_media',0.594,2971,'unclassified',''],['143.198.176.127','other:unclassified:15','voip_signaling',0.542,1000,'unclassified',''],['143.198.172.85','other:mobile:555','voip_signaling',0.465,924,'mobile',''],['165.227.194.81','other:mobile:385','voip_signaling',0.419,720,'mobile',''],['143.198.172.85','other:cloud:82','voip_signaling',0.335,546,'cloud',''],['165.227.194.81','other:unclassified:47','voip_signaling',0.302,496,'unclassified',''],['143.198.172.85','other:residential:67','voip_signaling',0.281,474,'residential',''],['128.199.103.165','other:unclassified:9','voip_signaling',0.279,541,'unclassified',''],['209.38.67.66','other:cloud:49','voip_signaling',0.253,454,'cloud',''],['137.184.173.234','other:cloud:40','voip_signaling',0.247,564,'cloud',''],['143.198.172.85','other:satellite:7','rtp_media',0.222,1106,'satellite',''],['138.68.150.143','other:cloud:26','voip_signaling',0.221,402,'cloud',''],['138.68.150.143','other:unclassified:3','voip_signaling',0.161,217,'unclassified',''],['185.134.23.8','other:cloud:4','rtp_media',0.157,2480,'cloud',''],['147.182.250.67','other:residential:8','voip_signaling',0.156,1524,'residential',''],['143.198.176.127','other:residential:408','rtp_media',0.149,745,'residential',''],['165.227.194.81','other:satellite:4','rtp_media',0.132,656,'satellite',''],['137.184.173.234','other:unclassified:11','voip_signaling',0.132,246,'unclassified',''],['165.227.194.81','other:cloud:60','voip_signaling',0.119,211,'cloud',''],['143.198.176.127','other:bph:2','voip_signaling',0.113,197,'bph',''],['64.225.32.104','other:monitored:1','rtp_media',0.086,432,'monitored',''],['147.182.250.67','other:unclassified:10','voip_signaling',0.086,756,'unclassified',''],['138.68.150.143','other:mobile:2','rtp_media',0.075,375,'mobile',''],['209.38.67.66','other:wholesale_voip:34','rtp_media',0.068,345,'wholesale_voip',''],['147.182.250.67','other:residential:1','rtp_media',0.060,605,'residential',''],['216.126.227.152','other:cloud:5','rtp_media',0.056,939,'cloud',''],['64.225.32.104','other:cloud:10','rtp_media',0.054,78,'cloud',''],['165.227.194.81','other:residential:36','voip_signaling',0.046,78,'residential',''],['167.71.112.11','other:unclassified:12','voip_admin',0.035,540,'unclassified',''],['146.190.124.95','other:residential:5','voip_signaling',0.032,57,'residential',''],['147.182.250.67','other:mobile:1','voip_signaling',0.030,327,'mobile',''],['147.182.250.67','other:wholesale_voip:5','rtp_media',0.029,145,'wholesale_voip',''],['137.184.173.234','other:residential:2','voip_signaling',0.028,49,'residential',''],['137.184.173.234','other:bph:1','voip_signaling',0.024,45,'bph',''],['147.182.250.67','other:unclassified:11','rtp_media',0.023,106,'unclassified',''],['167.71.112.11','other:cloud:14','rtp_media',0.019,39,'cloud',''],['64.225.32.104','other:bph:2','voip_signaling',0.017,32,'bph',''],['209.38.67.66','other:unclassified:18','voip_signaling',0.017,35,'unclassified',''],['167.71.112.11','other:unclassified:11','voip_signaling',0.017,32,'unclassified',''],['209.38.67.66','other:bph:7','voip_signaling',0.015,37,'bph',''],['138.68.150.143','other:wholesale_voip:1','voip_signaling',0.014,16,'wholesale_voip',''],['64.225.32.104','other:monitored:1','voip_signaling',0.014,24,'monitored',''],['216.126.227.152','other:cloud:2','voip_signaling',0.012,19,'cloud',''],['165.227.194.81','other:bph:2','voip_signaling',0.012,19,'bph',''],['209.38.67.66','other:cloud:9','rtp_media',0.011,20,'cloud',''],['137.184.173.234','other:satellite:3','rtp_media',0.011,9,'satellite',''],['209.38.67.66','other:residential:2','rtp_media',0.011,95,'residential',''],['137.184.173.234','other:cloud:10','rtp_media',0.011,23,'cloud',''],['137.184.173.234','other:unclassified:3','rtp_media',0.010,51,'unclassified',''],['167.71.112.11','other:residential:1','rtp_media',0.005,14,'residential',''],['167.71.112.11','other:residential:3','voip_signaling',0.005,8,'residential',''],['165.227.194.81','other:bph:1','rtp_media',0.005,26,'bph',''],['162.243.77.115','other:residential:1','rtp_media',0.005,12,'residential',''],['146.190.124.95','other:satellite:1','voip_signaling',0.005,9,'satellite',''],['138.68.150.143','other:residential:1','voip_signaling',0.004,5,'residential',''],['128.199.103.165','other:bph:1','voip_signaling',0.004,8,'bph',''],['146.190.124.95','other:residential:3','rtp_media',0.003,4,'residential',''],['167.71.112.11','other:cloud:7','voip_admin',0.003,59,'cloud',''],['167.71.112.11','other:residential:2','voip_admin',0.003,55,'residential',''],['147.182.250.67','other:cloud:8','voip_signaling',0.002,11,'cloud',''],['143.198.176.127','other:residential:2','voip_signaling',0.002,4,'residential',''],['146.190.124.95','other:bph:2','voip_signaling',0.002,4,'bph',''],['138.68.150.143','other:cloud:3','rtp_media',0.002,3,'cloud',''],['128.199.103.165','other:cloud:2','rtp_media',0.002,5,'cloud',''],['209.38.67.66','other:residential:3','voip_signaling',0.002,3,'residential',''],['143.198.172.85','other:satellite:2','voip_signaling',0.002,6,'satellite',''],['143.198.172.85','other:bph:1','voip_signaling',0.001,2,'bph','']
+];
+const SKC = { monitored:'#E5484D', bph:'#E5484D', cloud:'#4C8DFF', satellite:'#8B5CF6', mobile:'#F59E0B', residential:'#2DD4BF', wholesale_voip:'#EC4899', reverse_proxy:'#A3A3A3', unclassified:'#5D6472' };
+const SKN = { monitored:'other watchlist IP', bph:'bulletproof + cloud', cloud:'cloud / hosting', satellite:'satellite', mobile:'mobile', residential:'residential ISP', wholesale_voip:'wholesale VoIP', reverse_proxy:'reverse proxy', unclassified:'unclassified' };
+const SKF = { rtp_media:'#4C8DFF', voip_signaling:'#D946EF', voip_admin:'#F5A623' };
+const SKNAME = {'143.198.172.85':'OUTSIDERS','143.198.176.127':'SIP trunk node','192.248.178.127':'CVS #2 · Vultr DE','216.126.227.152':'Magnus Billing host','165.227.194.81':'OUTSIDERZ "SIP IP"'};
+const MINS = [0, 0.01, 0.05, 0.1, 0.5, 1, 5];
+const SS = { mon:'', fam:'', min:2, pool:true, pin:null };
+const skMon = document.getElementById('sk-mon'); [...new Set(SK.map(r => r[0]))].sort().forEach(m => skMon.insertAdjacentHTML('beforeend', '<option value="' + m + '">' + m + (SKNAME[m] ? ' — ' + SKNAME[m] : '') + '</option>'));
+
+function skBuild(){
+  const rows = SK.filter(r => (!SS.mon || r[0] === SS.mon) && (!SS.fam || r[2] === SS.fam));
+  const nodes = new Map(), links = new Map();
+  const node = (id, layer, label, color, extra) => { if (!nodes.has(id)) nodes.set(id, {id, layer, label, color, mb:0, flows:0, ...extra}); return nodes.get(id); };
+  const link = (s, t, mb, f, color) => { const k = s + '→' + t; const l = links.get(k) || {source:s, target:t, value:0, flows:0, color}; l.value += mb; l.flows += f; links.set(k, l); };
+  // collapse: per-monitored "other" rows into one node per class; optionally the 208.69 pool
+  const pairs = new Map();
+  rows.forEach(([m, p, fam, mb, f, cls, role]) => {
+    let pid = p, plabel = p, extra = {cls, role};
+    if (p.startsWith('other:')) { const [, c, n] = p.split(':'); pid = 'other:' + c; plabel = 'other ' + SKN[c]; extra = {cls:c, role:'', count:(nodes.get('p:' + pid)?.count || 0)}; }
+    else if (SS.pool && /^208\.69\.8[12]\./.test(p)) { pid = 'pool:208.69'; plabel = '208.69.81–82.x pool'; extra = {cls:'unclassified', role:'', count:8}; }
+    const k = m + '|' + pid + '|' + fam; const cur = pairs.get(k) || {m, pid, plabel, fam, mb:0, f:0, cls:extra.cls, role:extra.role, countAdd: p.startsWith('other:') ? +p.split(':')[2] : 0, isOther: p.startsWith('other:')};
+    cur.mb += mb; cur.f += f; if (p.startsWith('other:')) cur.countAdd = Math.max(cur.countAdd, +p.split(':')[2]); pairs.set(k, cur);
+  });
+  const counts = {}; pairs.forEach(x => { if (x.isOther) counts[x.pid] = (counts[x.pid] || 0) + x.countAdd; });
+  const thr = MINS[SS.min];
+  // threshold on the peer→monitored pair (all families) so a pair is either in or out
+  const pairTot = {}; pairs.forEach(x => { const k = x.m + '|' + x.pid; pairTot[k] = (pairTot[k] || 0) + x.mb; });
+  pairs.forEach(x => {
+    if (pairTot[x.m + '|' + x.pid] < thr) return;
+    const c = node('c:' + x.cls, 0, SKN[x.cls], SKC[x.cls], {});
+    const p = node('p:' + x.pid, 1, x.plabel, SKC[x.cls], {cls:x.cls, role:x.role, count: x.isOther ? counts[x.pid] : (x.pid === 'pool:208.69' ? 8 : 0)});
+    const m = node('m:' + x.m, 2, x.m, {'143.198.172.85':'#E5484D','192.248.178.127':'#E5484D','143.198.176.127':'#F5A623'}[x.m] || '#9199A8', {name:SKNAME[x.m]});
+    const f = node('f:' + x.fam, 3, x.fam, SKF[x.fam], {});
+    [c, p, m, f].forEach(n => { n.mb += x.mb; n.flows += x.f; });
+    link(c.id, p.id, x.mb, x.f, SKC[x.cls]); link(p.id, m.id, x.mb, x.f, SKC[x.cls]); link(m.id, f.id, x.mb, x.f, SKF[x.fam]);
+  });
+  return { nodes:[...nodes.values()], links:[...links.values()], tot: rows.reduce((a, r) => a + r[3], 0), shown: [...pairs.values()].filter(x => pairTot[x.m + '|' + x.pid] >= thr).reduce((a, x) => a + x.mb, 0) };
+}
+const skTip = document.getElementById('sk-tip');
+function skShowTip(ev, html){ skTip.innerHTML = html; skTip.style.display = 'block'; const box = skTip.parentElement.getBoundingClientRect(); skTip.style.left = Math.min(ev.clientX - box.left + 14, box.width - 300) + 'px'; skTip.style.top = (ev.clientY - box.top + 14) + 'px'; }
+function skDraw(){
+  const svg = d3.select('#sk'); const W = Math.max(640, svg.node().clientWidth || 1000); const H = 780;
+  svg.attr('viewBox', '0 0 ' + W + ' ' + H).attr('height', H); svg.selectAll('*').remove();
+  const g = skBuild();
+  document.getElementById('sk-stats').textContent = g.shown.toFixed(1) + ' of ' + g.tot.toFixed(1) + ' MB shown · ' + g.nodes.filter(n => n.layer === 1).length + ' peer nodes · ' + g.links.length + ' links';
+  if (!g.nodes.length) return;
+  const sk = d3.sankey().nodeId(d => d.id).nodeWidth(12).nodePadding(5).nodeAlign(d3.sankeyJustify).extent([[150, 8], [W - 170, H - 8]]);
+  const { nodes, links } = sk({ nodes: g.nodes.map(d => ({...d})), links: g.links.map(d => ({...d})) });
+  const L = svg.append('g').selectAll('path').data(links).join('path').attr('class', 'sk-link').attr('d', d3.sankeyLinkHorizontal()).attr('stroke', d => d.color).attr('stroke-width', d => Math.max(1, d.width))
+    .on('mousemove', (ev, d) => skShowTip(ev, '<b>' + d.source.label + '</b> → <b>' + d.target.label + '</b><br><span class="mono">' + d.value.toFixed(2) + ' MB · ' + d.flows.toLocaleString() + ' flows</span>')).on('mouseleave', () => skTip.style.display = 'none');
+  const N = svg.append('g').selectAll('g').data(nodes).join('g').attr('class', 'sk-node');
+  N.append('rect').attr('x', d => d.x0).attr('y', d => d.y0).attr('height', d => Math.max(1, d.y1 - d.y0)).attr('width', d => d.x1 - d.x0).attr('fill', d => d.color).attr('rx', 2)
+    .on('mousemove', (ev, d) => skShowTip(ev, '<b>' + d.label + '</b>' + (d.name ? ' — ' + d.name : '') + (d.role ? ' · <span style="color:#F5A623">' + d.role + '</span>' : '') + (d.count ? ' · ' + d.count + ' peers' : '') + '<br><span class="mono">' + d.mb.toFixed(2) + ' MB · ' + d.flows.toLocaleString() + ' flows · ' + (100 * d.mb / g.shown).toFixed(0) + '% of shown</span>' + (d.layer === 1 && d.cls ? '<br><span class="mono">' + SKN[d.cls] + '</span>' : '')))
+    .on('mouseleave', () => { skTip.style.display = 'none'; if (!SS.pin) skHl(null); }).on('mouseenter', (ev, d) => { if (!SS.pin) skHl(d); }).on('click', (ev, d) => { SS.pin = SS.pin && SS.pin.id === d.id ? null : d; skHl(SS.pin); });
+  N.append('text').attr('x', d => d.x0 < W / 2 ? d.x1 + 6 : d.x0 - 6).attr('y', d => (d.y0 + d.y1) / 2).attr('dy', '0.35em').attr('text-anchor', d => d.x0 < W / 2 ? 'start' : 'end').attr('class', 'mono')
+    .each(function(d){ const t = d3.select(this); const h = d.y1 - d.y0; if (h < 7 && d.layer === 1) return; t.append('tspan').text(d.label); if (d.role) t.append('tspan').attr('class', 'role').text(' ' + d.role); if (d.count) t.append('tspan').attr('class', 'meta').text(' ×' + d.count); if (d.name && h > 14) t.append('tspan').attr('class', 'meta').text(' ' + d.name); if (h > 11) t.append('tspan').attr('class', 'meta').text(' ' + (d.mb >= 1 ? d.mb.toFixed(1) + ' MB' : (d.mb * 1000).toFixed(0) + ' KB')); });
+  function skHl(d){
+    if (!d) { L.classed('hl', false).classed('dim', false); N.classed('dim', false); return; }
+    const keep = new Set([d.id]); const ls = new Set();
+    // walk both directions through the layered graph
+    const grow = (ids, dir) => { let frontier = [...ids]; while (frontier.length) { const next = []; links.forEach(l => { const a = dir === 'down' ? l.source : l.target, b = dir === 'down' ? l.target : l.source; if (frontier.includes(a.id) && !ls.has(l)) { ls.add(l); if (!keep.has(b.id)) { keep.add(b.id); next.push(b.id); } } }); frontier = next; } };
+    // from a middle node, trace its own links only (not the whole neighbourhood's), so the picture stays about this node
+    links.forEach(l => { if (l.source.id === d.id || l.target.id === d.id) { ls.add(l); keep.add(l.source.id); keep.add(l.target.id); } });
+    if (d.layer === 1) { // peer: also continue monitored → family for its share? keep it to direct links to avoid over-claiming
+    }
+    if (d.layer === 0 || d.layer === 3) { grow([...keep], d.layer === 0 ? 'down' : 'up'); }
+    L.classed('hl', l => ls.has(l)).classed('dim', l => !ls.has(l)); N.classed('dim', n => !keep.has(n.id));
+  }
+  window.skHl = skHl;
+}
+document.getElementById('sk-mon').addEventListener('change', ev => { SS.mon = ev.target.value; SS.pin = null; skDraw(); });
+document.querySelectorAll('[data-fam]').forEach(b => b.addEventListener('click', () => { SS.fam = b.dataset.fam; document.querySelectorAll('[data-fam]').forEach(x => x.classList.toggle('on', x === b)); SS.pin = null; skDraw(); }));
+document.getElementById('sk-min').addEventListener('input', ev => { SS.min = +ev.target.value; document.getElementById('sk-minlbl').textContent = '≥ ' + MINS[SS.min] + ' MB'; SS.pin = null; skDraw(); });
+document.getElementById('sk-pool').addEventListener('click', ev => { SS.pool = !SS.pool; ev.target.classList.toggle('on', SS.pool); SS.pin = null; skDraw(); });
+document.getElementById('sk-reset').addEventListener('click', () => { SS.pin = null; if (window.skHl) skHl(null); });
+let skRt = null; new ResizeObserver(() => { if (document.getElementById('tab-sankey').style.display !== 'none') { clearTimeout(skRt); skRt = setTimeout(skDraw, 150); } }).observe(document.getElementById('sk'));
+if (typeof d3 === 'undefined' || !d3.sankey) { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js'; s.onload = () => { const t = document.createElement('script'); t.src = 'https://cdn.jsdelivr.net/npm/d3-sankey@0.12/dist/d3-sankey.min.js'; t.onload = () => { if (document.getElementById('tab-sankey').style.display !== 'none') skDraw(); }; document.head.appendChild(t); }; document.head.appendChild(s); }
 </script>
 </body>
 </html>
