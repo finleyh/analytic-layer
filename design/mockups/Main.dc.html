@@ -3,36 +3,39 @@
 <head>
 <meta charset="utf-8">
 <title>CVS Watch — Overview</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Orbitron:wght@500;600&display=swap">
 <style>
-body{margin:0;background:#0B0D10;color:#E7E9ED;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{margin:0;background:#061214;color:#E8FFF8;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 .mono{font-family:'IBM Plex Mono',monospace}
 a{color:#4C8DFF;text-decoration:none}
 a:hover{color:#78AAFF}
-.navlink{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;font-size:14px;font-weight:500;color:#9199A8}
-.navlink:hover{background:#171B22;color:#E7E9ED}
-.navlink.active{background:#1B2029;color:#E7E9ED}
-.card{background:#141821;border:1px solid #262B35;border-radius:10px}
-.pill{font-size:12px;font-weight:500;padding:5px 12px;border-radius:999px;border:1px solid #262B35;color:#9199A8;background:transparent;cursor:pointer}
-.pill.active{background:#1B2029;border-color:#3A4254;color:#E7E9ED}
+.navlink{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;font-size:14px;font-weight:500;color:#A6D8CD}
+.navlink:hover{background:#0F3133;color:#E8FFF8}
+.navlink.active{background:#133A3C;color:#E8FFF8}
+.card{background:#0C2A2C;border:1px solid #2B7266;border-radius:10px}
+.pill{font-size:12px;font-weight:500;padding:5px 12px;border-radius:999px;border:1px solid #2B7266;color:#A6D8CD;background:transparent;cursor:pointer}
+.pill.active{background:#133A3C;border-color:#3F9C8A;color:#E8FFF8}
 .pill.dim{opacity:0.4;cursor:not-allowed}
-.src{font-size:10px;font-family:'IBM Plex Mono',monospace;color:#5D6472;background:#0F1217;border:1px solid #1B2029;padding:2px 7px;border-radius:4px;white-space:nowrap}
-th{text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em;color:#5D6472;text-transform:uppercase;padding:0 16px 10px 16px;border-bottom:1px solid #262B35}
-td{padding:13px 16px;font-size:13px;border-bottom:1px solid #1B2029}
+.src{font-size:10px;font-family:'IBM Plex Mono',monospace;color:#6FA89E;background:#0A2224;border:1px solid #133A3C;padding:2px 7px;border-radius:4px;white-space:nowrap}
+th{text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em;color:#6FA89E;text-transform:uppercase;padding:0 16px 10px 16px;border-bottom:1px solid #2B7266}
+td{padding:13px 16px;font-size:13px;border-bottom:1px solid #133A3C}
 tr:last-child td{border-bottom:none}
 .bar{display:flex;align-items:center;gap:12px}
-.bar .lbl{width:150px;font-size:12px;color:#9199A8}
-.bar .trk{flex:1;background:#1B2029;border-radius:4px;height:14px;overflow:hidden}
+.bar .lbl{width:150px;font-size:12px;color:#A6D8CD}
+.bar .trk{flex:1;background:#133A3C;border-radius:4px;height:14px;overflow:hidden}
 .bar .fil{height:100%;border-radius:4px}
 .bar .val{width:110px;text-align:right;font-size:12px}
-.note{font-size:11px;color:#5D6472;line-height:1.5;margin-top:14px;padding-top:12px;border-top:1px solid #1B2029}
+.note{font-size:11px;color:#6FA89E;line-height:1.5;margin-top:14px;padding-top:12px;border-top:1px solid #133A3C}
+.chip{font-size:10px;font-family:'IBM Plex Mono',monospace;background:#133A3C;border:1px solid #2B7266;color:#A6D8CD;padding:1px 6px;border-radius:4px;display:inline-block}
+.chip.tip{border-style:dashed;color:#C6EBE2;border-color:#3F9C8A}
 </style>
+<link rel="stylesheet" href="theme.css">
 </head>
 <body>
 
-<div style="display:flex;width:100%;min-height:100vh;background:#0B0D10">
+<div style="display:flex;width:100%;min-height:100vh;background:transparent">
 
-<div style="width:240px;flex-shrink:0;background:#0F1217;border-right:1px solid #262B35;display:flex;flex-direction:column;padding:24px 16px;box-sizing:border-box;gap:4px">
+<div class="sidebar" style="width:240px;flex-shrink:0;background:#0A2224;border-right:1px solid #2B7266;display:flex;flex-direction:column;padding:24px 16px;box-sizing:border-box;gap:4px">
   <div style="display:flex;align-items:center;gap:10px;padding:8px 8px 22px 8px">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4C8DFF" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9" stroke-opacity="0.45"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke-opacity="0.45"/></svg>
     <span style="font-size:15px;font-weight:600;letter-spacing:0.2px">CVS Watch</span>
@@ -46,9 +49,9 @@ tr:last-child td{border-bottom:none}
   <a href="CandidateReview.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l2.2-5h13.6L21 8M3 8v10.5A1.5 1.5 0 004.5 20h15a1.5 1.5 0 001.5-1.5V8M3 8h6.2l.9 3h3.8l.9-3H21"/></svg>Candidates</a>
   <a href="PipelineHealth.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg>Pipeline health</a>
   <div style="flex:1"></div>
-  <div style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-top:1px solid #262B35;margin-top:8px">
-    <div style="width:28px;height:28px;border-radius:50%;background:#1B2029;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#9199A8;flex-shrink:0">JF</div>
-    <div style="font-size:12px;color:#9199A8;line-height:1.4">J. Finley<br><span style="color:#5D6472">Analyst</span></div>
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-top:1px solid #2B7266;margin-top:8px">
+    <div style="width:28px;height:28px;border-radius:50%;background:#133A3C;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#A6D8CD;flex-shrink:0">JF</div>
+    <div style="font-size:12px;color:#A6D8CD;line-height:1.4">J. Finley<br><span style="color:#6FA89E">Analyst</span></div>
   </div>
 </div>
 
@@ -57,40 +60,45 @@ tr:last-child td{border-bottom:none}
   <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:28px;flex-wrap:wrap;gap:16px">
     <div>
       <h1 style="margin:0 0 4px 0;font-size:22px;font-weight:600">Overview</h1>
-      <div style="font-size:13px;color:#5D6472">Last reconciled 4 minutes ago · hourly rollup current · daily views as of 07:00 UTC</div>
+      <div style="font-size:13px;color:#6FA89E">Watch set reconciled hourly from OpenCTI · <span style="color:#E5484D">netflow stale 35 h</span> · daily views as of Oct 14 03:00 UTC</div>
     </div>
     <div style="display:flex;gap:6px;align-items:center">
-      <button class="pill dim" title="24h is only available on widgets backed by flow_rollup_hourly — every daily view below is 1-day buckets, ≤90 min stale">24h</button>
+      <button class="pill dim" title="24h is only available on widgets backed by rollup__flow_hourly — every daily view below is 1-day buckets, ≤90 min stale">24h</button>
       <button class="pill active">7d</button>
       <button class="pill">30d</button>
     </div>
   </div>
 
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;border:1px solid #5A2327;background:#1C1013;border-radius:8px;margin-bottom:20px;font-size:12px;color:#C6EBE2"><span style="width:8px;height:8px;border-radius:50%;background:#E5484D;flex-shrink:0"></span><span><b style="color:#E5484D">Netflow feed stale</b> — newest record Oct 14 03:57 UTC; the puller completes every 4 h with 0 records, so the upstream is the side to ask. Traffic widgets below are the 7d to Oct 9 pull; counts are as of Oct 15. <a href="PipelineHealth.dc.html">Pipeline health →</a></span></div>
   <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(min(150px, 100%), 1fr));gap:16px;margin-bottom:28px">
     <div class="card" style="padding:18px 20px">
-      <div style="font-size:12px;color:#5D6472;margin-bottom:8px">Active monitored IPs</div>
-      <div style="font-size:28px;font-weight:600">15</div>
+      <div style="font-size:12px;color:#6FA89E;margin-bottom:8px">Active monitored IPs</div>
+      <div style="font-size:28px;font-weight:600">16</div>
+      <div style="font-size:10px;color:#6FA89E;margin-top:3px">watch__ips · +51.198.100.9 Oct 13</div>
     </div>
-    <div class="card" style="padding:18px 20px;border-color:#5A2327">
-      <div style="font-size:12px;color:#5D6472;margin-bottom:8px">Confirmed CVS</div>
-      <div style="font-size:28px;font-weight:600;color:#E5484D">2</div>
-    </div>
-    <div class="card" style="padding:18px 20px">
-      <div style="font-size:12px;color:#5D6472;margin-bottom:8px">SIP trunks tagged</div>
-      <div style="font-size:28px;font-weight:600">1</div>
+    <div class="card" style="padding:18px 20px;border-color:#5A4423">
+      <div style="font-size:12px;color:#6FA89E;margin-bottom:8px">Reviewed roles (watched)</div>
+      <div style="font-size:28px;font-weight:600;color:#F5A623">0<span style="font-size:14px;color:#6FA89E;font-weight:500"> / 16</span></div>
+      <div style="font-size:10px;color:#6FA89E;margin-top:3px">review__ip_roles · all pending · proposed: 14 sip_server, 1 sip_trunk, 1 unclear</div>
     </div>
     <div class="card" style="padding:18px 20px">
-      <div style="font-size:12px;color:#5D6472;margin-bottom:8px">Pending candidates</div>
-      <div style="font-size:28px;font-weight:600">2</div>
+      <div style="font-size:12px;color:#6FA89E;margin-bottom:8px">TIP labels on watched IPs</div>
+      <div style="font-size:28px;font-weight:600;color:#C6EBE2">5</div>
+      <div style="font-size:10px;color:#6FA89E;margin-top:3px">3 criminal_voip_service (165.227.194.81 added Oct 15) · 1 sip_trunk · 1 criminal_voip_client — analyst suggestions, never rule inputs</div>
     </div>
     <div class="card" style="padding:18px 20px">
-      <div style="font-size:12px;color:#5D6472;margin-bottom:8px">RTP volume (7d)</div>
-      <div style="font-size:28px;font-weight:600">104.6<span style="font-size:14px;color:#5D6472;font-weight:500"> MB</span></div>
+      <div style="font-size:12px;color:#6FA89E;margin-bottom:8px">Pending review</div>
+      <div style="font-size:28px;font-weight:600">20<span style="font-size:14px;color:#6FA89E;font-weight:500"> ASN</span></div>
+      <div style="font-size:10px;color:#6FA89E;margin-top:3px">+ 48 peer roles · 16 watched roles · 71 unconfirmed SIP pairs</div>
     </div>
-    <div class="card" style="padding:18px 20px;border-color:#3A4254">
-      <div style="font-size:12px;color:#5D6472;margin-bottom:8px">Unclassified peers (7d)</div>
+    <div class="card" style="padding:18px 20px">
+      <div style="font-size:12px;color:#6FA89E;margin-bottom:8px">RTP volume (7d)</div>
+      <div style="font-size:28px;font-weight:600">104.6<span style="font-size:14px;color:#6FA89E;font-weight:500"> MB</span></div>
+    </div>
+    <div class="card" style="padding:18px 20px;border-color:#3F9C8A">
+      <div style="font-size:12px;color:#6FA89E;margin-bottom:8px">Unclassified peers (7d)</div>
       <div style="font-size:28px;font-weight:600">1,754</div>
-      <div style="font-size:11px;color:#5D6472;margin-top:4px">7.6 MB · 6% of bytes · <a href="TopTalkers.dc.html#unclassified">triage →</a></div>
+      <div style="font-size:11px;color:#6FA89E;margin-top:4px">7.6 MB · 6% of bytes · <a href="TopTalkers.dc.html#unclassified">triage →</a></div>
     </div>
   </div>
 
@@ -99,12 +107,12 @@ tr:last-child td{border-bottom:none}
       <div style="font-size:13px;font-weight:600">Domain proof-of-life</div>
       <div style="margin-top:5px"><span class="src">spoiler-alert /status · 18:37 UTC sync</span></div>
     </div>
-    <div><div style="font-size:11px;color:#5D6472">Monitored</div><div style="font-size:20px;font-weight:600">16</div><div style="font-size:11px;color:#9199A8">13 active · <span style="color:#F5A623">3 zombie</span></div></div>
-    <div><div style="font-size:11px;color:#5D6472">Retired</div><div style="font-size:20px;font-weight:600">3</div><div style="font-size:11px;color:#9199A8">0 resurrected</div></div>
-    <div><div style="font-size:11px;color:#5D6472">Due now</div><div style="font-size:20px;font-weight:600">0</div><div style="font-size:11px;color:#9199A8">next 19:01 UTC</div></div>
-    <div><div style="font-size:11px;color:#5D6472">Checks (24h)</div><div style="font-size:20px;font-weight:600">44</div><div style="font-size:11px;color:#3DD68C">0 errors</div></div>
-    <div><div style="font-size:11px;color:#5D6472">Results (24h)</div><div style="font-size:13px;font-weight:600;margin-top:6px" class="mono"><span style="color:#3DD68C">ok 21</span> · <span style="color:#9199A8">empty 17</span> · <span style="color:#F5A623">parked 6</span></div></div>
-    <div><div style="font-size:11px;color:#5D6472">Resolve to a netflow peer</div><div style="font-size:20px;font-weight:600">5</div><div style="font-size:11px;color:#9199A8">of 16 · all via <span class="mono">165.227.194.81</span> · <a href="Watchlist.dc.html#domains">Domains →</a></div></div>
+    <div><div style="font-size:11px;color:#6FA89E">Monitored</div><div style="font-size:20px;font-weight:600">16</div><div style="font-size:11px;color:#A6D8CD">13 active · <span style="color:#F5A623">3 zombie</span></div></div>
+    <div><div style="font-size:11px;color:#6FA89E">Retired</div><div style="font-size:20px;font-weight:600">3</div><div style="font-size:11px;color:#A6D8CD">0 resurrected</div></div>
+    <div><div style="font-size:11px;color:#6FA89E">Due now</div><div style="font-size:20px;font-weight:600">0</div><div style="font-size:11px;color:#A6D8CD">next 19:01 UTC</div></div>
+    <div><div style="font-size:11px;color:#6FA89E">Checks (24h)</div><div style="font-size:20px;font-weight:600">44</div><div style="font-size:11px;color:#3DD68C">0 errors</div></div>
+    <div><div style="font-size:11px;color:#6FA89E">Results (24h)</div><div style="font-size:13px;font-weight:600;margin-top:6px" class="mono"><span style="color:#3DD68C">ok 21</span> · <span style="color:#A6D8CD">empty 17</span> · <span style="color:#F5A623">parked 6</span></div></div>
+    <div><div style="font-size:11px;color:#6FA89E">Resolve to a netflow peer</div><div style="font-size:20px;font-weight:600">5</div><div style="font-size:11px;color:#A6D8CD">of 16 · all via <span class="mono">165.227.194.81</span> · <a href="Watchlist.dc.html#domains">Domains →</a></div></div>
   </div>
 
   <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:24px">
@@ -112,14 +120,14 @@ tr:last-child td{border-bottom:none}
     <div class="card" style="flex:1 1 520px;min-width:0;padding:22px 24px">
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:16px;gap:12px;flex-wrap:wrap">
         <div style="font-size:13px;font-weight:600">Traffic touching each peer category — 7d</div>
-        <span class="src">monitored_ip_provider_mix_daily · all port families</span>
+        <span class="src">rollup__provider_mix_daily · all port families</span>
       </div>
       <div style="display:flex;flex-direction:column;gap:9px">
         <div class="bar"><div class="lbl">Cloud</div><div class="trk"><div class="fil" style="width:63%;background:#4C8DFF"></div></div><div class="val mono">76.0 MB · 63%</div></div>
-        <div class="bar"><div class="lbl">Intra-watchlist <span style="color:#5D6472">(tagged)</span></div><div class="trk"><div class="fil" style="width:36%;background:#F5A623"></div></div><div class="val mono">43.1 MB · 36%</div></div>
+        <div class="bar"><div class="lbl">Intra-watchlist <span style="color:#6FA89E">(tagged)</span></div><div class="trk"><div class="fil" style="width:36%;background:#F5A623"></div></div><div class="val mono">43.1 MB · 36%</div></div>
         <div class="bar"><div class="lbl">Satellite</div><div class="trk"><div class="fil" style="width:14%;background:#8B5CF6"></div></div><div class="val mono">17.1 MB · 14%</div></div>
         <div class="bar"><div class="lbl">Mobile</div><div class="trk"><div class="fil" style="width:7%;background:#F59E0B"></div></div><div class="val mono">8.0 MB · 7%</div></div>
-        <div class="bar"><div class="lbl">Unclassified</div><div class="trk"><div class="fil" style="width:6%;background:#5D6472"></div></div><div class="val mono">7.6 MB · 6%</div></div>
+        <div class="bar"><div class="lbl">Unclassified</div><div class="trk"><div class="fil" style="width:6%;background:#6FA89E"></div></div><div class="val mono">7.6 MB · 6%</div></div>
         <div class="bar"><div class="lbl">Residential ISP</div><div class="trk"><div class="fil" style="width:6%;background:#2DD4BF"></div></div><div class="val mono">7.2 MB · 6%</div></div>
         <div class="bar"><div class="lbl">Bulletproof hosting</div><div class="trk"><div class="fil" style="width:6%;background:#E5484D"></div></div><div class="val mono">6.8 MB · 6%</div></div>
         <div class="bar"><div class="lbl">Educational</div><div class="trk"><div class="fil" style="width:5%;background:#60A5FA"></div></div><div class="val mono">5.7 MB · 5%</div></div>
@@ -132,9 +140,9 @@ tr:last-child td{border-bottom:none}
     <div class="card" style="flex:1 1 380px;min-width:0;padding:22px 24px">
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:4px;gap:12px;flex-wrap:wrap">
         <div style="font-size:13px;font-weight:600">Bulletproof-hosting contact — 30d</div>
-        <span class="src">bph_contact_daily</span>
+        <span class="src">rollup__bph_contact_daily</span>
       </div>
-      <div style="font-size:12px;color:#5D6472;margin-bottom:16px"><span class="mono" style="color:#E5484D;font-weight:600">21.1 MB</span> · 82% from <a href="EntityDetail.dc.html" class="mono">143.198.172.85</a></div>
+      <div style="font-size:12px;color:#6FA89E;margin-bottom:16px"><span class="mono" style="color:#E5484D;font-weight:600">21.1 MB</span> · 82% from <a href="EntityDetail.dc.html" class="mono">143.198.172.85</a></div>
       <div style="display:flex;align-items:flex-end;gap:3px;height:120px">
         <div style="flex:1;height:26%;background:#5A2327;border-radius:2px 2px 0 0" title="Sep 10 · 520 KB"></div>
         <div style="flex:1;height:14%;background:#5A2327;border-radius:2px 2px 0 0" title="Sep 11 · 290 KB"></div>
@@ -167,8 +175,8 @@ tr:last-child td{border-bottom:none}
         <div style="flex:1;height:91%;background:#E5484D;border-radius:2px 2px 0 0" title="Oct 8 · 1.83 MB"></div>
         <div style="flex:1;height:13%;background:#7A2F33;border-radius:2px 2px 0 0" title="Oct 9 (partial) · 254 KB"></div>
       </div>
-      <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:10px;color:#5D6472"><span>Sep 10</span><span style="color:#E5484D">▲ Sep 23: OUTSIDERS added — BPH contact ×5</span><span>Oct 9</span></div>
-      <div class="note">Summed across all 15 monitored IPs. Per-IP line on each Entity detail page; per-IP 30d total on the Watchlist.</div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:10px;color:#6FA89E"><span>Sep 10</span><span style="color:#E5484D">▲ Sep 23: OUTSIDERS added — BPH contact ×5</span><span>Oct 9</span></div>
+      <div class="note">Summed across the 15 monitored IPs of the Oct 9 pull. Per-IP line on each Entity detail page; per-IP 30d total on the Watchlist.</div>
     </div>
 
   </div>
@@ -178,28 +186,28 @@ tr:last-child td{border-bottom:none}
     <div class="card" style="flex:1 1 420px;min-width:0">
       <div style="padding:18px 20px 4px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px">
         <div style="font-size:13px;font-weight:600">Top RTP talkers (7d)</div>
-        <div style="display:flex;gap:10px;align-items:center"><span class="src">flow_rollup_daily · rtp_media · tagged peers excluded</span><a href="TopTalkers.dc.html" style="font-size:12px">View all →</a></div>
+        <div style="display:flex;gap:10px;align-items:center"><span class="src">rollup__flow_daily · rtp_media · tagged peers excluded</span><a href="TopTalkers.dc.html" style="font-size:12px">View all →</a></div>
       </div>
       <table style="width:100%;border-collapse:collapse;margin-top:8px">
         <tr><th>Peer</th><th>Category</th><th style="text-align:right">Bytes</th></tr>
         <tr><td><a href="EntityDetail.dc.html" class="mono">50.116.38.139</a></td><td><span style="color:#4C8DFF">cloud</span></td><td style="text-align:right" class="mono">19.0 MB</td></tr>
         <tr><td><a href="EntityDetail.dc.html" class="mono">45.226.112.91</a></td><td><span style="color:#8B5CF6">satellite</span></td><td style="text-align:right" class="mono">18.1 MB</td></tr>
         <tr><td><a href="EntityDetail.dc.html" class="mono">45.226.115.144</a></td><td><span style="color:#8B5CF6">satellite</span></td><td style="text-align:right" class="mono">1.8 MB</td></tr>
-        <tr><td><a href="EntityDetail.dc.html" class="mono">170.81.198.236</a></td><td><span style="color:#5D6472">unclassified</span></td><td style="text-align:right" class="mono">704 KB</td></tr>
-        <tr><td><a href="EntityDetail.dc.html" class="mono">162.33.177.141</a></td><td><span style="color:#5D6472">unclassified</span></td><td style="text-align:right" class="mono">432 KB</td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">170.81.198.236</a></td><td><span style="color:#6FA89E">unclassified</span></td><td style="text-align:right" class="mono">704 KB</td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">162.33.177.141</a></td><td><span style="color:#6FA89E">unclassified</span></td><td style="text-align:right" class="mono">432 KB</td></tr>
       </table>
     </div>
 
     <div class="card" style="flex:1 1 340px;min-width:0">
-      <div style="padding:18px 20px 4px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px"><div style="font-size:13px;font-weight:600">Fingerprint drift (7d)</div><span class="src">scan_fingerprints · censys + shodan</span></div>
+      <div style="padding:18px 20px 4px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px"><div style="font-size:13px;font-weight:600">Fingerprint drift (7d)</div><span class="src">lookup__host_scans · censys + shodan</span></div>
       <table style="width:100%;border-collapse:collapse;margin-top:8px">
         <tr><th>Monitored IP</th><th>Changed</th><th style="text-align:right">Last</th></tr>
-        <tr><td><a href="EntityDetail.dc.html" class="mono">167.71.112.11</a></td><td style="color:#9199A8;font-size:12px">censys ×4 · shodan ×1</td><td style="text-align:right" class="mono">Oct 9</td></tr>
-        <tr><td><a href="EntityDetail.dc.html" class="mono">165.227.194.81</a></td><td style="color:#9199A8;font-size:12px">censys ×2</td><td style="text-align:right" class="mono">Oct 9</td></tr>
-        <tr><td><a href="EntityDetail.dc.html" class="mono">192.248.178.127</a></td><td style="color:#9199A8;font-size:12px">censys ×1</td><td style="text-align:right" class="mono">Oct 9</td></tr>
-        <tr><td><a href="EntityDetail.dc.html" class="mono">209.38.67.66</a></td><td style="color:#9199A8;font-size:12px">censys ×3 · shodan ×2</td><td style="text-align:right" class="mono">Oct 8</td></tr>
-        <tr><td><a href="EntityDetail.dc.html" class="mono">185.134.23.8</a></td><td style="color:#9199A8;font-size:12px">censys ×1</td><td style="text-align:right" class="mono">Oct 8</td></tr>
-        <tr><td><a href="EntityDetail.dc.html" class="mono">143.198.172.85</a></td><td style="color:#9199A8;font-size:12px">shodan ×3 <span style="color:#E5484D;font-weight:600">· not scanned since</span></td><td style="text-align:right" class="mono" style="color:#E5484D">Oct 7</td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">167.71.112.11</a></td><td style="color:#A6D8CD;font-size:12px">censys ×4 · shodan ×1</td><td style="text-align:right" class="mono">Oct 9</td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">165.227.194.81</a></td><td style="color:#A6D8CD;font-size:12px">censys ×2</td><td style="text-align:right" class="mono">Oct 9</td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">192.248.178.127</a></td><td style="color:#A6D8CD;font-size:12px">censys ×1</td><td style="text-align:right" class="mono">Oct 9</td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">209.38.67.66</a></td><td style="color:#A6D8CD;font-size:12px">censys ×3 · shodan ×2</td><td style="text-align:right" class="mono">Oct 8</td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">185.134.23.8</a></td><td style="color:#A6D8CD;font-size:12px">censys ×1</td><td style="text-align:right" class="mono">Oct 8</td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">143.198.172.85</a></td><td style="color:#A6D8CD;font-size:12px">shodan ×3 <span style="color:#E5484D;font-weight:600">· not scanned since</span></td><td style="text-align:right" class="mono" style="color:#E5484D">Oct 7</td></tr>
       </table>
       <div class="note" style="margin:0;padding:10px 20px 14px 20px">9 of 15 IPs changed at least once since the daily sweep started Oct 2 — the portscan chain exists to catch exactly this drift, and nothing in the first draft surfaced it fleet-wide. Per-IP column on the <a href="Watchlist.dc.html">Watchlist</a>; full history on each Entity page.</div>
     </div>
@@ -207,12 +215,12 @@ tr:last-child td{border-bottom:none}
     <div class="card" style="flex:1 1 340px;min-width:0">
       <div style="padding:18px 20px 4px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px"><div style="font-size:13px;font-weight:600">Watchlist activity</div><span class="src" style="color:#F5A623;border-color:#5A4423">IP events: no source · domain events: derived</span></div>
       <div style="padding:8px 20px 18px 20px;display:flex;flex-direction:column;gap:14px">
-        <div style="display:flex;gap:10px"><div style="width:6px;height:6px;border-radius:50%;background:#E5484D;margin-top:6px;flex-shrink:0"></div><div style="font-size:13px"><span class="mono">192.248.178.127</span> tagged <span style="color:#E5484D">infrastructure_type:criminal_voip_service</span><div style="font-size:11px;color:#5D6472;margin-top:2px">Oct 9 · illustrative</div></div></div>
-        <div style="display:flex;gap:10px"><div style="width:6px;height:6px;border-radius:50%;background:#4C8DFF;margin-top:6px;flex-shrink:0"></div><div style="font-size:13px"><span class="mono">216.126.227.152</span> added to <span style="color:#9199A8">msk:voip_analysis</span><div style="font-size:11px;color:#5D6472;margin-top:2px">Oct 9 · first scan + first flows that day</div></div></div>
-        <div style="display:flex;gap:10px"><div style="width:6px;height:6px;border-radius:50%;background:#F5A623;margin-top:6px;flex-shrink:0"></div><div style="font-size:13px"><span class="mono">plugvalley.ws</span>, <span class="mono">bigdata.mundossp.com</span>, <span class="mono">pgsql.mundossp.com</span> demoted → <span style="color:#F5A623">monitor:zombie</span> <span style="color:#9199A8">(lifecycle:parked)</span><div style="font-size:11px;color:#5D6472;margin-top:2px">Oct 8 · spoiler-alert</div></div></div>
-        <div style="display:flex;gap:10px"><div style="width:6px;height:6px;border-radius:50%;background:#5D6472;margin-top:6px;flex-shrink:0"></div><div style="font-size:13px"><span class="mono">mysql.mundossp.com</span>, <span class="mono">status.plugvalley.pro</span>, <span class="mono">go.elitemetaltools.com</span> retired → <span style="color:#9199A8">monitor:retired</span><div style="font-size:11px;color:#5D6472;margin-top:2px">Oct 8 · spoiler-alert · yearly tombstone recheck</div></div></div>
-        <div style="display:flex;gap:10px"><div style="width:6px;height:6px;border-radius:50%;background:#4C8DFF;margin-top:6px;flex-shrink:0"></div><div style="font-size:13px"><a href="DomainDetail.dc.html" class="mono">panel.m3zapp.com</a> A record moved <span class="mono" style="color:#9199A8">164.92.90.138</span> → <span class="mono">104.219.250.37, 2.59.170.20</span> (parking lander)<div style="font-size:11px;color:#5D6472;margin-top:2px">Oct 1 · derived from spoiler-alert check history</div></div></div>
-        <div style="display:flex;gap:10px"><div style="width:6px;height:6px;border-radius:50%;background:#3DD68C;margin-top:6px;flex-shrink:0"></div><div style="font-size:13px">AS8075 (Microsoft), AS62563 (GlobalTelehost) approved → <span class="mono">cloud_providers</span><div style="font-size:11px;color:#5D6472;margin-top:2px">Oct 8 · asn_classification_candidates.reviewed_at</div></div></div>
+        <div style="display:flex;gap:10px"><div style="width:6px;height:6px;border-radius:50%;background:#E5484D;margin-top:6px;flex-shrink:0"></div><div style="font-size:13px"><span class="mono">51.198.100.9</span> added to the watch set with OpenCTI label <span class="chip tip" style="font-size:10px;padding:0 5px">infrastructure:criminal_voip_client</span><div style="font-size:11px;color:#6FA89E;margin-top:2px">Oct 13 · watch__ips.added_at — the one IP-side event a table does record</div></div></div>
+        <div style="display:flex;gap:10px"><div style="width:6px;height:6px;border-radius:50%;background:#4C8DFF;margin-top:6px;flex-shrink:0"></div><div style="font-size:13px"><span class="mono">216.126.227.152</span> added to <span style="color:#A6D8CD">msk:voip_analysis</span><div style="font-size:11px;color:#6FA89E;margin-top:2px">Oct 9 · first scan + first flows that day</div></div></div>
+        <div style="display:flex;gap:10px"><div style="width:6px;height:6px;border-radius:50%;background:#F5A623;margin-top:6px;flex-shrink:0"></div><div style="font-size:13px"><span class="mono">plugvalley.ws</span>, <span class="mono">bigdata.mundossp.com</span>, <span class="mono">pgsql.mundossp.com</span> demoted → <span style="color:#F5A623">monitor:zombie</span> <span style="color:#A6D8CD">(lifecycle:parked)</span><div style="font-size:11px;color:#6FA89E;margin-top:2px">Oct 8 · spoiler-alert</div></div></div>
+        <div style="display:flex;gap:10px"><div style="width:6px;height:6px;border-radius:50%;background:#6FA89E;margin-top:6px;flex-shrink:0"></div><div style="font-size:13px"><span class="mono">mysql.mundossp.com</span>, <span class="mono">status.plugvalley.pro</span>, <span class="mono">go.elitemetaltools.com</span> retired → <span style="color:#A6D8CD">monitor:retired</span><div style="font-size:11px;color:#6FA89E;margin-top:2px">Oct 8 · spoiler-alert · yearly tombstone recheck</div></div></div>
+        <div style="display:flex;gap:10px"><div style="width:6px;height:6px;border-radius:50%;background:#4C8DFF;margin-top:6px;flex-shrink:0"></div><div style="font-size:13px"><a href="DomainDetail.dc.html" class="mono">panel.m3zapp.com</a> A record moved <span class="mono" style="color:#A6D8CD">164.92.90.138</span> → <span class="mono">104.219.250.37, 2.59.170.20</span> (parking lander)<div style="font-size:11px;color:#6FA89E;margin-top:2px">Oct 1 · derived from spoiler-alert check history</div></div></div>
+        <div style="display:flex;gap:10px"><div style="width:6px;height:6px;border-radius:50%;background:#3DD68C;margin-top:6px;flex-shrink:0"></div><div style="font-size:13px">AS8075 (Microsoft), AS62563 (GlobalTelehost) approved → <span class="mono">ref__providers · cloud</span><div style="font-size:11px;color:#6FA89E;margin-top:2px">Oct 8 · review__asn_candidates.reviewed_at</div></div></div>
       </div>
       <div class="note" style="margin:0;padding:10px 20px 14px 20px">Domain lifecycle events are real but <em>derived</em> here: spoiler-alert keeps an append-only <span class="mono">lifecycle_events</span> table, but it's only served under its SSO-gated <span class="mono">/dashboard</span> prefix — no public endpoint. One small upstream ask (a token-readable <span class="mono">/events</span>) makes this feed real for domains; IP-side events still need a table of their own.</div>
     </div>

@@ -3,51 +3,52 @@
 <head>
 <meta charset="utf-8">
 <title>CVS Watch — Entity detail</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Orbitron:wght@500;600&display=swap">
 <style>
-body{margin:0;background:#0B0D10;color:#E7E9ED;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{margin:0;background:#061214;color:#E8FFF8;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 .mono{font-family:'IBM Plex Mono',monospace}
 a{color:#4C8DFF;text-decoration:none}
 a:hover{color:#78AAFF}
-.navlink{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;font-size:14px;font-weight:500;color:#9199A8}
-.navlink:hover{background:#171B22;color:#E7E9ED}
-.navlink.active{background:#1B2029;color:#E7E9ED}
-.card{background:#141821;border:1px solid #262B35;border-radius:10px}
-.src{font-size:10px;font-family:'IBM Plex Mono',monospace;color:#5D6472;background:#0F1217;border:1px solid #1B2029;padding:2px 7px;border-radius:4px;white-space:nowrap}
-.chip{font-size:11px;font-family:'IBM Plex Mono',monospace;background:#1B2029;border:1px solid #262B35;color:#9199A8;padding:3px 8px;border-radius:5px;display:inline-block}
+.navlink{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;font-size:14px;font-weight:500;color:#A6D8CD}
+.navlink:hover{background:#0F3133;color:#E8FFF8}
+.navlink.active{background:#133A3C;color:#E8FFF8}
+.card{background:#0C2A2C;border:1px solid #2B7266;border-radius:10px}
+.src{font-size:10px;font-family:'IBM Plex Mono',monospace;color:#6FA89E;background:#0A2224;border:1px solid #133A3C;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.chip{font-size:11px;font-family:'IBM Plex Mono',monospace;background:#133A3C;border:1px solid #2B7266;color:#A6D8CD;padding:3px 8px;border-radius:5px;display:inline-block}
 .badge{font-size:11px;font-weight:600;padding:4px 10px;border-radius:5px;display:inline-block}
-th{text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em;color:#5D6472;text-transform:uppercase;padding:0 16px 10px 16px;border-bottom:1px solid #262B35}
-td{padding:13px 16px;font-size:13px;border-bottom:1px solid #1B2029}
+th{text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em;color:#6FA89E;text-transform:uppercase;padding:0 16px 10px 16px;border-bottom:1px solid #2B7266}
+td{padding:13px 16px;font-size:13px;border-bottom:1px solid #133A3C}
 tr:last-child td{border-bottom:none}
-.tab{all:unset;cursor:pointer;font-size:13px;font-weight:500;padding:9px 4px;color:#5D6472;border-bottom:2px solid transparent}
-.tab.active{color:#E7E9ED;border-bottom:2px solid #4C8DFF}
-.seg{all:unset;cursor:pointer;font-size:12px;font-weight:500;padding:6px 14px;color:#9199A8;border:1px solid #262B35;background:transparent}
-.seg.active{background:#1B2029;border-color:#3A4254;color:#E7E9ED}
+.tab{all:unset;cursor:pointer;font-size:13px;font-weight:500;padding:9px 4px;color:#6FA89E;border-bottom:2px solid transparent}
+.tab.active{color:#E8FFF8;border-bottom:2px solid #4C8DFF}
+.seg{all:unset;cursor:pointer;font-size:12px;font-weight:500;padding:6px 14px;color:#A6D8CD;border:1px solid #2B7266;background:transparent}
+.seg.active{background:#133A3C;border-color:#3F9C8A;color:#E8FFF8}
 .col{flex:1;display:flex;flex-direction:column-reverse;height:100%}
 .col div{width:100%}
-.lg{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#9199A8;margin-right:14px}
+.lg{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#A6D8CD;margin-right:14px}
 .lg i{width:10px;height:10px;border-radius:2px;display:inline-block}
 .bar{display:flex;align-items:center;gap:12px}
-.bar .lbl{width:170px;font-size:12px;color:#9199A8}
-.bar .trk{flex:1;background:#1B2029;border-radius:4px;height:14px;overflow:hidden}
+.bar .lbl{width:170px;font-size:12px;color:#A6D8CD}
+.bar .trk{flex:1;background:#133A3C;border-radius:4px;height:14px;overflow:hidden}
 .bar .fil{height:100%;border-radius:4px}
 .bar .val{width:100px;text-align:right;font-size:12px}
-.note{font-size:11px;color:#5D6472;line-height:1.5;margin-top:14px;padding-top:12px;border-top:1px solid #1B2029}
-.fpc{height:34px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;border:1px solid #262B35;background:#171B22;color:#9199A8}
+.note{font-size:11px;color:#6FA89E;line-height:1.5;margin-top:14px;padding-top:12px;border-top:1px solid #133A3C}
+.fpc{height:34px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;border:1px solid #2B7266;background:#0F3133;color:#A6D8CD}
 .fpc.same{background:#153226;border-color:#1E4D37;color:#3DD68C}
 .fpc.chg{background:#2A2013;border-color:#5A4423;color:#F5A623;font-weight:600}
-.fpc.miss{background:transparent;border:1px dashed #3A4254;color:#5D6472}
-.diff{display:grid;grid-template-columns:120px 28px 1fr;gap:10px;align-items:baseline;padding:10px 0;border-bottom:1px solid #1B2029;font-size:13px}
+.fpc.miss{background:transparent;border:1px dashed #3F9C8A;color:#6FA89E}
+.diff{display:grid;grid-template-columns:120px 28px 1fr;gap:10px;align-items:baseline;padding:10px 0;border-bottom:1px solid #133A3C;font-size:13px}
 .diff:last-child{border-bottom:none}
-.diff .when{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9199A8}
+.diff .when{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#A6D8CD}
 .diff .op{font-family:'IBM Plex Mono',monospace;font-weight:700;color:#E5484D;text-align:center}
 </style>
+<link rel="stylesheet" href="theme.css">
 </head>
 <body>
 
-<div style="display:flex;width:100%;min-height:100vh;background:#0B0D10">
+<div style="display:flex;width:100%;min-height:100vh;background:transparent">
 
-<div style="width:240px;flex-shrink:0;background:#0F1217;border-right:1px solid #262B35;display:flex;flex-direction:column;padding:24px 16px;box-sizing:border-box;gap:4px">
+<div class="sidebar" style="width:240px;flex-shrink:0;background:#0A2224;border-right:1px solid #2B7266;display:flex;flex-direction:column;padding:24px 16px;box-sizing:border-box;gap:4px">
   <div style="display:flex;align-items:center;gap:10px;padding:8px 8px 22px 8px">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4C8DFF" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9" stroke-opacity="0.45"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke-opacity="0.45"/></svg>
     <span style="font-size:15px;font-weight:600;letter-spacing:0.2px">CVS Watch</span>
@@ -61,35 +62,36 @@ tr:last-child td{border-bottom:none}
   <a href="CandidateReview.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l2.2-5h13.6L21 8M3 8v10.5A1.5 1.5 0 004.5 20h15a1.5 1.5 0 001.5-1.5V8M3 8h6.2l.9 3h3.8l.9-3H21"/></svg>Candidates</a>
   <a href="PipelineHealth.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg>Pipeline health</a>
   <div style="flex:1"></div>
-  <div style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-top:1px solid #262B35;margin-top:8px">
-    <div style="width:28px;height:28px;border-radius:50%;background:#1B2029;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#9199A8;flex-shrink:0">JF</div>
-    <div style="font-size:12px;color:#9199A8;line-height:1.4">J. Finley<br><span style="color:#5D6472">Analyst</span></div>
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-top:1px solid #2B7266;margin-top:8px">
+    <div style="width:28px;height:28px;border-radius:50%;background:#133A3C;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#A6D8CD;flex-shrink:0">JF</div>
+    <div style="font-size:12px;color:#A6D8CD;line-height:1.4">J. Finley<br><span style="color:#6FA89E">Analyst</span></div>
   </div>
 </div>
 
 <div style="flex:1 1 0;min-width:0;padding:36px 44px;box-sizing:border-box">
 
-  <div style="font-size:12px;color:#5D6472;margin-bottom:10px"><a href="Watchlist.dc.html">Watchlist</a> / Entity</div>
+  <div style="font-size:12px;color:#6FA89E;margin-bottom:10px"><a href="Watchlist.dc.html">Watchlist</a> / Entity</div>
 
   <div style="display:flex;align-items:center;gap:14px;margin-bottom:6px;flex-wrap:wrap">
     <h1 class="mono" style="margin:0;font-size:24px;font-weight:600">143.198.172.85</h1>
-    <span class="badge" style="background:#2A1216;color:#E5484D;border:1px solid #5A2327">CONFIRMED CVS</span>
-    <span style="font-size:14px;color:#9199A8">"OUTSIDERS"</span>
+    <span class="badge" style="background:#0F3133;color:#A6D8CD;border:1px dotted #3F9C8A" title="review__ip_roles: proposed_role = sip_server, status = pending, accepted_role = null">ROLE PENDING · proposed sip_server</span>
+    <span style="font-size:14px;color:#A6D8CD">"OUTSIDERS"</span>
   </div>
   <div style="display:flex;gap:8px;margin-bottom:24px">
     <span class="chip">msk:voip_analysis</span>
-    <span class="chip" style="color:#E5484D;border-color:#5A2327">infrastructure_type:criminal_voip_service</span>
+    <span class="chip" style="border-style:dashed;color:#C6EBE2;border-color:#3F9C8A" title="OpenCTI label (watch__ips.tags) — an analyst's suggestion in the TIP, read by no logic">TIP · infrastructure_type:criminal_voip_service</span>
+    <span style="font-size:11px;color:#6FA89E;align-self:center">reviewed role and TIP label are shown separately on purpose — see Watchlist</span>
   </div>
 
   <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(min(170px, 100%), 1fr));gap:16px;margin-bottom:28px">
-    <div class="card" style="padding:16px 20px"><div style="font-size:12px;color:#5D6472;margin-bottom:6px">First seen</div><div style="font-size:15px;font-weight:600" class="mono">2026-09-22</div></div>
-    <div class="card" style="padding:16px 20px"><div style="font-size:12px;color:#5D6472;margin-bottom:6px">Last seen</div><div style="font-size:15px;font-weight:600" class="mono">2026-10-09 07:00 UTC</div></div>
-    <div class="card" style="padding:16px 20px"><div style="font-size:12px;color:#5D6472;margin-bottom:6px">Status</div><div style="font-size:15px;font-weight:600;color:#3DD68C">active</div></div>
-    <div class="card" style="padding:16px 20px"><div style="font-size:12px;color:#5D6472;margin-bottom:6px">RTP sessions (17d)</div><div style="font-size:15px;font-weight:600" class="mono">16,667</div></div>
-    <div class="card" style="padding:16px 20px;border-color:#5A2327"><div style="font-size:12px;color:#5D6472;margin-bottom:6px">BPH contact (30d)</div><div style="font-size:15px;font-weight:600;color:#E5484D" class="mono">17.2 MB</div><div style="font-size:10px;color:#5D6472;margin-top:3px">82% of the whole watchlist's</div></div>
+    <div class="card" style="padding:16px 20px"><div style="font-size:12px;color:#6FA89E;margin-bottom:6px">First seen</div><div style="font-size:15px;font-weight:600" class="mono">2026-09-22</div></div>
+    <div class="card" style="padding:16px 20px"><div style="font-size:12px;color:#6FA89E;margin-bottom:6px">Last seen</div><div style="font-size:15px;font-weight:600" class="mono">2026-10-09 07:00 UTC</div></div>
+    <div class="card" style="padding:16px 20px"><div style="font-size:12px;color:#6FA89E;margin-bottom:6px">Status</div><div style="font-size:15px;font-weight:600;color:#3DD68C">active</div></div>
+    <div class="card" style="padding:16px 20px"><div style="font-size:12px;color:#6FA89E;margin-bottom:6px">RTP sessions (17d)</div><div style="font-size:15px;font-weight:600" class="mono">16,667</div></div>
+    <div class="card" style="padding:16px 20px;border-color:#5A2327"><div style="font-size:12px;color:#6FA89E;margin-bottom:6px">BPH contact (30d)</div><div style="font-size:15px;font-weight:600;color:#E5484D" class="mono">17.2 MB</div><div style="font-size:10px;color:#6FA89E;margin-top:3px">82% of the whole watchlist's</div></div>
   </div>
 
-  <div style="display:flex;gap:28px;border-bottom:1px solid #262B35;margin-bottom:22px">
+  <div style="display:flex;gap:28px;border-bottom:1px solid #2B7266;margin-bottom:22px">
     <button class="tab active" data-tab="netflow">Netflow</button>
     <button class="tab" data-tab="fingerprint" title="shodan changed Oct 7 · no scan since">Device fingerprint<span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#F5A623;margin-left:7px;vertical-align:middle"></span></button>
   </div>
@@ -99,37 +101,37 @@ tr:last-child td{border-bottom:none}
     <div class="card" style="padding:22px 24px;margin-bottom:24px">
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:2px">
         <div style="font-size:13px;font-weight:600">Daily traffic by plane</div>
-        <span class="src">port_family_mix_daily</span>
+        <span class="src">rollup__port_family_mix_daily</span>
       </div>
-      <div style="font-size:12px;color:#5D6472;margin-bottom:14px">2026-09-22 → 2026-10-09 · all peers · the "who administers this" view: admin-plane bytes vs. media and signaling</div>
+      <div style="font-size:12px;color:#6FA89E;margin-bottom:14px">2026-09-22 → 2026-10-09 · all peers · the "who administers this" view: admin-plane bytes vs. media and signaling</div>
       <div style="margin-bottom:12px">
-        <span class="lg"><i style="background:#4C8DFF"></i>media <span class="mono" style="color:#5D6472">rtp_media</span></span>
-        <span class="lg"><i style="background:#8B5CF6"></i>signaling <span class="mono" style="color:#5D6472">voip_signaling</span></span>
-        <span class="lg"><i style="background:#F5A623"></i>admin plane <span class="mono" style="color:#5D6472">ssh/web/voip/db_admin</span></span>
-        <span class="lg"><i style="background:#5D6472"></i>other</span>
+        <span class="lg"><i style="background:#4C8DFF"></i>media <span class="mono" style="color:#6FA89E">rtp_media</span></span>
+        <span class="lg"><i style="background:#8B5CF6"></i>signaling <span class="mono" style="color:#6FA89E">voip_signaling</span></span>
+        <span class="lg"><i style="background:#F5A623"></i>admin plane <span class="mono" style="color:#6FA89E">ssh/web/voip/db_admin</span></span>
+        <span class="lg"><i style="background:#6FA89E"></i>other</span>
       </div>
       <div style="display:flex;align-items:stretch;gap:5px;height:150px">
         <div class="col" title="Sep 22 · 133 KB"><div style="height:0.4%;background:#4C8DFF"></div><div style="height:1.3%;background:#8B5CF6"></div><div style="height:0.3%;min-height:2px;background:#F5A623"></div></div>
-        <div class="col" title="Sep 23 · 4.38 MB"><div style="height:36.5%;background:#4C8DFF"></div><div style="height:29.5%;background:#8B5CF6"></div><div style="height:0.1%;min-height:2px;background:#F5A623"></div><div style="height:0.1%;min-height:2px;background:#5D6472"></div></div>
-        <div class="col" title="Sep 24 · 6.63 MB — peak"><div style="height:52%;background:#4C8DFF"></div><div style="height:47.7%;background:#8B5CF6"></div><div style="height:0.1%;min-height:2px;background:#F5A623"></div><div style="height:0.2%;min-height:2px;background:#5D6472"></div></div>
-        <div class="col" title="Sep 25 · 5.37 MB"><div style="height:63.3%;background:#4C8DFF"></div><div style="height:17.5%;background:#8B5CF6"></div><div style="height:0.05%;min-height:2px;background:#F5A623"></div><div style="height:0.1%;min-height:2px;background:#5D6472"></div></div>
+        <div class="col" title="Sep 23 · 4.38 MB"><div style="height:36.5%;background:#4C8DFF"></div><div style="height:29.5%;background:#8B5CF6"></div><div style="height:0.1%;min-height:2px;background:#F5A623"></div><div style="height:0.1%;min-height:2px;background:#6FA89E"></div></div>
+        <div class="col" title="Sep 24 · 6.63 MB — peak"><div style="height:52%;background:#4C8DFF"></div><div style="height:47.7%;background:#8B5CF6"></div><div style="height:0.1%;min-height:2px;background:#F5A623"></div><div style="height:0.2%;min-height:2px;background:#6FA89E"></div></div>
+        <div class="col" title="Sep 25 · 5.37 MB"><div style="height:63.3%;background:#4C8DFF"></div><div style="height:17.5%;background:#8B5CF6"></div><div style="height:0.05%;min-height:2px;background:#F5A623"></div><div style="height:0.1%;min-height:2px;background:#6FA89E"></div></div>
         <div class="col" title="Sep 26 · 3.08 MB · admin 16 KB"><div style="height:30.5%;background:#4C8DFF"></div><div style="height:15.7%;background:#8B5CF6"></div><div style="height:0.25%;min-height:3px;background:#F5A623"></div></div>
         <div class="col" title="Sep 27 (Sat) · 2.42 MB"><div style="height:15.1%;background:#4C8DFF"></div><div style="height:21.3%;background:#8B5CF6"></div></div>
-        <div class="col" title="Sep 28 (Sun) · 4.81 MB"><div style="height:41.8%;background:#4C8DFF"></div><div style="height:30.6%;background:#8B5CF6"></div><div style="height:0.05%;min-height:2px;background:#5D6472"></div></div>
-        <div class="col" title="Sep 29 · 3.55 MB — signaling drops to 62 KB"><div style="height:52.4%;background:#4C8DFF"></div><div style="height:0.9%;min-height:2px;background:#8B5CF6"></div><div style="height:0.07%;min-height:2px;background:#F5A623"></div><div style="height:0.08%;min-height:2px;background:#5D6472"></div></div>
-        <div class="col" title="Sep 30 · 3.02 MB · admin 58 KB — peak"><div style="height:44%;background:#4C8DFF"></div><div style="height:0.6%;min-height:2px;background:#8B5CF6"></div><div style="height:0.9%;min-height:4px;background:#F5A623"></div><div style="height:0.1%;min-height:2px;background:#5D6472"></div></div>
-        <div class="col" title="Oct 1 · 3.57 MB"><div style="height:52.8%;background:#4C8DFF"></div><div style="height:0.7%;min-height:2px;background:#8B5CF6"></div><div style="height:0.2%;min-height:2px;background:#F5A623"></div><div style="height:0.2%;min-height:2px;background:#5D6472"></div></div>
-        <div class="col" title="Oct 2 · 3.60 MB"><div style="height:53.2%;background:#4C8DFF"></div><div style="height:0.8%;min-height:2px;background:#8B5CF6"></div><div style="height:0.15%;min-height:2px;background:#F5A623"></div><div style="height:0.2%;min-height:2px;background:#5D6472"></div></div>
-        <div class="col" title="Oct 3 (Sat) · 1.72 MB"><div style="height:25.2%;background:#4C8DFF"></div><div style="height:0.8%;min-height:2px;background:#8B5CF6"></div><div style="height:0.06%;min-height:2px;background:#5D6472"></div></div>
-        <div class="col" title="Oct 4 (Sun) · 979 KB"><div style="height:13.9%;background:#4C8DFF"></div><div style="height:0.8%;min-height:2px;background:#8B5CF6"></div><div style="height:0.05%;min-height:2px;background:#5D6472"></div></div>
-        <div class="col" title="Oct 5 · 3.34 MB"><div style="height:48.5%;background:#4C8DFF"></div><div style="height:1.7%;min-height:2px;background:#8B5CF6"></div><div style="height:0.07%;min-height:2px;background:#F5A623"></div><div style="height:0.1%;min-height:2px;background:#5D6472"></div></div>
+        <div class="col" title="Sep 28 (Sun) · 4.81 MB"><div style="height:41.8%;background:#4C8DFF"></div><div style="height:30.6%;background:#8B5CF6"></div><div style="height:0.05%;min-height:2px;background:#6FA89E"></div></div>
+        <div class="col" title="Sep 29 · 3.55 MB — signaling drops to 62 KB"><div style="height:52.4%;background:#4C8DFF"></div><div style="height:0.9%;min-height:2px;background:#8B5CF6"></div><div style="height:0.07%;min-height:2px;background:#F5A623"></div><div style="height:0.08%;min-height:2px;background:#6FA89E"></div></div>
+        <div class="col" title="Sep 30 · 3.02 MB · admin 58 KB — peak"><div style="height:44%;background:#4C8DFF"></div><div style="height:0.6%;min-height:2px;background:#8B5CF6"></div><div style="height:0.9%;min-height:4px;background:#F5A623"></div><div style="height:0.1%;min-height:2px;background:#6FA89E"></div></div>
+        <div class="col" title="Oct 1 · 3.57 MB"><div style="height:52.8%;background:#4C8DFF"></div><div style="height:0.7%;min-height:2px;background:#8B5CF6"></div><div style="height:0.2%;min-height:2px;background:#F5A623"></div><div style="height:0.2%;min-height:2px;background:#6FA89E"></div></div>
+        <div class="col" title="Oct 2 · 3.60 MB"><div style="height:53.2%;background:#4C8DFF"></div><div style="height:0.8%;min-height:2px;background:#8B5CF6"></div><div style="height:0.15%;min-height:2px;background:#F5A623"></div><div style="height:0.2%;min-height:2px;background:#6FA89E"></div></div>
+        <div class="col" title="Oct 3 (Sat) · 1.72 MB"><div style="height:25.2%;background:#4C8DFF"></div><div style="height:0.8%;min-height:2px;background:#8B5CF6"></div><div style="height:0.06%;min-height:2px;background:#6FA89E"></div></div>
+        <div class="col" title="Oct 4 (Sun) · 979 KB"><div style="height:13.9%;background:#4C8DFF"></div><div style="height:0.8%;min-height:2px;background:#8B5CF6"></div><div style="height:0.05%;min-height:2px;background:#6FA89E"></div></div>
+        <div class="col" title="Oct 5 · 3.34 MB"><div style="height:48.5%;background:#4C8DFF"></div><div style="height:1.7%;min-height:2px;background:#8B5CF6"></div><div style="height:0.07%;min-height:2px;background:#F5A623"></div><div style="height:0.1%;min-height:2px;background:#6FA89E"></div></div>
         <div class="col" title="Oct 6 · 1.84 MB"><div style="height:27%;background:#4C8DFF"></div><div style="height:0.7%;min-height:2px;background:#8B5CF6"></div></div>
-        <div class="col" title="Oct 7 · 5.57 MB"><div style="height:82.4%;background:#4C8DFF"></div><div style="height:1.6%;min-height:2px;background:#8B5CF6"></div><div style="height:0.14%;min-height:2px;background:#5D6472"></div></div>
-        <div class="col" title="Oct 8 · 6.56 MB"><div style="height:96.8%;background:#4C8DFF"></div><div style="height:1.8%;min-height:2px;background:#8B5CF6"></div><div style="height:0.16%;min-height:2px;background:#F5A623"></div><div style="height:0.23%;min-height:2px;background:#5D6472"></div></div>
+        <div class="col" title="Oct 7 · 5.57 MB"><div style="height:82.4%;background:#4C8DFF"></div><div style="height:1.6%;min-height:2px;background:#8B5CF6"></div><div style="height:0.14%;min-height:2px;background:#6FA89E"></div></div>
+        <div class="col" title="Oct 8 · 6.56 MB"><div style="height:96.8%;background:#4C8DFF"></div><div style="height:1.8%;min-height:2px;background:#8B5CF6"></div><div style="height:0.16%;min-height:2px;background:#F5A623"></div><div style="height:0.23%;min-height:2px;background:#6FA89E"></div></div>
         <div class="col" title="Oct 9 (partial) · 714 KB"><div style="height:10.4%;background:#4C8DFF;opacity:0.6"></div><div style="height:0.4%;min-height:2px;background:#8B5CF6;opacity:0.6"></div></div>
       </div>
-      <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:10px;color:#5D6472"><span>Sep 22</span><span style="color:#8B5CF6">▲ Sep 29: signaling falls from 2–3 MB/day to ~50 KB/day while media holds</span><span>Oct 9</span></div>
-      <div class="note">Admin-plane bytes are tiny but non-zero on 13 of 18 days (peak 58 KB, Sep 30) — those rows are the lead for "who administers this." Click a bar to drill into <span class="mono">flow_rollup_daily</span> for that day's peers by port family. Replaces the single "vs. primary peer" chart from the first draft; that relationship is now one row in Top peers below.</div>
+      <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:10px;color:#6FA89E"><span>Sep 22</span><span style="color:#8B5CF6">▲ Sep 29: signaling falls from 2–3 MB/day to ~50 KB/day while media holds</span><span>Oct 9</span></div>
+      <div class="note">Admin-plane bytes are tiny but non-zero on 13 of 18 days (peak 58 KB, Sep 30) — those rows are the lead for "who administers this." Click a bar to drill into <span class="mono">rollup__flow_daily</span> for that day's peers by port family. Replaces the single "vs. primary peer" chart from the first draft; that relationship is now one row in Top peers below.</div>
     </div>
 
     <div style="display:flex;gap:24px;flex-wrap:wrap;margin-bottom:24px">
@@ -138,10 +140,10 @@ tr:last-child td{border-bottom:none}
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:14px">
           <div>
             <div style="font-size:13px;font-weight:600">Peer category mix — 7d</div>
-            <div style="font-size:12px;color:#5D6472;margin-top:2px">share of this IP's 20.7 MB that touched each category</div>
+            <div style="font-size:12px;color:#6FA89E;margin-top:2px">share of this IP's 20.7 MB that touched each category</div>
           </div>
           <div style="display:flex;align-items:center;gap:10px">
-            <span class="src">monitored_ip_provider_mix_daily</span>
+            <span class="src">rollup__provider_mix_daily</span>
             <div style="display:flex">
               <button class="seg active" data-mix="cat" style="border-radius:6px 0 0 6px">By category</button>
               <button class="seg" data-mix="role" style="border-radius:0 6px 6px 0;border-left:none">Callers vs. infra</button>
@@ -153,13 +155,13 @@ tr:last-child td{border-bottom:none}
           <div class="bar"><div class="lbl">Mobile</div><div class="trk"><div class="fil" style="width:38%;background:#F59E0B"></div></div><div class="val mono">7.9 MB · 38%</div></div>
           <div class="bar"><div class="lbl">Bulletproof hosting</div><div class="trk"><div class="fil" style="width:32%;background:#E5484D"></div></div><div class="val mono">6.6 MB · 32%</div></div>
           <div class="bar"><div class="lbl">Residential ISP</div><div class="trk"><div class="fil" style="width:30%;background:#2DD4BF"></div></div><div class="val mono">6.2 MB · 30%</div></div>
-          <div class="bar"><div class="lbl">Unclassified</div><div class="trk"><div class="fil" style="width:5%;background:#5D6472"></div></div><div class="val mono">1.1 MB · 5%</div></div>
+          <div class="bar"><div class="lbl">Unclassified</div><div class="trk"><div class="fil" style="width:5%;background:#6FA89E"></div></div><div class="val mono">1.1 MB · 5%</div></div>
           <div class="bar"><div class="lbl">Satellite</div><div class="trk"><div class="fil" style="width:1%;background:#8B5CF6"></div></div><div class="val mono">0.2 MB · 1%</div></div>
         </div>
         <div id="mix-role" style="display:none;flex-direction:column;gap:9px">
-          <div class="bar"><div class="lbl">Looks like callers <span style="color:#5D6472">(sat · mobile · residential · cell-IoT)</span></div><div class="trk"><div class="fil" style="width:69%;background:#2DD4BF"></div></div><div class="val mono">14.3 MB · 69%</div></div>
-          <div class="bar"><div class="lbl">Looks like infrastructure <span style="color:#5D6472">(cloud · bph · proxy · wholesale)</span></div><div class="trk"><div class="fil" style="width:73%;background:#4C8DFF"></div></div><div class="val mono">15.1 MB · 73%</div></div>
-          <div class="bar"><div class="lbl">Unclassified</div><div class="trk"><div class="fil" style="width:5%;background:#5D6472"></div></div><div class="val mono">1.1 MB · 5%</div></div>
+          <div class="bar"><div class="lbl">Looks like callers <span style="color:#6FA89E">(sat · mobile · residential · cell-IoT)</span></div><div class="trk"><div class="fil" style="width:69%;background:#2DD4BF"></div></div><div class="val mono">14.3 MB · 69%</div></div>
+          <div class="bar"><div class="lbl">Looks like infrastructure <span style="color:#6FA89E">(cloud · bph · proxy · wholesale)</span></div><div class="trk"><div class="fil" style="width:73%;background:#4C8DFF"></div></div><div class="val mono">15.1 MB · 73%</div></div>
+          <div class="bar"><div class="lbl">Unclassified</div><div class="trk"><div class="fil" style="width:5%;background:#6FA89E"></div></div><div class="val mono">1.1 MB · 5%</div></div>
         </div>
         <div class="note">Overlapping — the Magnus Billing host is cloud <em>and</em> bph, so both bars include its 6.6 MB. A ~70/70 split like this reads as "a CVS with both a customer base and upstream infrastructure," which is the founding question #1 answered as a shape. The caller/infra grouping is a UI decision, not a view column.</div>
       </div>
@@ -167,9 +169,9 @@ tr:last-child td{border-bottom:none}
       <div class="card" style="flex:1 1 300px;min-width:0;padding:22px 24px">
         <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px">
           <div style="font-size:13px;font-weight:600">Bulletproof-hosting contact — 30d</div>
-          <span class="src">bph_contact_daily</span>
+          <span class="src">rollup__bph_contact_daily</span>
         </div>
-        <div style="font-size:12px;color:#5D6472;margin-bottom:16px"><span class="mono" style="color:#E5484D;font-weight:600">17.2 MB</span> · 86,015 flows · 22 of 30 days</div>
+        <div style="font-size:12px;color:#6FA89E;margin-bottom:16px"><span class="mono" style="color:#E5484D;font-weight:600">17.2 MB</span> · 86,015 flows · 22 of 30 days</div>
         <div style="display:flex;align-items:flex-end;gap:3px;height:96px">
           <div style="flex:1;height:0%" title="Sep 10–21 · none (not yet on watchlist)"></div><div style="flex:1;height:0%"></div><div style="flex:1;height:0%"></div><div style="flex:1;height:0%"></div><div style="flex:1;height:0%"></div><div style="flex:1;height:0%"></div><div style="flex:1;height:0%"></div><div style="flex:1;height:0%"></div><div style="flex:1;height:0%"></div><div style="flex:1;height:0%"></div><div style="flex:1;height:0%"></div><div style="flex:1;height:0%"></div>
           <div style="flex:1;height:2%;background:#E5484D;border-radius:2px 2px 0 0" title="Sep 22"></div>
@@ -191,7 +193,7 @@ tr:last-child td{border-bottom:none}
           <div style="flex:1;height:90%;background:#E5484D;border-radius:2px 2px 0 0" title="Oct 8"></div>
           <div style="flex:1;height:12%;background:#7A2F33;border-radius:2px 2px 0 0" title="Oct 9 (partial)"></div>
         </div>
-        <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:10px;color:#5D6472"><span>Sep 10</span><span>Oct 9</span></div>
+        <div style="display:flex;justify-content:space-between;margin-top:8px;font-size:10px;color:#6FA89E"><span>Sep 10</span><span>Oct 9</span></div>
         <div class="note">Almost entirely the Magnus Billing host (AS14956). Same shape as media volume above — BPH contact <em>is</em> the call path here, not a side channel.</div>
       </div>
 
@@ -201,7 +203,7 @@ tr:last-child td{border-bottom:none}
       <div style="padding:18px 20px 4px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
         <div style="font-size:13px;font-weight:600">Top peers — 7d</div>
         <div style="display:flex;align-items:center;gap:10px">
-          <span class="src" id="peers-src">flow_rollup_daily</span>
+          <span class="src" id="peers-src">rollup__flow_daily</span>
           <div style="display:flex">
             <button class="seg active" data-peers="all" style="border-radius:6px 0 0 6px">All</button>
             <button class="seg" data-peers="uncl" style="border-radius:0 6px 6px 0;border-left:none">Unclassified <span class="mono" style="color:#F5A623">111</span></button>
@@ -210,51 +212,51 @@ tr:last-child td{border-bottom:none}
       </div>
       <table id="peers-all" style="width:100%;border-collapse:collapse;margin-top:8px">
         <tr><th>Peer</th><th>Category</th><th>Port families</th><th style="text-align:right">Bytes</th><th style="text-align:right">Flows</th></tr>
-        <tr><td><a href="EntityDetail.dc.html" class="mono">216.126.227.152</a> <span style="font-size:11px;color:#5D6472">also monitored</span></td><td><span style="color:#E5484D">cloud + bph</span></td><td style="color:#9199A8">rtp_media, voip_signaling</td><td style="text-align:right" class="mono">6.6 MB</td><td style="text-align:right" class="mono">34,188</td></tr>
-        <tr><td><a href="EntityDetail.dc.html" class="mono">50.116.38.139</a></td><td><span style="color:#4C8DFF">cloud</span></td><td style="color:#9199A8">rtp_media</td><td style="text-align:right" class="mono">2.1 MB</td><td style="text-align:right" class="mono">9,840</td></tr>
-        <tr><td><a href="EntityDetail.dc.html" class="mono">45.226.112.91</a></td><td><span style="color:#8B5CF6">satellite</span></td><td style="color:#9199A8">rtp_media</td><td style="text-align:right" class="mono">1.4 MB</td><td style="text-align:right" class="mono">6,210</td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">216.126.227.152</a> <span style="font-size:11px;color:#6FA89E">also monitored</span></td><td><span style="color:#E5484D">cloud + bph</span></td><td style="color:#A6D8CD">rtp_media, voip_signaling</td><td style="text-align:right" class="mono">6.6 MB</td><td style="text-align:right" class="mono">34,188</td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">50.116.38.139</a></td><td><span style="color:#4C8DFF">cloud</span></td><td style="color:#A6D8CD">rtp_media</td><td style="text-align:right" class="mono">2.1 MB</td><td style="text-align:right" class="mono">9,840</td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">45.226.112.91</a></td><td><span style="color:#8B5CF6">satellite</span></td><td style="color:#A6D8CD">rtp_media</td><td style="text-align:right" class="mono">1.4 MB</td><td style="text-align:right" class="mono">6,210</td></tr>
       </table>
       <table id="peers-uncl" style="width:100%;border-collapse:collapse;margin-top:8px;display:none">
         <tr><th>Peer</th><th style="text-align:right">Bytes</th><th style="text-align:right">Flows</th><th style="text-align:right">Days seen</th><th>Candidate</th><th></th></tr>
-        <tr><td><a href="EntityDetail.dc.html" class="mono">38.252.230.85</a></td><td style="text-align:right" class="mono">193 KB</td><td style="text-align:right" class="mono">947</td><td style="text-align:right" class="mono">6</td><td style="color:#5D6472">—</td><td style="text-align:right"><a href="CandidateReview.dc.html" style="font-size:12px">propose classification →</a></td></tr>
-        <tr><td><a href="EntityDetail.dc.html" class="mono">70.19.107.5</a></td><td style="text-align:right" class="mono">170 KB</td><td style="text-align:right" class="mono">848</td><td style="text-align:right" class="mono">6</td><td style="color:#5D6472">—</td><td style="text-align:right"><a href="CandidateReview.dc.html" style="font-size:12px">propose classification →</a></td></tr>
-        <tr><td><a href="EntityDetail.dc.html" class="mono">38.211.39.124</a></td><td style="text-align:right" class="mono">82 KB</td><td style="text-align:right" class="mono">386</td><td style="text-align:right" class="mono">6</td><td style="color:#5D6472">—</td><td style="text-align:right"><a href="CandidateReview.dc.html" style="font-size:12px">propose classification →</a></td></tr>
-        <tr><td><a href="EntityDetail.dc.html" class="mono">74.191.66.193</a></td><td style="text-align:right" class="mono">58 KB</td><td style="text-align:right" class="mono">282</td><td style="text-align:right" class="mono">3</td><td style="color:#5D6472">—</td><td style="text-align:right"><a href="CandidateReview.dc.html" style="font-size:12px">propose classification →</a></td></tr>
-        <tr><td><a href="EntityDetail.dc.html" class="mono">67.230.43.121</a></td><td style="text-align:right" class="mono">50 KB</td><td style="text-align:right" class="mono">245</td><td style="text-align:right" class="mono">4</td><td style="color:#5D6472">—</td><td style="text-align:right"><a href="CandidateReview.dc.html" style="font-size:12px">propose classification →</a></td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">38.252.230.85</a></td><td style="text-align:right" class="mono">193 KB</td><td style="text-align:right" class="mono">947</td><td style="text-align:right" class="mono">6</td><td style="color:#6FA89E">—</td><td style="text-align:right"><a href="CandidateReview.dc.html" style="font-size:12px">propose classification →</a></td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">70.19.107.5</a></td><td style="text-align:right" class="mono">170 KB</td><td style="text-align:right" class="mono">848</td><td style="text-align:right" class="mono">6</td><td style="color:#6FA89E">—</td><td style="text-align:right"><a href="CandidateReview.dc.html" style="font-size:12px">propose classification →</a></td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">38.211.39.124</a></td><td style="text-align:right" class="mono">82 KB</td><td style="text-align:right" class="mono">386</td><td style="text-align:right" class="mono">6</td><td style="color:#6FA89E">—</td><td style="text-align:right"><a href="CandidateReview.dc.html" style="font-size:12px">propose classification →</a></td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">74.191.66.193</a></td><td style="text-align:right" class="mono">58 KB</td><td style="text-align:right" class="mono">282</td><td style="text-align:right" class="mono">3</td><td style="color:#6FA89E">—</td><td style="text-align:right"><a href="CandidateReview.dc.html" style="font-size:12px">propose classification →</a></td></tr>
+        <tr><td><a href="EntityDetail.dc.html" class="mono">67.230.43.121</a></td><td style="text-align:right" class="mono">50 KB</td><td style="text-align:right" class="mono">245</td><td style="text-align:right" class="mono">4</td><td style="color:#6FA89E">—</td><td style="text-align:right"><a href="CandidateReview.dc.html" style="font-size:12px">propose classification →</a></td></tr>
       </table>
-      <div class="note" style="padding:0 20px 16px 20px;margin-top:0;border-top:none"><span id="peers-note">Only the monitored-IP variant of this page gets the three daily-view cards above — they're keyed by monitored_ip. A peer's page needs flow_rollup_daily filtered on peer_ip instead ("which monitored IPs does this peer touch").</span></div>
+      <div class="note" style="padding:0 20px 16px 20px;margin-top:0;border-top:none"><span id="peers-note">Only the monitored-IP variant of this page gets the three daily-view cards above — they're keyed by monitored_ip. A peer's page needs rollup__flow_daily filtered on peer_ip instead ("which monitored IPs does this peer touch").</span></div>
     </div>
 
   </div>
 
   <div id="tab-fingerprint" style="display:none">
 
-    <div style="display:flex;gap:10px;align-items:flex-start;font-size:12px;line-height:1.5;color:#B7BCC6;background:#2A1216;border:1px solid #5A2327;border-radius:8px;padding:12px 14px;margin-bottom:20px"><span style="color:#E5484D">⚠</span><span><b style="color:#E5484D">No scan since Oct 7, 02:00 UTC.</b> The daily sweep reached the other 14 monitored IPs on Oct 9 — this one is two days behind. <span class="mono">scan_snapshots</span> has no row either, so it isn't a parse failure; the sweep didn't reach it. Nothing below is current until it does.</span></div>
+    <div style="display:flex;gap:10px;align-items:flex-start;font-size:12px;line-height:1.5;color:#C6EBE2;background:#2A1216;border:1px solid #5A2327;border-radius:8px;padding:12px 14px;margin-bottom:20px"><span style="color:#E5484D">⚠</span><span><b style="color:#E5484D">No scan since Oct 7, 02:00 UTC.</b> The daily sweep reached the other 14 monitored IPs on Oct 9 — this one is two days behind. <span class="mono">scan_snapshots</span> has no row either, so it isn't a parse failure; the sweep didn't reach it. Nothing below is current until it does.</span></div>
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));gap:16px;margin-bottom:24px">
       <div class="card" style="padding:16px 20px">
-        <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:12px;color:#5D6472">censys</div><span class="src">scan_fingerprints</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:12px;color:#6FA89E">censys</div><span class="src">lookup__host_scans</span></div>
         <div style="font-size:15px;font-weight:600;color:#3DD68C;margin:6px 0 4px 0">stable</div>
-        <div style="font-size:12px;color:#9199A8">6 scans · identical hash <span class="mono">167c28d5…</span> since Oct 2 · 3 services</div>
+        <div style="font-size:12px;color:#A6D8CD">6 scans · identical hash <span class="mono">167c28d5…</span> since Oct 2 · 3 services</div>
       </div>
       <div class="card" style="padding:16px 20px;border-color:#5A4423">
-        <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:12px;color:#5D6472">shodan</div><span class="src">scan_fingerprints</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline"><div style="font-size:12px;color:#6FA89E">shodan</div><span class="src">lookup__host_scans</span></div>
         <div style="font-size:15px;font-weight:600;color:#F5A623;margin:6px 0 4px 0">changed 3× in 5 days</div>
-        <div style="font-size:12px;color:#9199A8">6 scans · 4 services → 1 · all removals · last change Oct 7</div>
+        <div style="font-size:12px;color:#A6D8CD">6 scans · 4 services → 1 · all removals · last change Oct 7</div>
       </div>
     </div>
 
     <div class="card" style="padding:22px 24px;margin-bottom:24px">
       <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px;gap:12px;flex-wrap:wrap">
         <div style="font-size:13px;font-weight:600">Fingerprint history — one cell per daily scan</div>
-        <span class="src">scan_fingerprints.fingerprint_hash · Oct 2 → Oct 9</span>
+        <span class="src">lookup__host_scans.fingerprint_hash · Oct 2 → Oct 9</span>
       </div>
       <div style="display:grid;grid-template-columns:64px repeat(8,1fr);gap:6px;align-items:center">
         <div></div>
-        <div class="mono" style="font-size:10px;color:#5D6472;text-align:center">Oct 2</div><div class="mono" style="font-size:10px;color:#5D6472;text-align:center">Oct 3</div><div class="mono" style="font-size:10px;color:#5D6472;text-align:center">Oct 4</div><div class="mono" style="font-size:10px;color:#5D6472;text-align:center">Oct 5</div><div class="mono" style="font-size:10px;color:#5D6472;text-align:center">Oct 6</div><div class="mono" style="font-size:10px;color:#5D6472;text-align:center">Oct 7</div><div class="mono" style="font-size:10px;color:#5D6472;text-align:center">Oct 8</div><div class="mono" style="font-size:10px;color:#5D6472;text-align:center">Oct 9</div>
-        <div style="font-size:12px;color:#9199A8">censys</div>
+        <div class="mono" style="font-size:10px;color:#6FA89E;text-align:center">Oct 2</div><div class="mono" style="font-size:10px;color:#6FA89E;text-align:center">Oct 3</div><div class="mono" style="font-size:10px;color:#6FA89E;text-align:center">Oct 4</div><div class="mono" style="font-size:10px;color:#6FA89E;text-align:center">Oct 5</div><div class="mono" style="font-size:10px;color:#6FA89E;text-align:center">Oct 6</div><div class="mono" style="font-size:10px;color:#6FA89E;text-align:center">Oct 7</div><div class="mono" style="font-size:10px;color:#6FA89E;text-align:center">Oct 8</div><div class="mono" style="font-size:10px;color:#6FA89E;text-align:center">Oct 9</div>
+        <div style="font-size:12px;color:#A6D8CD">censys</div>
         <div class="fpc" title="first scan · 22, 80, 5060">167c28</div><div class="fpc same">167c28</div><div class="fpc same">167c28</div><div class="fpc same">167c28</div><div class="fpc same">167c28</div><div class="fpc same">167c28</div><div class="fpc miss" title="no row">—</div><div class="fpc miss" title="no row">—</div>
-        <div style="font-size:12px;color:#9199A8">shodan</div>
+        <div style="font-size:12px;color:#A6D8CD">shodan</div>
         <div class="fpc" title="first scan · 2223, 3000, 3001, 4000">6d0a9f</div><div class="fpc same">6d0a9f</div><div class="fpc chg" title="− 2223/tcp OpenSSH">cc1b20</div><div class="fpc same">cc1b20</div><div class="fpc chg" title="− 4000/tcp">b57801</div><div class="fpc chg" title="− 3000/tcp http">0f68ed</div><div class="fpc miss" title="no row">—</div><div class="fpc miss" title="no row">—</div>
       </div>
       <div class="note">Same hash = identical extracted facts (port, protocol, software name/version — banner text and scan time are excluded by design, so a changed hash is a real service change, not noise). Orange = differs from the previous scan. Dashed = no row at all. A row is written even when nothing changed, so "stable for N days" is a stored fact rather than an absence.</div>
@@ -267,26 +269,26 @@ tr:last-child td{border-bottom:none}
           <div style="font-size:13px;font-weight:600">What changed — shodan</div>
           <span class="src">diff of consecutive fingerprint_facts</span>
         </div>
-        <div class="diff"><span class="when">Oct 3 → Oct 4</span><span class="op">−</span><span><span class="mono">2223/tcp</span> ssh · <span class="mono" style="color:#E7E9ED">OpenSSH 7.9p1 Debian 10+deb10u2</span></span></div>
-        <div class="diff"><span class="when">Oct 5 → Oct 6</span><span class="op">−</span><span><span class="mono">4000/tcp</span> <span style="color:#5D6472">unidentified</span></span></div>
+        <div class="diff"><span class="when">Oct 3 → Oct 4</span><span class="op">−</span><span><span class="mono">2223/tcp</span> ssh · <span class="mono" style="color:#E8FFF8">OpenSSH 7.9p1 Debian 10+deb10u2</span></span></div>
+        <div class="diff"><span class="when">Oct 5 → Oct 6</span><span class="op">−</span><span><span class="mono">4000/tcp</span> <span style="color:#6FA89E">unidentified</span></span></div>
         <div class="diff"><span class="when">Oct 6 → Oct 7</span><span class="op">−</span><span><span class="mono">3000/tcp</span> http</span></div>
-        <div class="note">Three removals, nothing added, in five days. <span class="mono">2223/tcp</span> is in the <span class="mono">ssh_admin</span> port family (netflow-rollups migration 0017) — the cross-check this screen should offer: any <span class="mono">flow_records</span> to 2223 before Oct 4 name whoever administered this box over a non-standard SSH port on a 2019-era OpenSSH build. The admin-plane bytes on the Netflow tab (Sep 26, Sep 30) are the first place to look. Operator tidying up, reimage in progress, or Shodan's coverage shifting — the tool only says the facts changed; what it means stays a human call.</div>
+        <div class="note">Three removals, nothing added, in five days. <span class="mono">2223/tcp</span> is in the <span class="mono">ssh_admin</span> port family (netflow-rollups migration 0017) — the cross-check this screen should offer: any <span class="mono">flow__records</span> to 2223 before Oct 4 name whoever administered this box over a non-standard SSH port on a 2019-era OpenSSH build. The admin-plane bytes on the Netflow tab (Sep 26, Sep 30) are the first place to look. Operator tidying up, reimage in progress, or Shodan's coverage shifting — the tool only says the facts changed; what it means stays a human call.</div>
       </div>
 
       <div class="card" style="flex:1 1 420px;min-width:0;padding:22px 24px">
         <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:14px">
           <div style="font-size:13px;font-weight:600">Open services — latest scan per source</div>
-          <div style="font-size:12px;color:#5D6472" class="mono">Oct 7, 02:00 UTC</div>
+          <div style="font-size:12px;color:#6FA89E" class="mono">Oct 7, 02:00 UTC</div>
         </div>
         <table style="width:100%;border-collapse:collapse">
           <tr><th>Source</th><th>Port</th><th>Protocol</th><th>Software</th><th></th></tr>
-          <tr style="background:#132033"><td class="mono" style="color:#9199A8">censys</td><td class="mono">5060/udp</td><td style="color:#9199A8">SIP</td><td class="mono" style="color:#4C8DFF;font-weight:600">asterisk</td><td></td></tr>
-          <tr><td class="mono" style="color:#9199A8">censys</td><td class="mono">22/tcp</td><td style="color:#9199A8">SSH</td><td style="color:#5D6472">—</td><td></td></tr>
-          <tr><td class="mono" style="color:#9199A8">censys</td><td class="mono">80/tcp</td><td style="color:#9199A8">HTTP</td><td style="color:#9199A8">http_server</td><td></td></tr>
-          <tr><td class="mono" style="color:#9199A8">shodan</td><td class="mono">3001/tcp</td><td style="color:#9199A8">http</td><td style="color:#5D6472">—</td><td></td></tr>
-          <tr style="opacity:0.5"><td class="mono" style="color:#9199A8">shodan</td><td class="mono" style="text-decoration:line-through">3000/tcp</td><td style="color:#9199A8">http</td><td style="color:#5D6472">—</td><td><span class="chip" style="color:#F5A623;border-color:#5A4423">gone Oct 7</span></td></tr>
-          <tr style="opacity:0.5"><td class="mono" style="color:#9199A8">shodan</td><td class="mono" style="text-decoration:line-through">4000/tcp</td><td style="color:#9199A8">—</td><td style="color:#5D6472">—</td><td><span class="chip" style="color:#F5A623;border-color:#5A4423">gone Oct 6</span></td></tr>
-          <tr style="opacity:0.5"><td class="mono" style="color:#9199A8">shodan</td><td class="mono" style="text-decoration:line-through">2223/tcp</td><td style="color:#9199A8">ssh</td><td class="mono" style="color:#9199A8">OpenSSH 7.9p1</td><td><span class="chip" style="color:#F5A623;border-color:#5A4423">gone Oct 4</span></td></tr>
+          <tr style="background:#132033"><td class="mono" style="color:#A6D8CD">censys</td><td class="mono">5060/udp</td><td style="color:#A6D8CD">SIP</td><td class="mono" style="color:#4C8DFF;font-weight:600">asterisk</td><td></td></tr>
+          <tr><td class="mono" style="color:#A6D8CD">censys</td><td class="mono">22/tcp</td><td style="color:#A6D8CD">SSH</td><td style="color:#6FA89E">—</td><td></td></tr>
+          <tr><td class="mono" style="color:#A6D8CD">censys</td><td class="mono">80/tcp</td><td style="color:#A6D8CD">HTTP</td><td style="color:#A6D8CD">http_server</td><td></td></tr>
+          <tr><td class="mono" style="color:#A6D8CD">shodan</td><td class="mono">3001/tcp</td><td style="color:#A6D8CD">http</td><td style="color:#6FA89E">—</td><td></td></tr>
+          <tr style="opacity:0.5"><td class="mono" style="color:#A6D8CD">shodan</td><td class="mono" style="text-decoration:line-through">3000/tcp</td><td style="color:#A6D8CD">http</td><td style="color:#6FA89E">—</td><td><span class="chip" style="color:#F5A623;border-color:#5A4423">gone Oct 7</span></td></tr>
+          <tr style="opacity:0.5"><td class="mono" style="color:#A6D8CD">shodan</td><td class="mono" style="text-decoration:line-through">4000/tcp</td><td style="color:#A6D8CD">—</td><td style="color:#6FA89E">—</td><td><span class="chip" style="color:#F5A623;border-color:#5A4423">gone Oct 6</span></td></tr>
+          <tr style="opacity:0.5"><td class="mono" style="color:#A6D8CD">shodan</td><td class="mono" style="text-decoration:line-through">2223/tcp</td><td style="color:#A6D8CD">ssh</td><td class="mono" style="color:#A6D8CD">OpenSSH 7.9p1</td><td><span class="chip" style="color:#F5A623;border-color:#5A4423">gone Oct 4</span></td></tr>
         </table>
         <div class="note">Censys and Shodan don't overlap at all on this host — censys sees 22/80/5060, shodan saw 2223/3000/3001/4000. Two scanners, two partial views; the union is the fingerprint, and a change in either is a change.</div>
       </div>
@@ -317,10 +319,10 @@ document.querySelectorAll('[data-peers]').forEach(b => b.addEventListener('click
   const u = b.dataset.peers === 'uncl';
   document.getElementById('peers-all').style.display = u ? 'none' : 'table';
   document.getElementById('peers-uncl').style.display = u ? 'table' : 'none';
-  document.getElementById('peers-src').textContent = u ? 'unclassified_peer_contacts_daily' : 'flow_rollup_daily';
+  document.getElementById('peers-src').textContent = u ? 'rollup__unclassified_contacts_daily' : 'rollup__flow_daily';
   document.getElementById('peers-note').textContent = u
-    ? '111 peers with every peer_is_* flag false — the input to the candidate pipeline. "Propose classification" would open a pre-filled card on the Candidates screen; the Candidate column shows pending/approved status once a row exists for the peer\'s ASN (which needs an ASN lookup — no rollup view carries it).'
-    : 'Only the monitored-IP variant of this page gets the three daily-view cards above — they\'re keyed by monitored_ip. A peer\'s page needs flow_rollup_daily filtered on peer_ip instead ("which monitored IPs does this peer touch").';
+    ? '111 peers with peer_categories = {} and no accepted role — the input to the candidate pipeline. "Propose classification" would open a pre-filled card on the Candidates screen; the Candidate column shows pending/approved status once a row exists for the peer\'s ASN (which needs an ASN lookup — no rollup view carries it).'
+    : 'Only the monitored-IP variant of this page gets the three daily-view cards above — they\'re keyed by monitored_ip. A peer\'s page needs rollup__flow_daily filtered on peer_ip instead ("which monitored IPs does this peer touch").';
 }));
 </script>
 </body>

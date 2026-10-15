@@ -1,0 +1,40 @@
+/* "Galaxy map" theme — modelled on the right-hand UI panels of a Stellaris-style galaxy map:
+   dark teal glass panels over a nebula, thin bright-teal borders, mint-cyan text, gold for the
+   numbers that matter. Linked after each page's own <style> so its rules win on ties; the pages'
+   neutral greys were re-mapped to the same palette in-place (see README "Theme"). Status colours
+   (red bph, orange trunk/warn, green ok, blue cloud, purple satellite…) are unchanged on purpose. */
+html{background:#050c10}
+body{background:transparent;color:#E8FFF8}
+body::before{content:'';position:fixed;inset:0;z-index:-2;pointer-events:none;background:
+  radial-gradient(ellipse 55% 45% at 12% 18%, rgba(128,58,160,0.55), transparent 62%),
+  radial-gradient(ellipse 45% 55% at 78% 72%, rgba(18,116,104,0.50), transparent 62%),
+  radial-gradient(ellipse 38% 38% at 52% 28%, rgba(178,70,150,0.32), transparent 62%),
+  radial-gradient(ellipse 50% 40% at 92% 12%, rgba(90,160,170,0.28), transparent 62%),
+  radial-gradient(ellipse 60% 30% at 40% 95%, rgba(60,30,90,0.45), transparent 62%),
+  #050c10}
+body::after{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:0.9;background-image:
+  radial-gradient(1px 1px at 23px 37px, rgba(255,255,255,0.85), transparent 1.5px),
+  radial-gradient(1px 1px at 131px 89px, rgba(210,240,255,0.7), transparent 1.5px),
+  radial-gradient(1.5px 1.5px at 201px 151px, rgba(255,230,200,0.8), transparent 2px),
+  radial-gradient(1px 1px at 77px 173px, rgba(255,255,255,0.5), transparent 1.5px),
+  radial-gradient(1px 1px at 167px 23px, rgba(255,255,255,0.6), transparent 1.5px),
+  radial-gradient(1px 1px at 251px 107px, rgba(190,255,235,0.6), transparent 1.5px),
+  radial-gradient(1.5px 1.5px at 43px 227px, rgba(255,255,255,0.75), transparent 2px),
+  radial-gradient(1px 1px at 289px 199px, rgba(255,255,255,0.45), transparent 1.5px);
+  background-size:311px 263px, 311px 263px, 311px 263px, 311px 263px, 311px 263px, 311px 263px, 311px 263px, 311px 263px}
+a{color:#7FEFD6}a:hover{color:#B9FFEF}
+h1{font-family:'Orbitron','IBM Plex Sans',system-ui,sans-serif;letter-spacing:0.05em;color:#E3FFF6;text-shadow:0 0 14px rgba(95,227,199,0.35)}
+.sidebar{background:rgba(6,28,30,0.78)!important;border-right:1px solid rgba(72,196,170,0.42)!important;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);box-shadow:inset -1px 0 0 rgba(140,255,225,0.08)}
+.navlink{color:#A6D8CD;border-radius:3px}
+.navlink:hover{background:rgba(72,196,170,0.12);color:#E8FFF8}
+.navlink.active{background:rgba(72,196,170,0.2);color:#E8FFF8;box-shadow:inset 3px 0 0 #5FE3C7}
+.card{background:rgba(8,34,36,0.72);border:1px solid rgba(72,196,170,0.45);border-radius:4px;backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
+  box-shadow:inset 0 1px 0 rgba(150,255,228,0.22), inset 0 0 0 1px rgba(0,20,18,0.35), 0 8px 24px rgba(0,0,0,0.35)}
+th{color:#CFF3EA;background:rgba(36,118,104,0.38);border-bottom:1px solid rgba(72,196,170,0.5);padding-top:7px;padding-bottom:7px}
+td{border-color:rgba(72,196,170,0.18)}
+.src{background:rgba(5,26,28,0.75);border:1px solid rgba(72,196,170,0.35);color:#6FC9B8;border-radius:3px}
+.pill,.tog{border-radius:3px;border-color:rgba(72,196,170,0.45);color:#A6D8CD}
+.pill.active,.tog.on{background:rgba(72,196,170,0.22);border-color:#5FE3C7;color:#E8FFF8}
+.chip{border-radius:3px;background:rgba(5,26,28,0.7)}
+.note{border-top-color:rgba(72,196,170,0.25)}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-track{background:rgba(5,20,22,0.6)}::-webkit-scrollbar-thumb{background:rgba(72,196,170,0.35);border-radius:3px}

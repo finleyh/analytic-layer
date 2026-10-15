@@ -3,75 +3,79 @@
 <head>
 <meta charset="utf-8">
 <title>CVS Watch — Geo</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Orbitron:wght@500;600&display=swap">
 <style>
-body{margin:0;background:#0B0D10;color:#E7E9ED;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{margin:0;background:#061214;color:#E8FFF8;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 .mono{font-family:'IBM Plex Mono',monospace}
 a{color:#4C8DFF;text-decoration:none}
 a:hover{color:#78AAFF}
-.navlink{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;font-size:14px;font-weight:500;color:#9199A8}
-.navlink:hover{background:#171B22;color:#E7E9ED}
-.navlink.active{background:#1B2029;color:#E7E9ED}
-.card{background:#141821;border:1px solid #262B35;border-radius:10px}
-.src{font-size:10px;font-family:'IBM Plex Mono',monospace;color:#5D6472;background:#0F1217;border:1px solid #1B2029;padding:2px 7px;border-radius:4px;white-space:nowrap}
-.chip{font-size:10px;font-family:'IBM Plex Mono',monospace;background:#1B2029;border:1px solid #262B35;color:#9199A8;padding:1px 6px;border-radius:4px;display:inline-block;margin:2px 3px 0 0}
-.k{font-size:10px;color:#5D6472;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px}
-th{text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em;color:#5D6472;text-transform:uppercase;padding:0 10px 10px 10px;border-bottom:1px solid #262B35;white-space:nowrap}
-td{padding:9px 10px;font-size:12px;border-bottom:1px solid #1B2029;vertical-align:middle}
+.navlink{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;font-size:14px;font-weight:500;color:#A6D8CD}
+.navlink:hover{background:#0F3133;color:#E8FFF8}
+.navlink.active{background:#133A3C;color:#E8FFF8}
+.card{background:#0C2A2C;border:1px solid #2B7266;border-radius:10px}
+.src{font-size:10px;font-family:'IBM Plex Mono',monospace;color:#6FA89E;background:#0A2224;border:1px solid #133A3C;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.chip.tip{border-style:dashed;color:#C6EBE2;border-color:#3F9C8A}
+.chip.pend{border-style:dotted;color:#A6D8CD}
+.chip.rev{color:#F5A623;border-color:#5A4423}
+.chip{font-size:10px;font-family:'IBM Plex Mono',monospace;background:#133A3C;border:1px solid #2B7266;color:#A6D8CD;padding:1px 6px;border-radius:4px;display:inline-block;margin:2px 3px 0 0}
+.k{font-size:10px;color:#6FA89E;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px}
+th{text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em;color:#6FA89E;text-transform:uppercase;padding:0 10px 10px 10px;border-bottom:1px solid #2B7266;white-space:nowrap}
+td{padding:9px 10px;font-size:12px;border-bottom:1px solid #133A3C;vertical-align:middle}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:#171B22}
-.sub{font-size:11px;color:#5D6472;display:block;margin-top:2px}
-.note{font-size:11px;color:#5D6472;line-height:1.5;padding:12px 20px 14px 20px;border-top:1px solid #1B2029}
-.lg{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#9199A8;margin-right:14px}
+tr:hover td{background:#0F3133}
+.sub{font-size:11px;color:#6FA89E;display:block;margin-top:2px}
+.note{font-size:11px;color:#6FA89E;line-height:1.5;padding:12px 20px 14px 20px;border-top:1px solid #133A3C}
+.lg{display:inline-flex;align-items:center;gap:6px;font-size:11px;color:#A6D8CD;margin-right:14px}
 .lg i{width:10px;height:10px;border-radius:2px;display:inline-block}
-.row{display:grid;grid-template-columns:150px 1fr 70px;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid #1B2029}
+.row{display:grid;grid-template-columns:150px 1fr 70px;gap:14px;align-items:center;padding:9px 0;border-bottom:1px solid #133A3C}
 .row:last-child{border-bottom:none}
-.bar{display:flex;height:22px;border-radius:4px;overflow:hidden;background:#1B2029}
-.seg{display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#0B0D10;font-weight:600;overflow:hidden;white-space:nowrap;border-right:1px solid #0B0D10}
-.seg.abroad{box-shadow:inset 0 -3px 0 #E7E9ED}
+.bar{display:flex;height:22px;border-radius:4px;overflow:hidden;background:#133A3C}
+.seg{display:flex;align-items:center;justify-content:center;font-family:'IBM Plex Mono',monospace;font-size:10px;color:#061214;font-weight:600;overflow:hidden;white-space:nowrap;border-right:1px solid #061214}
+.seg.abroad{box-shadow:inset 0 -3px 0 #E8FFF8}
 .trk{display:flex;align-items:flex-end;gap:4px;height:70px}
 .trk div{flex:1;border-radius:2px 2px 0 0;position:relative}
-.trk div span{position:absolute;top:-14px;left:0;right:0;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#9199A8}
-.tile{border:1px solid #262B35;border-radius:8px;padding:12px 14px;background:#171B22;min-width:0}
-.sleep{display:inline-block;width:60px;height:6px;background:#1B2029;border-radius:3px;overflow:hidden;vertical-align:middle;margin-right:6px}
+.trk div span{position:absolute;top:-14px;left:0;right:0;text-align:center;font-family:'IBM Plex Mono',monospace;font-size:9px;color:#A6D8CD}
+.tile{border:1px solid #2B7266;border-radius:8px;padding:12px 14px;background:#0F3133;min-width:0}
+.sleep{display:inline-block;width:60px;height:6px;background:#133A3C;border-radius:3px;overflow:hidden;vertical-align:middle;margin-right:6px}
 .sleep i{display:block;height:100%;background:#8B5CF6}
-.dn{font-size:12px;color:#9199A8;line-height:1.5;display:flex;gap:8px}
-.dn b{color:#E7E9ED;font-weight:600}
+.dn{font-size:12px;color:#A6D8CD;line-height:1.5;display:flex;gap:8px}
+.dn b{color:#E8FFF8;font-weight:600}
 .cls{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;display:inline-block;white-space:nowrap}
-.ctl{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid #1B2029}
+.ctl{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid #133A3C}
 .ctl .grp{display:flex;align-items:center;gap:6px}
-.ctl label{font-size:10px;color:#5D6472;text-transform:uppercase;letter-spacing:0.04em;margin-right:4px}
-.tog{all:unset;cursor:pointer;font-size:11px;font-weight:500;padding:5px 11px;border-radius:999px;border:1px solid #262B35;color:#9199A8;background:transparent}
-.tog.on{background:#1B2029;border-color:#3A4254;color:#E7E9ED}
+.ctl label{font-size:10px;color:#6FA89E;text-transform:uppercase;letter-spacing:0.04em;margin-right:4px}
+.tog{all:unset;cursor:pointer;font-size:11px;font-weight:500;padding:5px 11px;border-radius:999px;border:1px solid #2B7266;color:#A6D8CD;background:transparent}
+.tog.on{background:#133A3C;border-color:#3F9C8A;color:#E8FFF8}
 .tog.role.on{border-color:currentColor}
-select.sel{background:#0F1217;color:#E7E9ED;border:1px solid #262B35;border-radius:6px;padding:5px 8px;font-size:12px;font-family:'IBM Plex Mono',monospace}
+select.sel{background:#0A2224;color:#E8FFF8;border:1px solid #2B7266;border-radius:6px;padding:5px 8px;font-size:12px;font-family:'IBM Plex Mono',monospace}
 input[type=range]{accent-color:#4C8DFF;width:160px}
-#map{width:100%;height:540px;display:block;background:#0B0D10;cursor:grab}
+#map{width:100%;height:540px;display:block;background:#061214;cursor:grab}
 #map:active{cursor:grabbing}
-.country{fill:#13161C;stroke:#262B35;stroke-width:0.5}
-.country.lit{stroke:#3A4254}
+.country{fill:#0B2628;stroke:#2B7266;stroke-width:0.5}
+.country.lit{stroke:#3F9C8A}
 .arc{fill:none;stroke-linecap:round;opacity:0.85;pointer-events:stroke}
-.arc:hover{opacity:1;stroke:#E7E9ED!important}
+.arc:hover{opacity:1;stroke:#E8FFF8!important}
 .arc.dim{opacity:0.12}
-.node{stroke:#0B0D10;stroke-width:1}
-.tip{position:absolute;pointer-events:none;background:#171B22;border:1px solid #3A4254;border-radius:7px;padding:8px 10px;font-size:11px;line-height:1.5;color:#E7E9ED;max-width:280px;z-index:5;display:none;box-shadow:0 6px 20px rgba(0,0,0,0.5)}
-.tip .mono{color:#9199A8}
-.side{width:300px;flex-shrink:0;border-left:1px solid #1B2029;display:flex;flex-direction:column;max-height:540px;overflow:auto}
-.side .hd{padding:14px 16px 10px 16px;border-bottom:1px solid #1B2029}
-.srow{display:flex;justify-content:space-between;gap:8px;padding:8px 16px;border-bottom:1px solid #1B2029;font-size:12px;cursor:pointer}
-.srow:hover,.srow.on{background:#171B22}
+.node{stroke:#061214;stroke-width:1}
+.tip{position:absolute;pointer-events:none;background:#0F3133;border:1px solid #3F9C8A;border-radius:7px;padding:8px 10px;font-size:11px;line-height:1.5;color:#E8FFF8;max-width:280px;z-index:5;display:none;box-shadow:0 6px 20px rgba(0,0,0,0.5)}
+.tip .mono{color:#A6D8CD}
+.side{width:300px;flex-shrink:0;border-left:1px solid #133A3C;display:flex;flex-direction:column;max-height:540px;overflow:auto}
+.side .hd{padding:14px 16px 10px 16px;border-bottom:1px solid #133A3C}
+.srow{display:flex;justify-content:space-between;gap:8px;padding:8px 16px;border-bottom:1px solid #133A3C;font-size:12px;cursor:pointer}
+.srow:hover,.srow.on{background:#0F3133}
 .srow .cc{font-family:'IBM Plex Mono',monospace;font-weight:600;width:28px}
-.srow .mb{font-family:'IBM Plex Mono',monospace;color:#9199A8;white-space:nowrap}
-.peer{padding:6px 16px 6px 44px;border-bottom:1px solid #1B2029;font-size:11px;color:#9199A8;line-height:1.45}
-.peer .mono{color:#E7E9ED}
-@media (max-width:1100px){.side{width:100%;border-left:none;border-top:1px solid #1B2029;max-height:320px}}
+.srow .mb{font-family:'IBM Plex Mono',monospace;color:#A6D8CD;white-space:nowrap}
+.peer{padding:6px 16px 6px 44px;border-bottom:1px solid #133A3C;font-size:11px;color:#A6D8CD;line-height:1.45}
+.peer .mono{color:#E8FFF8}
+@media (max-width:1100px){.side{width:100%;border-left:none;border-top:1px solid #133A3C;max-height:320px}}
 </style>
+<link rel="stylesheet" href="theme.css">
 </head>
 <body>
 
-<div style="display:flex;width:100%;min-height:100vh;background:#0B0D10">
+<div style="display:flex;width:100%;min-height:100vh;background:transparent">
 
-<div style="width:240px;flex-shrink:0;background:#0F1217;border-right:1px solid #262B35;display:flex;flex-direction:column;padding:24px 16px;box-sizing:border-box;gap:4px">
+<div class="sidebar" style="width:240px;flex-shrink:0;background:#0A2224;border-right:1px solid #2B7266;display:flex;flex-direction:column;padding:24px 16px;box-sizing:border-box;gap:4px">
   <div style="display:flex;align-items:center;gap:10px;padding:8px 8px 22px 8px">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4C8DFF" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9" stroke-opacity="0.45"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke-opacity="0.45"/></svg>
     <span style="font-size:15px;font-weight:600;letter-spacing:0.2px">CVS Watch</span>
@@ -85,9 +89,9 @@ input[type=range]{accent-color:#4C8DFF;width:160px}
   <a href="CandidateReview.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l2.2-5h13.6L21 8M3 8v10.5A1.5 1.5 0 004.5 20h15a1.5 1.5 0 001.5-1.5V8M3 8h6.2l.9 3h3.8l.9-3H21"/></svg>Candidates</a>
   <a href="PipelineHealth.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg>Pipeline health</a>
   <div style="flex:1"></div>
-  <div style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-top:1px solid #262B35;margin-top:8px">
-    <div style="width:28px;height:28px;border-radius:50%;background:#1B2029;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#9199A8;flex-shrink:0">JF</div>
-    <div style="font-size:12px;color:#9199A8;line-height:1.4">J. Finley<br><span style="color:#5D6472">Analyst</span></div>
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-top:1px solid #2B7266;margin-top:8px">
+    <div style="width:28px;height:28px;border-radius:50%;background:#133A3C;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#A6D8CD;flex-shrink:0">JF</div>
+    <div style="font-size:12px;color:#A6D8CD;line-height:1.4">J. Finley<br><span style="color:#6FA89E">Analyst</span></div>
   </div>
 </div>
 
@@ -96,19 +100,19 @@ input[type=range]{accent-color:#4C8DFF;width:160px}
   <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:16px">
     <div>
       <h1 style="margin:0 0 4px 0;font-size:22px;font-weight:600">Geo — where the SIP media goes</h1>
-      <div style="font-size:13px;color:#5D6472">Working hypothesis: operators route through overseas SIP upstreams to stay away from US telco fraud teams. This page shows the <em>where</em>; it can't show the <em>why</em>.</div>
+      <div style="font-size:13px;color:#6FA89E">Working hypothesis: operators route through overseas SIP upstreams to stay away from US telco fraud teams. This page shows the <em>where</em>; it can't show the <em>why</em>.</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-      <span class="src">sip_peer_candidates · sip_peer_identities · *_providers geo</span>
-      <span class="src">flow_records backfill · 63d · UDP ≠ 5060</span>
+      <span class="src">review__sip_pairs · lookup__ip_identities · ref__providers geo</span>
+      <span class="src">flow__records backfill · 63d · UDP ≠ 5060</span>
     </div>
   </div>
 
   <div class="card" style="margin-bottom:22px;overflow:hidden">
     <div class="ctl">
       <div class="grp"><label>Mode</label><button class="tog on" data-mode="roles">SIP peer roles · 30d</button><button class="tog" data-mode="weekly">All UDP media · by week</button></div>
-      <div class="grp" id="rolectl"><label>Roles</label><button class="tog role on" data-role="trunk" style="color:#F5A623">trunk</button><button class="tog role on" data-role="client" style="color:#3DD68C">client</button><button class="tog role" data-role="prober" style="color:#9199A8">prober</button><button class="tog role" data-role="unclear" style="color:#5D6472">unclear</button></div>
-      <div class="grp"><label>Monitored IP</label><select class="sel" id="monsel"><option value="">all 15</option></select></div>
+      <div class="grp" id="rolectl"><label>Roles</label><button class="tog role on" data-role="sip_trunk" style="color:#F5A623">sip_trunk</button><button class="tog role on" data-role="sip_client" style="color:#3DD68C">sip_client</button><button class="tog role" data-role="sip_scanner" style="color:#A6D8CD">sip_scanner</button><button class="tog role" data-role="unclear" style="color:#6FA89E">unclear</button></div>
+      <div class="grp"><label>Monitored IP</label><select class="sel" id="monsel"><option value="">all 16</option></select></div>
       <div class="grp" id="weekctl" style="display:none"><label>Week of</label><input type="range" id="wk" min="0" max="8" value="8"><span class="mono" id="wklbl" style="font-size:12px;width:48px">Oct 5</span><button class="tog" id="play">▶ play</button></div>
       <div class="grp"><button class="tog" id="hideus">hide US → US</button><button class="tog" id="reset">reset view</button></div>
       <div style="flex:1"></div>
@@ -117,38 +121,38 @@ input[type=range]{accent-color:#4C8DFF;width:160px}
     <div style="display:flex;flex-wrap:wrap;position:relative">
       <div style="flex:1 1 640px;min-width:0;position:relative">
         <svg id="map"></svg>
-        <div id="mapmsg" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#5D6472;font-size:13px;pointer-events:none">loading world outline…</div>
+        <div id="mapmsg" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#6FA89E;font-size:13px;pointer-events:none">loading world outline…</div>
         <div style="position:absolute;left:14px;bottom:12px;display:flex;flex-direction:column;gap:5px;pointer-events:none" id="maplegend"></div>
         <div class="tip" id="tip"></div>
       </div>
       <div class="side" id="side"></div>
     </div>
-    <div class="note">Arcs are great circles from the monitored IP's home country (from its own <span class="mono">flow_records</span> country field) to the peer's country; width ~ log bytes; a white-bordered diamond is a monitored IP (red = confirmed CVS, orange = SIP trunk). Country fill ~ log bytes in the current selection. <b style="color:#9199A8">Roles mode</b> draws the 130 classified SIP peer pairs, colored by what kind of network the peer is. <b style="color:#9199A8">Weekly mode</b> draws every UDP media flow (≠ 5060) for the chosen week from the 63-day backfill — scrub or play it to watch who talks to whom over time. Scroll to zoom, drag to pan, hover anything, click a country to list its peers on the right. Everything sits at a country centroid because that's the geo the data honestly supports today; see Data notes below for what a real dot map needs.</div>
+    <div class="note">Arcs are great circles from the monitored IP's home country (from its own <span class="mono">flow__records</span> country field) to the peer's country; width ~ log bytes; a white-bordered diamond is a monitored IP — grey while its reviewed role is pending (all 16 on Oct 15; the heuristic's proposal and any OpenCTI label are in its tooltip, as text, not as color). Country fill ~ log bytes in the current selection. <b style="color:#A6D8CD">Roles mode</b> draws the 155 measured SIP peer pairs (84 human-confirmed), colored by what kind of network the peer is. <b style="color:#A6D8CD">Weekly mode</b> draws every UDP media flow (≠ 5060) for the chosen week from the 63-day backfill — scrub or play it to watch who talks to whom over time. Scroll to zoom, drag to pan, hover anything, click a country to list its peers on the right. Everything sits at a country centroid because that's the geo the data honestly supports today; see Data notes below for what a real dot map needs.</div>
   </div>
 
   <div class="card" style="padding:14px 22px;margin-bottom:22px;display:flex;align-items:center;gap:30px;flex-wrap:wrap">
-    <div><div class="k">SIP peer pairs</div><div style="font-size:20px;font-weight:600">130</div><div style="font-size:11px;color:#9199A8">30 trunk · 3 client · 34 prober · 63 unclear</div></div>
-    <div><div class="k">Trunk media, 30d</div><div style="font-size:20px;font-weight:600">372 MB</div><div style="font-size:11px;color:#9199A8">to 6 countries</div></div>
-    <div><div class="k">Trunk media to non-US peers</div><div style="font-size:20px;font-weight:600;color:#F5A623">45%</div><div style="font-size:11px;color:#9199A8">168 MB · DE 86 · CO 79 · GB 1.7 · DO 1.4 · MX 0.3</div></div>
-    <div><div class="k">…of which: own switches abroad</div><div style="font-size:20px;font-weight:600">52%</div><div style="font-size:11px;color:#9199A8">cloud-flagged peers (Vultr, Hetzner, DO, Azure)</div></div>
-    <div><div class="k">…of which: foreign carriers</div><div style="font-size:20px;font-weight:600">48%</div><div style="font-size:11px;color:#9199A8">satellite / mobile / residential / unclassified</div></div>
-    <div><div class="k">9-week trend, non-US share</div><div style="font-size:20px;font-weight:600;color:#9199A8">flat</div><div style="font-size:11px;color:#9199A8">~40–45% every week since Aug 10 — a steady mode, not a shift</div></div>
+    <div><div class="k">SIP peer pairs</div><div style="font-size:20px;font-weight:600">155</div><div style="font-size:11px;color:#A6D8CD">32 sip_trunk · 54 sip_client · 39 sip_scanner · 30 unclear · <span style="color:#3DD68C">84 confirmed by a human</span></div></div>
+    <div><div class="k">Trunk media, pair window</div><div style="font-size:20px;font-weight:600">421 MB</div><div style="font-size:11px;color:#A6D8CD">to 7 countries · review__sip_pairs.media_bytes</div></div>
+    <div><div class="k">Trunk media to non-US peers</div><div style="font-size:20px;font-weight:600;color:#F5A623">44%</div><div style="font-size:11px;color:#A6D8CD">185 MB · DE 100 · CO 82 · DO 1.0 · GB 0.9 · MX 0.3 · CA 0.2</div></div>
+    <div><div class="k">…of which: own switches abroad</div><div style="font-size:20px;font-weight:600">55%</div><div style="font-size:11px;color:#A6D8CD">peer_is_hosting on the pair (Vultr, Hetzner, DO, OVH, Azure)</div></div>
+    <div><div class="k">…of which: foreign carriers</div><div style="font-size:20px;font-weight:600">45%</div><div style="font-size:11px;color:#A6D8CD">not hosting: CO satellite, DO Servimast</div></div>
+    <div><div class="k">9-week trend, non-US share</div><div style="font-size:20px;font-weight:600;color:#A6D8CD">flat</div><div style="font-size:11px;color:#A6D8CD">~40–45% every week since Aug 10 — a steady mode, not a shift</div></div>
   </div>
 
   <div class="card" style="padding:20px 22px;margin-bottom:22px">
     <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px">
       <div style="font-size:13px;font-weight:600">Each monitored IP's trunk media, by peer country and what kind of network the peer is</div>
-      <span class="src">sip_peer_candidates role=trunk · media_bytes · peer_country · sip_peer_identities.provider_tables</span>
+      <span class="src">review__sip_pairs role=trunk · media_bytes · peer_country · lookup__ip_identities.provider_categories</span>
     </div>
-    <div style="font-size:12px;color:#5D6472;margin-bottom:12px">Color = provider class of the peer. White underline = outside the US. The two "overseas" tactics look different here: a foreign <em>carrier</em> (purple/teal/orange abroad) vs. the operator's <em>own switch</em> hosted abroad (blue abroad).</div>
+    <div style="font-size:12px;color:#6FA89E;margin-bottom:12px">Color = provider class of the peer. White underline = outside the US. The two "overseas" tactics look different here: a foreign <em>carrier</em> (purple/teal/orange abroad) vs. the operator's <em>own switch</em> hosted abroad (blue abroad).</div>
     <div style="margin-bottom:10px">
       <span class="lg"><i style="background:#4C8DFF"></i>cloud / hosting (their own node)</span>
       <span class="lg"><i style="background:#8B5CF6"></i>satellite</span>
       <span class="lg"><i style="background:#F59E0B"></i>mobile</span>
       <span class="lg"><i style="background:#2DD4BF"></i>residential ISP</span>
       <span class="lg"><i style="background:#E5484D"></i>bulletproof + cloud</span>
-      <span class="lg"><i style="background:#5D6472"></i>no provider table</span>
-      <span class="lg"><i style="background:#1B2029;border:1px solid #3A4254;box-shadow:inset 0 -3px 0 #E7E9ED"></i>non-US</span>
+      <span class="lg"><i style="background:#6FA89E"></i>no provider table</span>
+      <span class="lg"><i style="background:#133A3C;border:1px solid #3F9C8A;box-shadow:inset 0 -3px 0 #E8FFF8"></i>non-US</span>
     </div>
     <div id="bars"></div>
     <div class="note" style="padding-left:0;padding-right:0">Read across: <span class="mono">146.190.124.95</span> is the carrier case — half its media goes to a Colombian satellite ISP that sleeps in Bogotá time. <span class="mono">143.198.176.127</span> (the SIP trunk node) is the hosting case — 97% abroad, but the peer is <span class="mono">192.248.178.127</span>, your own confirmed CVS on Vultr Frankfurt (rDNS <span class="mono">callspoofing.org</span>). <span class="mono">143.198.172.85</span> (OUTSIDERS) is 96% US — Comcast/Charter/Verizon residential and a Dominican trickle. Pairs below 0.1 MB are folded into the smallest segments.</div>
@@ -159,11 +163,11 @@ input[type=range]{accent-color:#4C8DFF;width:160px}
     <div class="card" style="flex:1 1 520px;min-width:0;padding:20px 22px">
       <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:4px">
         <div style="font-size:13px;font-weight:600">Non-US share of media bytes, by week</div>
-        <span class="src">flow_records backfill · the rollups drop country</span>
+        <span class="src">flow__records backfill · the rollups drop country</span>
       </div>
-      <div style="font-size:12px;color:#5D6472;margin-bottom:22px">The hypothesis chart. Flat across the whole window — if a shift happened, it predates Aug 10 (the netflow backfill's reach) or is relative to other operators' baselines this watchlist doesn't see.</div>
+      <div style="font-size:12px;color:#6FA89E;margin-bottom:22px">The hypothesis chart. Flat across the whole window — if a shift happened, it predates Aug 10 (the netflow backfill's reach) or is relative to other operators' baselines this watchlist doesn't see.</div>
       <div id="trend"></div>
-      <div class="note" style="padding-left:0;padding-right:0">Needs <span class="mono">peer_country</span> carried through <span class="mono">flow_rollup_hourly</span> to be a live chart — the same one-line GROUP BY change as <span class="mono">peer_asn</span>; both are already on every <span class="mono">flow_records</span> row. Until then this is a one-off 180-day scan (fast enough: ~2 s for 63 days). The Sep 7 spike is a single 150 MB week to the DE node.</div>
+      <div class="note" style="padding-left:0;padding-right:0">Needs <span class="mono">peer_country</span> carried through <span class="mono">rollup__flow_hourly</span> to be a live chart — the same one-line GROUP BY change as <span class="mono">peer_asn</span>; both are already on every <span class="mono">flow__records</span> row. Until then this is a one-off 180-day scan (fast enough: ~2 s for 63 days). The Sep 7 spike is a single 150 MB week to the DE node.</div>
     </div>
 
     <div class="card" style="flex:1 1 360px;min-width:0;padding:20px 22px">
@@ -171,7 +175,7 @@ input[type=range]{accent-color:#4C8DFF;width:160px}
         <div style="font-size:13px;font-weight:600">Peer countries — all 130 pairs</div>
         <span class="src">country level · lat/lon not drawable yet</span>
       </div>
-      <div style="font-size:12px;color:#5D6472;margin-bottom:14px">Tile area ~ log(media). A proper choropleth needs a world topojson; a dot map is <em>not</em> honest yet — coordinates exist on 6,453 / 6,530 cloud rows but 3 / 23 wholesale-VoIP and 1 / 30 mobile, so it would show the clouds and hide the carriers.</div>
+      <div style="font-size:12px;color:#6FA89E;margin-bottom:14px">Tile area ~ log(media). A proper choropleth needs a world topojson; a dot map is <em>not</em> honest yet — coordinates exist on 6,453 / 6,530 cloud rows but 3 / 23 wholesale-VoIP and 1 / 30 mobile, so it would show the clouds and hide the carriers.</div>
       <div id="tiles" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px"></div>
     </div>
 
@@ -179,13 +183,13 @@ input[type=range]{accent-color:#4C8DFF;width:160px}
 
   <div class="card" style="margin-bottom:22px;overflow-x:auto">
     <div style="padding:18px 20px 6px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
-      <div style="font-size:13px;font-weight:600">Trunk identities — the 30 trunk-role peers, with who they are and whether they sleep</div>
-      <span class="src">sip_peer_identities · ASN / RIPEstat / PeeringDB / rDNS · overnight_share in the peer's local time</span>
+      <div style="font-size:13px;font-weight:600">Trunk identities — the 33 pairs the heuristic or a reviewer called sip_trunk (5 re-reviewed as sip_client, 1 pending), with who they are and whether they sleep</div>
+      <span class="src">lookup__ip_identities · ASN / RIPEstat / PeeringDB / rDNS · overnight_share in the peer's local time</span>
     </div>
     <table id="trunks" style="width:100%;border-collapse:collapse;margin-top:8px;min-width:1100px">
       <tr><th>Peer</th><th>↔ monitored</th><th>CC · tz</th><th>Class</th><th>ASN holder</th><th>PeeringDB</th><th>rDNS</th><th style="text-align:right">Media</th><th>Sleeps?</th><th style="text-align:right">p95 conc</th><th style="text-align:right">call med</th><th>Scans</th></tr>
     </table>
-    <div class="note">"Sleeps?" = share of media in the peer's local 00:00–06:00 (<span class="mono">overnight_share</span>, bar = 0–25%). Businesses sleep (CO satellite 0.00, Linode 0.00); machines don't (the DE node 0.23, Hetzner 0.12) — a cheap carrier-vs-node discriminator and timezone evidence in one number. Empty where the pair is below the trunk-sized media floor (shape features cost a <span class="mono">flow_records</span> scan each). 18 of 33 enriched peers have rDNS, 28 a PeeringDB record, 15 are dark to both scan sources.</div>
+    <div class="note">"Sleeps?" = share of media in the peer's local 00:00–06:00 (<span class="mono">overnight_share</span>, bar = 0–25%). Businesses sleep (CO satellite 0.00, Linode 0.00); machines don't (the DE node 0.23, Hetzner 0.12) — a cheap carrier-vs-node discriminator and timezone evidence in one number. Empty where the pair is below the trunk-sized media floor (shape features cost a <span class="mono">flow__records</span> scan each). 18 of 33 enriched peers have rDNS, 28 a PeeringDB record, 15 are dark to both scan sources.</div>
   </div>
 
   <div class="card" style="padding:16px 18px">
@@ -193,9 +197,9 @@ input[type=range]{accent-color:#4C8DFF;width:160px}
     <div style="display:flex;flex-direction:column;gap:9px">
       <div class="dn"><span>①</span><span><b>Two "overseas" tactics, not one.</b> Foreign carriers as upstreams (CO satellite AS265861, DO Servimast / Altice, MX) vs. the operators' own switches hosted abroad (Vultr / Hetzner DE, DigitalOcean GB). The provider flags separate them; a country-only view conflates them and would overstate "foreign carrier" by about half.</span></div>
       <div class="dn"><span>②</span><span><b>Pattern, not shift — on this data.</b> Every monitored IP's non-US share is flat week over week since Aug 10. The chart that would prove a change needs a longer baseline than the 60-day backfill, or a comparison set of operators who <em>don't</em> do this.</span></div>
-      <div class="dn"><span>③</span><span><b>Upstream ask: <span class="mono">peer_country</span> and <span class="mono">peer_asn</span> on <span class="mono">flow_rollup_hourly</span>.</b> Both are on every raw flow row and dropped by the GROUP BY. Adding them turns this page's trend into a live continuous aggregate and unblocks the By-ASN tab, the graph cluster, and candidate context in one change.</span></div>
+      <div class="dn"><span>③</span><span><b>Upstream ask: <span class="mono">peer_country</span> and <span class="mono">peer_asn</span> on <span class="mono">rollup__flow_hourly</span>.</b> Both are on every raw flow row and dropped by the GROUP BY. Adding them turns this page's trend into a live continuous aggregate and unblocks the By-ASN tab, the graph cluster, and candidate context in one change.</span></div>
       <div class="dn"><span>④</span><span><b>Geo coverage is cloud-heavy.</b> Lat/lon lives on the provider tables (migration 0069) and the nightly geocode-backfill fills it, but carriers — the interesting ones here — are mostly country-only so far. Country-level views are honest today; dots are not.</span></div>
-      <div class="dn"><span>⑤</span><span><b>What this feeds the queue.</b> A <em>new</em> trunk-role pair in a country the monitored IP has never used before is a one-shot rule over <span class="mono">sip_peer_candidates</span> (first_day, peer_country) — the "tactics shift" detector the trend chart can't be yet. And the carrier-vs-node judgment on a confirmed trunk is the analysis-pillar call that stays human (or agent) — the heuristic deliberately stops short of it.</span></div>
+      <div class="dn"><span>⑤</span><span><b>What this feeds the queue.</b> A <em>new</em> trunk-role pair in a country the monitored IP has never used before is a one-shot rule over <span class="mono">review__sip_pairs</span> (first_day, peer_country) — the "tactics shift" detector the trend chart can't be yet. And the carrier-vs-node judgment on a confirmed trunk is the analysis-pillar call that stays human (or agent) — the heuristic deliberately stops short of it.</span></div>
     </div>
   </div>
 
@@ -203,51 +207,60 @@ input[type=range]{accent-color:#4C8DFF;width:160px}
 </div>
 
 <script>
-const CLS = { cloud:['#4C8DFF','cloud'], satellite:['#8B5CF6','satellite'], mobile:['#F59E0B','mobile'], residential:['#2DD4BF','residential'], bph:['#E5484D','bph+cloud'], none:['#5D6472','unclassified'] };
+const CLS = { cloud:['#4C8DFF','cloud'], satellite:['#8B5CF6','satellite'], mobile:['#F59E0B','mobile'], residential:['#2DD4BF','residential'], bph:['#E5484D','bph+cloud'], none:['#6FA89E','unclassified'] };
 const cls = p => !p ? 'none' : p.includes('bph') ? 'bph' : p.includes('satellite') ? 'satellite' : p.includes('mobile') ? 'mobile' : p.includes('residential') ? 'residential' : p.includes('cloud') ? 'cloud' : 'none';
-// monitored, peer, cc, mb, night, p95, callmed, sib, tz, asn, holder, pdb, rdns, ptabs, sh, cs
+// monitored, peer, cc, mb, night, p95, callmed, sib, tz, asn, holder, pdb, rdns, provider_categories, sh, cs, role, confirmed_role
+// review__sip_pairs ⋈ lookup__ip_identities, every pair whose heuristic or confirmed role is sip_trunk (Oct 15); [16] = heuristic role, [17] = confirmed_role ("" = pending)
 const T = [
- ['192.248.178.127','143.198.176.127','US',84.39,0.03,20,36,0,-5,14061,'DigitalOcean, LLC','Content','','cloud',1,1],
- ['143.198.176.127','192.248.178.127','DE',84.38,0.23,20,36,0,1,20473,'The Constant Company (Vultr)','NSP','callspoofing.org','cloud',1,1],
- ['146.190.124.95','45.226.112.91','CO',74.81,0.00,24,29,5,-5,265861,'Sistemas Satelitales de Colombia','','','satellite',0,0],
- ['146.190.124.95','50.116.38.139','US',58.97,0.00,21,30,0,-5,63949,'Akamai Connected Cloud (Linode)','Content','50-116-38-139.ip.linodeusercontent.com','cloud',1,1],
- ['216.126.227.152','143.198.172.85','US',19.13,0.01,17,34,0,-5,14061,'DigitalOcean, LLC','Content','','cloud',0,1],
- ['143.198.172.85','216.126.227.152','US',18.30,0.01,17,34,1,-5,14956,'RouterHosting LLC','','152.227.126.216.static.cloudzy.com','bph,cloud',1,1],
- ['146.190.124.95','139.144.17.68','US',14.00,0.01,15,28,0,-5,63949,'Akamai Connected Cloud (Linode)','Content','139-144-17-68.ip.linodeusercontent.com','cloud',1,1],
- ['146.190.124.95','45.226.115.144','CO',4.09,null,0,null,0,-5,265861,'Sistemas Satelitales de Colombia','','','satellite',0,0],
- ['146.190.124.95','3.235.74.192','US',2.25,0.00,5,29,0,-5,14618,'Amazon.com, Inc.','','ec2-3-235-74-192.compute-1.amazonaws.com','cloud',1,1],
- ['143.198.176.127','162.33.177.141','US',1.96,0.00,5,28,1,-5,399629,'BL Networks','','','',1,1],
- ['192.248.178.127','165.232.104.188','GB',1.54,0.00,4,26,0,0,14061,'DigitalOcean, LLC','Content','','cloud',1,1],
- ['143.198.176.127','157.90.226.70','DE',1.41,0.12,1,25,0,1,24940,'Hetzner Online GmbH','Content','static.70.226.90.157.clients.your-server.de','cloud',1,1],
- ['143.198.172.85','66.56.12.130','US',0.95,0.01,1,41,0,-5,7922,'Comcast Cable','Cable/DSL/ISP','c-66-56-12-130.hsd1.ga.comcast.net','residential',0,0],
- ['143.198.176.127','162.33.178.144','US',0.86,0.01,2,25,0,-5,399629,'BL Networks','','','',1,1],
- ['192.248.178.127','129.212.182.225','US',0.65,0.02,2,37,0,-5,14061,'DigitalOcean, LLC','Content','','cloud',1,1],
- ['143.198.172.85','38.252.230.85','DO',0.60,null,0,null,1,-4,272886,'Servimast JPM SRL','Network Services','','',1,1],
- ['165.227.194.81','38.252.230.81','DO',0.41,null,0,null,1,-4,272886,'Servimast JPM SRL','Network Services','','',1,1],
- ['143.198.172.85','190.94.20.18','DO',0.38,null,0,null,0,-4,28118,'Altice Dominicana S.A.','Cable/DSL/ISP','wimax-20-18.tricom.net','mobile,residential',0,0],
- ['143.198.172.85','153.54.137.151','US',0.33,null,0,null,0,-5,272096,'PacketHub S.A.','','','cloud',0,0],
- ['143.198.172.85','96.58.144.188','US',0.30,0.00,2,35,0,-5,33363,'Charter Communications','Cable/DSL/ISP','syn-096-058-144-188.res.spectrum.com','residential',0,0],
- ['146.190.124.95','158.23.180.16','MX',0.28,0.00,2,31,0,-6,8075,'Microsoft Corporation','Content','','cloud',1,1],
- ['143.198.172.85','68.204.88.138','US',0.27,0.00,2,41,0,-5,33363,'Charter Communications','Cable/DSL/ISP','syn-068-204-088-138.res.spectrum.com','residential',0,0],
- ['143.198.172.85','70.19.107.5','US',0.27,null,0,null,0,-5,701,'Verizon Business (UUNET)','NSP','pool-70-19-107-5.nycmny.fios.verizon.net','',1,1],
- ['143.198.172.85','73.138.114.160','US',0.26,null,0,null,0,-5,7922,'Comcast Cable','Cable/DSL/ISP','c-73-138-114-160.hsd1.fl.comcast.net','residential',0,0],
- ['143.198.172.85','73.137.217.89','US',0.24,0.00,2,47,0,-5,7922,'Comcast Cable','Cable/DSL/ISP','c-73-137-217-89.hsd1.ga.comcast.net','residential',0,0],
- ['165.227.194.81','174.225.16.131','US',0.23,null,0,null,1,-5,6167,'Verizon Wireless (Cellco)','','131.sub-174-225-16.myvzw.com','mobile',0,0],
- ['143.198.172.85','73.176.18.50','US',0.22,null,0,null,0,-5,7922,'Comcast Cable','Cable/DSL/ISP','c-73-176-18-50.hsd1.il.comcast.net','residential',0,0],
- ['143.198.172.85','37.19.221.163','US',0.22,null,0,null,5,-5,212238,'Datacamp Limited (CDNEXT)','','unn-37-19-221-163.datapacket.com','cloud',0,0],
- ['192.248.178.127','165.232.102.136','GB',0.17,0.13,2,24,0,0,14061,'DigitalOcean, LLC','Content','','cloud',1,1],
- ['185.134.23.8','161.35.127.38','US',0.14,0.01,2,38,0,-5,14061,'DigitalOcean, LLC','Content','','cloud',1,1]
+ ['192.248.178.127','143.198.176.127','US',99.06,0.0294,20.0,36.0,0,-5,14061,'DIGITALOCEAN-ASN - DigitalOcean, LLC','Content','','cloud',1,1,'sip_trunk','sip_trunk'],
+ ['143.198.176.127','192.248.178.127','DE',99.05,0.236,20.0,36.0,0,1,20473,'AS-VULTR - The Constant Company, LLC','NSP','callspoofing.org','cloud',1,1,'sip_trunk','sip_trunk'],
+ ['146.190.124.95','45.226.112.91','CO',76.98,0.0022,24.0,29.0,5,-5,265861,'AS265861 - SISTEMAS SATELITALES DE COLOMBIA SA ESP','','','satellite',0,0,'sip_trunk','sip_trunk'],
+ ['146.190.124.95','50.116.38.139','US',68.21,0.0023,20.0,29.0,0,-5,63949,'AKAMAI-LINODE-AP - Akamai Connected Cloud','Content','50-116-38-139.ip.linodeusercontent.com','cloud',1,1,'sip_trunk','sip_trunk'],
+ ['216.126.227.152','143.198.172.85','US',27.24,0.0109,19.0,36.0,0,-5,14061,'DIGITALOCEAN-ASN - DigitalOcean, LLC','Content','','cloud',0,1,'sip_trunk','sip_trunk'],
+ ['143.198.172.85','216.126.227.152','US',26.42,0.0109,19.0,36.0,1,-5,14956,'ROUTERHOSTING - RouterHosting LLC','','152.227.126.216.static.cloudzy.com','bph+cloud',1,1,'sip_trunk','sip_trunk'],
+ ['146.190.124.95','139.144.17.68','US',7.69,0.0033,14.95,28.0,0,-5,63949,'AKAMAI-LINODE-AP - Akamai Connected Cloud','Content','139-144-17-68.ip.linodeusercontent.com','cloud',1,1,'sip_trunk','sip_trunk'],
+ ['146.190.124.95','45.226.115.144','CO',5.30,null,0.0,null,0,-5,265861,'AS265861 - SISTEMAS SATELITALES DE COLOMBIA SA ESP','','','satellite',0,0,'sip_trunk','sip_trunk'],
+ ['146.190.124.95','3.235.74.192','US',2.24,0.0017,5.0,30.0,0,-5,14618,'AMAZON-AES - Amazon.com, Inc.','','ec2-3-235-74-192.compute-1.amazonaws.com','cloud',1,1,'sip_trunk','sip_trunk'],
+ ['143.198.176.127','162.33.177.141','US',2.15,0.0027,5.0,28.0,1,-5,399629,'BLNWX - BL Networks','','','',1,1,'sip_trunk','sip_trunk'],
+ ['143.198.176.127','157.90.226.70','DE',1.33,0.1203,1.0,25.0,0,1,24940,'HETZNER-AS Hetzner Online GmbH','Content','static.70.226.90.157.clients.your-server.de','cloud',1,1,'sip_trunk','sip_trunk'],
+ ['143.198.176.127','162.33.178.144','US',0.86,0.0137,2.0,25.0,0,-5,399629,'BLNWX - BL Networks','','','',1,1,'sip_trunk','sip_trunk'],
+ ['192.248.178.127','165.232.104.188','GB',0.71,0.0,3.0,26.0,0,0,14061,'DIGITALOCEAN-ASN - DigitalOcean, LLC','Content','','cloud',1,1,'sip_trunk','sip_trunk'],
+ ['143.198.172.85','38.252.230.85','DO',0.70,null,0.0,null,1,-4,272886,'AS272886 - SERVIMAST JPM SRL','Network Services','','',1,1,'sip_trunk','sip_client'],
+ ['192.248.178.127','129.212.182.225','US',0.60,0.0123,2.0,34.0,0,-5,14061,'DIGITALOCEAN-ASN - DigitalOcean, LLC','Content','','cloud',1,1,'sip_trunk','sip_trunk'],
+ ['143.198.172.85','153.54.137.151','US',0.44,null,0.0,null,0,-5,272096,'AS272096 - PACKETHUB S.A.','','','cloud',0,0,'sip_trunk',''],
+ ['143.198.172.85','70.19.107.5','US',0.32,null,0.0,null,0,-5,701,'UUNET - Verizon Business','NSP','pool-70-19-107-5.nycmny.fios.verizon.net','',1,1,'sip_trunk','sip_client'],
+ ['165.227.194.81','38.252.230.81','DO',0.32,null,0.0,null,1,-4,272886,'AS272886 - SERVIMAST JPM SRL','Network Services','','',1,1,'sip_trunk','sip_client'],
+ ['146.190.124.95','158.23.180.16','MX',0.28,0.0,2.0,31.0,0,-6,8075,'MICROSOFT-CORP-MSN-AS-BLOCK - Microsoft Corporation','Content','','cloud',1,1,'sip_trunk','sip_trunk'],
+ ['143.198.176.127','64.95.13.23','US',0.26,0.0047,1.0,41.5,0,-5,399629,'BLNWX - BL Networks','','','',1,1,'sip_trunk','sip_trunk'],
+ ['143.198.172.85','37.19.221.163','US',0.22,null,0.0,null,6,-5,212238,'CDNEXT Datacamp Limited','','unn-37-19-221-163.datapacket.com','cloud',0,0,'sip_trunk','sip_client'],
+ ['192.248.178.127','167.99.179.107','CA',0.15,null,null,null,0,-5,14061,'DIGITALOCEAN-ASN - DigitalOcean, LLC','Content','','cloud',1,1,'sip_trunk','sip_trunk'],
+ ['192.248.178.127','165.232.102.136','GB',0.12,null,null,null,0,0,14061,'DIGITALOCEAN-ASN - DigitalOcean, LLC','Content','','cloud',1,1,'sip_trunk','sip_trunk'],
+ ['185.134.23.8','161.35.127.38','US',0.11,0.0177,1.45,30.0,0,-5,14061,'DIGITALOCEAN-ASN - DigitalOcean, LLC','Content','','cloud',1,1,'sip_trunk','sip_trunk'],
+ ['143.198.176.127','138.201.128.32','DE',0.09,null,null,null,0,1,24940,'HETZNER-AS Hetzner Online GmbH','Content','static.32.128.201.138.clients.your-server.de','cloud',1,1,'sip_trunk','sip_trunk'],
+ ['64.225.32.104','185.134.23.8','GB',0.09,null,null,null,0,0,null,'','','','',0,0,'unclear','sip_trunk'],
+ ['185.134.23.8','64.225.32.104','US',0.09,null,null,null,0,-5,null,'','','','',0,0,'sip_trunk','sip_trunk'],
+ ['146.190.124.95','149.56.0.29','CA',0.09,null,null,null,0,-5,16276,'OVH OVH SAS','Content','ip29.ip-149-56-0.net','cloud',1,1,'sip_trunk','sip_trunk'],
+ ['146.190.124.95','192.155.100.5','US',0.06,null,null,null,1,-5,30083,'AS-30083-US-VELIA-NET - velia.net','','','cloud',1,1,'sip_trunk','sip_trunk'],
+ ['192.248.178.127','104.248.172.23','GB',0.06,null,null,null,0,0,14061,'DIGITALOCEAN-ASN - DigitalOcean, LLC','Content','','cloud',1,1,'sip_trunk','sip_trunk'],
+ ['192.248.178.127','142.93.33.165','GB',0.05,null,null,null,0,0,14061,'DIGITALOCEAN-ASN - DigitalOcean, LLC','Content','','cloud',1,1,'sip_trunk','sip_trunk'],
+ ['146.190.124.95','192.155.100.4','US',0.03,null,null,null,1,-5,30083,'AS-30083-US-VELIA-NET - velia.net','','','cloud',1,1,'sip_trunk','sip_trunk'],
+ ['192.248.178.127','143.198.136.172','US',0.01,null,null,null,1,-5,14061,'DIGITALOCEAN-ASN - DigitalOcean, LLC','Content','','cloud',1,1,'sip_trunk','sip_trunk']
 ];
-const NAMES = {'143.198.172.85':'OUTSIDERS','143.198.176.127':'SIP trunk node','192.248.178.127':'CVS #2 (Vultr DE)','216.126.227.152':'Magnus Billing host','165.227.194.81':'OUTSIDERZ "SIP IP"'};
+// trunk rows the page counts: confirmed sip_trunk, or heuristic sip_trunk still pending. Pairs a human re-reviewed as sip_client stay in T for the table, flagged, but are not trunk media.
+const T30 = T.filter(r => r[17] === 'sip_trunk' || (r[16] === 'sip_trunk' && !r[17]));
+const NAMES = {'143.198.172.85':'OUTSIDERS','143.198.176.127':'SIP trunk node','192.248.178.127':'CVS #2 (Vultr DE)','216.126.227.152':'Magnus Billing host','165.227.194.81':'OUTSIDERZ "SIP IP"','51.198.100.9':'added Oct 13'};
+// what each watched IP's role review says (review__ip_roles, vantage = watched) and what OpenCTI says (watch__ips.tags) — two sources, shown apart
+const PROP = {'147.182.250.67': 'sip_server', '185.134.23.8': 'sip_server', '146.190.124.95': 'sip_server', '128.199.103.165': 'sip_server', '209.38.67.66': 'sip_server', '165.227.194.81': 'sip_server', '64.225.32.104': 'sip_server', '162.243.77.115': 'unclear', '167.71.112.11': 'sip_server', '138.68.150.143': 'sip_server', '143.198.172.85': 'sip_server', '143.198.176.127': 'sip_server', '137.184.173.234': 'sip_server', '192.248.178.127': 'sip_server', '216.126.227.152': 'sip_trunk', '51.198.100.9': 'unclear'};
+const TIPL = {'143.198.172.85': 'infrastructure_type:criminal_voip_service', '192.248.178.127': 'infrastructure_type:criminal_voip_service', '143.198.176.127': 'infrastructure:sip_trunk', '165.227.194.81': 'infrastructure_type:criminal_voip_service', '51.198.100.9': 'infrastructure:criminal_voip_client'};
 
 // stacked bars per monitored IP
 const byMon = {};
-T.forEach(r => { const [m,,cc,mb,,,,,,,,,,pt] = r; const key = cc + '|' + cls(pt); byMon[m] = byMon[m] || {}; byMon[m][key] = (byMon[m][key] || 0) + mb; });
+T30.forEach(r => { const [m,,cc,mb,,,,,,,,,,pt] = r; const key = cc + '|' + cls(pt); byMon[m] = byMon[m] || {}; byMon[m][key] = (byMon[m][key] || 0) + mb; });
 document.getElementById('bars').innerHTML = Object.entries(byMon).map(([m, segs]) => {
   const total = Object.values(segs).reduce((a,b)=>a+b,0);
   const nonUS = Object.entries(segs).filter(([k]) => !k.startsWith('US|')).reduce((a,[,v])=>a+v,0);
   const parts = Object.entries(segs).sort((a,b)=>b[1]-a[1]).map(([k,v]) => { const [cc,c] = k.split('|'); const w = Math.max(100*v/total, 2.5); return '<div class="seg' + (cc!=='US' ? ' abroad' : '') + '" style="width:' + w + '%;background:' + CLS[c][0] + '" title="' + cc + ' · ' + CLS[c][1] + ' · ' + v.toFixed(1) + ' MB">' + (w > 9 ? cc + ' ' + v.toFixed(0) : cc) + '</div>'; }).join('');
-  return '<div class="row"><div><a href="EntityDetail.dc.html" class="mono" style="font-size:12px">' + m + '</a>' + (NAMES[m] ? '<span class="sub">' + NAMES[m] + '</span>' : '') + '<span class="sub">' + total.toFixed(1) + ' MB trunk media</span></div><div class="bar">' + parts + '</div><div class="mono" style="text-align:right;font-size:13px;font-weight:600;color:' + (nonUS/total > 0.3 ? '#F5A623' : '#9199A8') + '">' + Math.round(100*nonUS/total) + '%<span class="sub" style="font-weight:400">abroad</span></div></div>';
+  return '<div class="row"><div><a href="EntityDetail.dc.html" class="mono" style="font-size:12px">' + m + '</a>' + (NAMES[m] ? '<span class="sub">' + NAMES[m] + '</span>' : '') + '<span class="sub">' + total.toFixed(1) + ' MB trunk media</span></div><div class="bar">' + parts + '</div><div class="mono" style="text-align:right;font-size:13px;font-weight:600;color:' + (nonUS/total > 0.3 ? '#F5A623' : '#A6D8CD') + '">' + Math.round(100*nonUS/total) + '%<span class="sub" style="font-weight:400">abroad</span></div></div>';
 }).join('');
 
 // trend
@@ -259,43 +272,45 @@ const PER = [
  ['143.198.172.85', [null,null,null,28,null,5,6,10,8], 'DO / JM / BS trickle'],
  ['192.248.178.127', [null,1,0,2,31,7,2,0,1], 'GB only']
 ];
-const col = p => p == null ? '#1B2029' : p >= 60 ? '#F5A623' : p >= 30 ? '#8B5CF6' : '#3A4254';
+const col = p => p == null ? '#133A3C' : p >= 60 ? '#F5A623' : p >= 30 ? '#8B5CF6' : '#3F9C8A';
 const strip = (pct, h) => '<div class="trk" style="height:' + h + 'px">' + pct.map((p,i) => '<div style="height:' + (p == null ? 2 : Math.max(p, 2)) + '%;background:' + col(p) + '" title="' + W[i] + ' · ' + (p == null ? 'no media' : p + '% non-US') + '"><span>' + (p == null ? '·' : p) + '</span></div>').join('') + '</div>';
 document.getElementById('trend').innerHTML =
   '<div class="k">All monitored IPs — % of media bytes to non-US peers (labels), bar = share</div>' + strip(ALL.pct, 80) +
-  '<div style="display:flex;justify-content:space-between;font-size:10px;color:#5D6472;margin:6px 0 18px 0" class="mono"><span>Aug 10</span><span>MB/week: ' + ALL.mb.join(' · ') + '</span><span>Oct 5</span></div>' +
+  '<div style="display:flex;justify-content:space-between;font-size:10px;color:#6FA89E;margin:6px 0 18px 0" class="mono"><span>Aug 10</span><span>MB/week: ' + ALL.mb.join(' · ') + '</span><span>Oct 5</span></div>' +
   '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px">' + PER.map(([ip, pct, note]) => '<div><div class="mono" style="font-size:11px;margin-bottom:14px">' + ip + '<span class="sub">' + note + '</span></div>' + strip(pct, 50) + '</div>').join('') + '</div>';
 
-// country tiles: cc, pairs, trunks, clients, probers, mb, mons
-const CC = [['US',79,20,0,14,207.46,7],['DE',23,2,0,18,86.02,8],['CO',3,2,1,0,80.02,1],['DO',8,3,0,0,1.93,2],['GB',5,2,0,0,1.87,2],['CA',7,0,1,1,0.33,5],['MX',1,1,0,0,0.28,1],['RO',1,0,1,0,0.18,1],['JM',1,0,0,0,0.11,1],['FR',2,0,0,1,0.03,2]];
-const NAME = {US:'United States',DE:'Germany',CO:'Colombia',DO:'Dominican Rep.',GB:'United Kingdom',CA:'Canada',MX:'Mexico',RO:'Romania',JM:'Jamaica',FR:'France'};
-document.getElementById('tiles').innerHTML = CC.map(([cc,pairs,tr,cl,pr,mb,mons]) => { const s = Math.max(0, Math.log10(mb + 0.01) + 2) / 4.4; const bg = cc === 'US' ? '#132033' : mb > 1 ? '#2A2013' : '#171B22'; const bd = cc === 'US' ? '#1E3A5F' : mb > 1 ? '#5A4423' : '#262B35';
-  return '<div class="tile" style="background:' + bg + ';border-color:' + bd + ';grid-column:span ' + (mb > 50 ? 2 : 1) + '"><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="mono" style="font-size:15px;font-weight:600">' + cc + '</span><span class="mono" style="font-size:11px;color:#9199A8">' + (mb >= 1 ? mb.toFixed(0) + ' MB' : (mb*1000).toFixed(0) + ' KB') + '</span></div><div style="font-size:11px;color:#5D6472;margin-top:2px">' + NAME[cc] + '</div><div style="font-size:11px;color:#9199A8;margin-top:8px">' + pairs + ' pairs · ' + mons + ' monitored IP' + (mons>1?'s':'') + '</div><div style="margin-top:4px">' + (tr ? '<span class="chip" style="color:#F5A623;border-color:#5A4423">trunk ×' + tr + '</span>' : '') + (cl ? '<span class="chip" style="color:#3DD68C;border-color:#1E4D37">client ×' + cl + '</span>' : '') + (pr ? '<span class="chip">prober ×' + pr + '</span>' : '') + '</div></div>'; }).join('');
+// country tiles (review__sip_pairs, Oct 15): cc, pairs, trunks, clients, scanners, mb, monitored IPs
+const CC = [['US',97,16,47,15,244.14,7],['DE',24,3,0,19,100.61,8],['CO',3,2,1,0,83.34,1],['DO',9,0,8,0,2.25,2],['GB',5,5,0,0,1.02,2],['CA',7,2,1,1,0.32,5],['MX',1,1,0,0,0.28,1],['JM',1,0,0,0,0.18,1],['RO',1,0,1,0,0.15,1],['FR',5,0,0,2,0.08,4],['NL',2,0,0,2,0.01,2]];
+const NAME = {US:'United States',DE:'Germany',CO:'Colombia',DO:'Dominican Rep.',GB:'United Kingdom',CA:'Canada',MX:'Mexico',RO:'Romania',JM:'Jamaica',FR:'France',NL:'Netherlands'};
+document.getElementById('tiles').innerHTML = CC.map(([cc,pairs,tr,cl,pr,mb,mons]) => { const s = Math.max(0, Math.log10(mb + 0.01) + 2) / 4.4; const bg = cc === 'US' ? '#132033' : mb > 1 ? '#2A2013' : '#0F3133'; const bd = cc === 'US' ? '#1E3A5F' : mb > 1 ? '#5A4423' : '#2B7266';
+  return '<div class="tile" style="background:' + bg + ';border-color:' + bd + ';grid-column:span ' + (mb > 50 ? 2 : 1) + '"><div style="display:flex;justify-content:space-between;align-items:baseline"><span class="mono" style="font-size:15px;font-weight:600">' + cc + '</span><span class="mono" style="font-size:11px;color:#A6D8CD">' + (mb >= 1 ? mb.toFixed(0) + ' MB' : (mb*1000).toFixed(0) + ' KB') + '</span></div><div style="font-size:11px;color:#6FA89E;margin-top:2px">' + NAME[cc] + '</div><div style="font-size:11px;color:#A6D8CD;margin-top:8px">' + pairs + ' pairs · ' + mons + ' monitored IP' + (mons>1?'s':'') + '</div><div style="margin-top:4px">' + (tr ? '<span class="chip" style="color:#F5A623;border-color:#5A4423">trunk ×' + tr + '</span>' : '') + (cl ? '<span class="chip" style="color:#3DD68C;border-color:#1E4D37">client ×' + cl + '</span>' : '') + (pr ? '<span class="chip">scanner ×' + pr + '</span>' : '') + '</div></div>'; }).join('');
 
 // trunk table
 document.getElementById('trunks').insertAdjacentHTML('beforeend', T.map(r => { const [m,p,cc,mb,night,p95,callmed,sib,tz,asn,holder,pdb,rdns,pt,sh,cs] = r; const c = cls(pt);
-  return '<tr' + (cc !== 'US' ? ' style="background:#15140F"' : '') + '><td class="mono"><a href="EntityDetail.dc.html">' + p + '</a>' + (sib ? '<span class="sub">+' + sib + ' sibling IP' + (sib>1?'s':'') + '</span>' : '') + '</td><td class="mono" style="color:#9199A8">' + m + '</td><td class="mono"' + (cc !== 'US' ? ' style="color:#F5A623;font-weight:600"' : '') + '>' + cc + ' <span style="color:#5D6472;font-weight:400">UTC' + (tz >= 0 ? '+' : '') + tz + '</span></td><td><span class="cls" style="background:' + CLS[c][0] + '22;color:' + CLS[c][0] + '">' + CLS[c][1] + '</span></td><td style="white-space:nowrap">' + holder + '<span class="sub mono">AS' + asn + '</span></td><td style="color:#9199A8;white-space:nowrap">' + (pdb || '—') + '</td><td class="mono" style="font-size:11px;color:' + (rdns === 'callspoofing.org' ? '#E5484D' : '#9199A8') + '">' + (rdns || '—') + '</td><td class="mono" style="text-align:right">' + mb.toFixed(1) + ' MB</td><td>' + (night == null ? '<span style="color:#5D6472">—</span>' : '<span class="sleep"><i style="width:' + Math.min(100, night*400) + '%"></i></span><span class="mono" style="font-size:11px">' + night.toFixed(2) + '</span>') + '</td><td class="mono" style="text-align:right">' + (p95 || '—') + '</td><td class="mono" style="text-align:right">' + (callmed ?? '—') + '</td><td class="mono" style="font-size:11px;color:#5D6472">' + (sh ? 'S' : '·') + (cs ? 'C' : '·') + '</td></tr>'; }).join(''));
+  return '<tr' + (cc !== 'US' ? ' style="background:#15140F"' : '') + '><td class="mono"><a href="EntityDetail.dc.html">' + p + '</a>' + (sib ? '<span class="sub">+' + sib + ' sibling IP' + (sib>1?'s':'') + '</span>' : '') + (r[17] && r[17] !== 'sip_trunk' ? '<span class="sub" style="color:#E5484D">heuristic trunk → reviewed ' + r[17] + '</span>' : !r[17] ? '<span class="sub" style="color:#A6D8CD">pending review</span>' : '') + '</td><td class="mono" style="color:#A6D8CD">' + m + '</td><td class="mono"' + (cc !== 'US' ? ' style="color:#F5A623;font-weight:600"' : '') + '>' + cc + ' <span style="color:#6FA89E;font-weight:400">UTC' + (tz >= 0 ? '+' : '') + tz + '</span></td><td><span class="cls" style="background:' + CLS[c][0] + '22;color:' + CLS[c][0] + '">' + CLS[c][1] + '</span></td><td style="white-space:nowrap">' + holder + '<span class="sub mono">AS' + asn + '</span></td><td style="color:#A6D8CD;white-space:nowrap">' + (pdb || '—') + '</td><td class="mono" style="font-size:11px;color:' + (rdns === 'callspoofing.org' ? '#E5484D' : '#A6D8CD') + '">' + (rdns || '—') + '</td><td class="mono" style="text-align:right">' + mb.toFixed(1) + ' MB</td><td>' + (night == null ? '<span style="color:#6FA89E">—</span>' : '<span class="sleep"><i style="width:' + Math.min(100, night*400) + '%"></i></span><span class="mono" style="font-size:11px">' + night.toFixed(2) + '</span>') + '</td><td class="mono" style="text-align:right">' + (p95 || '—') + '</td><td class="mono" style="text-align:right">' + (callmed ?? '—') + '</td><td class="mono" style="font-size:11px;color:#6FA89E">' + (sh ? 'S' : '·') + (cs ? 'C' : '·') + '</td></tr>'; }).join(''));
 </script>
 
 <script src="vendor/d3.v7.min.js"></script>
 <script src="vendor/topojson-client.v3.min.js"></script>
 <script>
 // ---------- interactive map ----------
-// monitored IP -> home country (its own country field on flow_records, last 7d)
-const HOME = {'64.225.32.104':'US','128.199.103.165':'SG','137.184.173.234':'CA','138.68.150.143':'GB','143.198.172.85':'US','143.198.176.127':'US','146.190.124.95':'US','147.182.250.67':'US','162.243.77.115':'US','165.227.194.81':'US','167.71.112.11':'US','185.134.23.8':'GB','192.248.178.127':'DE','209.38.67.66':'US','216.126.227.152':'US'};
-const KIND = {'143.198.172.85':'cvs','192.248.178.127':'cvs','143.198.176.127':'trunk'};
-// sip_peer_candidates aggregated: monitored, cc, role, pairs, mb
-const PAIRS = [['64.225.32.104','GB','unclear',1,0.08],['64.225.32.104','DE','prober',4,0.02],['64.225.32.104','FR','unclear',1,0.02],['137.184.173.234','RO','client',1,0.18],['137.184.173.234','DE','prober',3,0.01],['137.184.173.234','CA','unclear',1,0.01],['143.198.172.85','US','trunk',10,21.35],['143.198.172.85','US','unclear',20,2.03],['143.198.172.85','DO','trunk',2,0.97],['143.198.172.85','DO','unclear',5,0.55],['143.198.172.85','JM','unclear',1,0.11],['143.198.172.85','DE','unclear',1,0.02],['143.198.172.85','FR','prober',1,0.01],['143.198.176.127','DE','trunk',2,85.79],['143.198.176.127','US','trunk',2,2.82],['143.198.176.127','US','unclear',1,0.18],['143.198.176.127','DE','unclear',1,0.09],['143.198.176.127','DE','prober',4,0.01],['146.190.124.95','CO','trunk',2,78.90],['146.190.124.95','US','trunk',3,75.23],['146.190.124.95','CO','client',1,1.11],['146.190.124.95','MX','trunk',1,0.28],['146.190.124.95','US','unclear',3,0.10],['146.190.124.95','CA','unclear',1,0.08],['146.190.124.95','DE','prober',2,0.01],['147.182.250.67','CA','client',1,0.06],['165.227.194.81','US','unclear',18,1.03],['165.227.194.81','DO','trunk',1,0.41],['165.227.194.81','US','trunk',1,0.23],['165.227.194.81','DE','unclear',1,0.06],['165.227.194.81','US','prober',1,0.00],['167.71.112.11','DE','prober',4,0.01],['185.134.23.8','US','trunk',1,0.14],['185.134.23.8','US','unclear',1,0.08],['185.134.23.8','US','prober',1,0.01],['185.134.23.8','CA','unclear',1,0.00],['185.134.23.8','CA','prober',1,0.00],['192.248.178.127','US','trunk',2,85.04],['192.248.178.127','GB','trunk',2,1.70],['192.248.178.127','CA','unclear',2,0.17],['192.248.178.127','GB','unclear',2,0.08],['192.248.178.127','US','unclear',2,0.05],['192.248.178.127','US','prober',12,0.04],['209.38.67.66','DE','prober',1,0.00],['216.126.227.152','US','trunk',1,19.13]];
-// weekly UDP media (≠5060) per monitored IP and peer country, 63-day flow_records backfill: week, monitored, cc, mb
+// monitored IP -> home country (its own country field on flow__records, last 7d)
+const HOME = {'64.225.32.104':'US','128.199.103.165':'SG','137.184.173.234':'CA','138.68.150.143':'GB','143.198.172.85':'US','143.198.176.127':'US','146.190.124.95':'US','147.182.250.67':'US','162.243.77.115':'US','165.227.194.81':'US','167.71.112.11':'US','185.134.23.8':'GB','192.248.178.127':'DE','209.38.67.66':'US','216.126.227.152':'US','51.198.100.9':'IE'};
+// reviewed role per watched IP (review__ip_roles.accepted_role, vantage = watched). Empty on Oct 15: all 16 pending. OpenCTI labels are deliberately NOT in here — they're text in the tooltip.
+const KIND = {};
+// review__sip_pairs aggregated: monitored, cc, role, pairs, mb
+// review__sip_pairs aggregated (Oct 15): monitored, cc, heuristic role, pairs, media MB, of which human-confirmed
+const PAIRS = [['64.225.32.104','DE','sip_scanner',4,0.02,0],['64.225.32.104','FR','unclear',2,0.05,0],['64.225.32.104','GB','unclear',1,0.09,1],['64.225.32.104','NL','sip_scanner',1,0.01,0],['137.184.173.234','CA','unclear',1,0.01,0],['137.184.173.234','DE','sip_scanner',3,0.01,0],['137.184.173.234','RO','sip_client',1,0.15,0],['143.198.172.85','DE','unclear',1,0.02,0],['143.198.172.85','DO','sip_client',6,1.11,6],['143.198.172.85','DO','sip_trunk',1,0.70,1],['143.198.172.85','DO','unclear',1,0.13,0],['143.198.172.85','FR','sip_scanner',1,0.01,0],['143.198.172.85','JM','unclear',1,0.18,0],['143.198.172.85','US','sip_client',35,6.20,35],['143.198.172.85','US','sip_scanner',1,0.00,0],['143.198.172.85','US','sip_trunk',4,27.40,3],['143.198.172.85','US','unclear',5,0.65,0],['143.198.176.127','DE','sip_scanner',4,0.01,0],['143.198.176.127','DE','sip_trunk',3,100.47,3],['143.198.176.127','FR','sip_scanner',1,0.01,0],['143.198.176.127','US','sip_trunk',3,3.27,3],['146.190.124.95','CA','sip_trunk',1,0.09,1],['146.190.124.95','CO','sip_client',1,1.06,1],['146.190.124.95','CO','sip_trunk',2,82.28,2],['146.190.124.95','DE','sip_scanner',2,0.01,0],['146.190.124.95','FR','unclear',1,0.02,0],['146.190.124.95','MX','sip_trunk',1,0.28,1],['146.190.124.95','US','sip_trunk',5,78.24,5],['146.190.124.95','US','unclear',1,0.01,0],['147.182.250.67','CA','sip_client',1,0.06,1],['165.227.194.81','DE','unclear',1,0.06,0],['165.227.194.81','DO','sip_trunk',1,0.32,1],['165.227.194.81','US','sip_client',10,0.73,9],['165.227.194.81','US','sip_scanner',1,0.00,0],['165.227.194.81','US','unclear',9,0.36,0],['167.71.112.11','DE','sip_scanner',5,0.01,0],['167.71.112.11','NL','sip_scanner',1,0.00,0],['185.134.23.8','CA','sip_scanner',1,0.00,0],['185.134.23.8','CA','unclear',1,0.00,0],['185.134.23.8','US','sip_scanner',1,0.01,0],['185.134.23.8','US','sip_trunk',2,0.20,2],['192.248.178.127','CA','sip_trunk',1,0.15,1],['192.248.178.127','CA','unclear',1,0.01,0],['192.248.178.127','GB','sip_trunk',4,0.93,4],['192.248.178.127','US','sip_scanner',12,0.04,0],['192.248.178.127','US','sip_trunk',3,99.67,3],['192.248.178.127','US','unclear',4,0.11,0],['209.38.67.66','DE','sip_scanner',1,0.00,0],['216.126.227.152','US','sip_trunk',1,27.24,1]];
+// weekly UDP media (≠5060) per monitored IP and peer country, 63-day flow__records backfill: week, monitored, cc, mb
 const WEEKS = ['Aug 10','Aug 17','Aug 24','Aug 31','Sep 7','Sep 14','Sep 21','Sep 28','Oct 5'];
 const FLOWS = [[0,'138.68.150.143','US',0.013],[0,'143.198.176.127','DE',1.581],[0,'143.198.176.127','US',0.619],[0,'143.198.176.127','CA',0.011],[0,'146.190.124.95','US',1.625],[0,'146.190.124.95','CO',1.437],[0,'165.227.194.81','CA',0.530],[0,'165.227.194.81','US',0.323],[0,'165.227.194.81','NL',0.171],[0,'165.227.194.81','BG',0.018],[1,'138.68.150.143','US',0.016],[1,'143.198.176.127','DE',1.121],[1,'143.198.176.127','US',0.437],[1,'143.198.176.127','CA',0.014],[1,'146.190.124.95','US',0.472],[1,'146.190.124.95','CO',0.415],[1,'165.227.194.81','US',0.095],[1,'192.248.178.127','US',1.111],[1,'192.248.178.127','SG',0.012],[2,'138.68.150.143','US',0.025],[2,'143.198.176.127','DE',2.425],[2,'143.198.176.127','US',1.010],[2,'143.198.176.127','CA',0.018],[2,'146.190.124.95','US',1.278],[2,'146.190.124.95','CO',1.203],[2,'165.227.194.81','US',0.310],[2,'192.248.178.127','US',2.426],[3,'64.225.32.104','GB',0.012],[3,'138.68.150.143','US',0.052],[3,'143.198.176.127','DE',1.723],[3,'143.198.176.127','US',0.878],[3,'146.190.124.95','US',4.189],[3,'146.190.124.95','CO',3.847],[3,'165.227.194.81','US',1.338],[3,'165.227.194.81','DE',0.013],[3,'185.134.23.8','US',0.012],[3,'192.248.178.127','US',0.132],[3,'209.38.67.66','US',0.011],[4,'64.225.32.104','GB',0.037],[4,'137.184.173.234','CA',0.039],[4,'138.68.150.143','US',0.408],[4,'138.68.150.143','AU',0.027],[4,'138.68.150.143','GB',0.011],[4,'143.198.176.127','DE',150.562],[4,'143.198.176.127','FI',8.458],[4,'143.198.176.127','US',2.434],[4,'143.198.176.127','SG',1.821],[4,'146.190.124.95','CO',18.576],[4,'146.190.124.95','US',17.883],[4,'146.190.124.95','MX',0.074],[4,'146.190.124.95','CA',0.020],[4,'147.182.250.67','CA',0.042],[4,'147.182.250.67','US',0.016],[4,'165.227.194.81','US',11.931],[4,'165.227.194.81','JM',0.174],[4,'165.227.194.81','DO',0.125],[4,'165.227.194.81','DE',0.048],[4,'165.227.194.81','CH',0.012],[4,'165.227.194.81','CA',0.012],[4,'185.134.23.8','US',0.166],[4,'192.248.178.127','US',2.244],[4,'192.248.178.127','GB',0.998],[4,'192.248.178.127','CA',0.021],[4,'209.38.67.66','US',0.079],[4,'216.126.227.152','US',0.014],[5,'64.225.32.104','GB',0.016],[5,'64.225.32.104','FR',0.010],[5,'128.199.103.165','FR',0.015],[5,'137.184.173.234','CA',0.043],[5,'138.68.150.143','US',0.423],[5,'138.68.150.143','AU',0.033],[5,'138.68.150.143','GB',0.022],[5,'138.68.150.143','FR',0.010],[5,'143.198.172.85','US',0.016],[5,'143.198.176.127','DE',16.189],[5,'143.198.176.127','US',5.859],[5,'143.198.176.127','CA',0.022],[5,'146.190.124.95','CO',18.297],[5,'146.190.124.95','US',17.737],[5,'146.190.124.95','MX',0.081],[5,'146.190.124.95','CA',0.025],[5,'147.182.250.67','CA',0.067],[5,'165.227.194.81','US',10.823],[5,'165.227.194.81','DO',0.653],[5,'165.227.194.81','DE',0.396],[5,'165.227.194.81','JM',0.157],[5,'165.227.194.81','CZ',0.022],[5,'165.227.194.81','NL',0.021],[5,'165.227.194.81','CA',0.020],[5,'185.134.23.8','US',0.097],[5,'192.248.178.127','US',16.251],[5,'192.248.178.127','GB',1.165],[5,'192.248.178.127','CA',0.063],[5,'209.38.67.66','US',0.031],[5,'216.126.227.152','US',0.035],[5,'216.126.227.152','DE',0.015],[6,'64.225.32.104','GB',0.034],[6,'137.184.173.234','CA',0.039],[6,'138.68.150.143','US',0.392],[6,'138.68.150.143','AU',0.060],[6,'138.68.150.143','GB',0.032],[6,'143.198.172.85','US',12.262],[6,'143.198.172.85','DO',0.760],[6,'143.198.172.85','BS',0.041],[6,'143.198.172.85','JM',0.033],[6,'143.198.172.85','GB',0.011],[6,'143.198.176.127','DE',25.699],[6,'143.198.176.127','US',10.614],[6,'143.198.176.127','CA',0.050],[6,'146.190.124.95','CO',19.902],[6,'146.190.124.95','US',18.352],[6,'146.190.124.95','MX',0.063],[6,'146.190.124.95','CA',0.024],[6,'147.182.250.67','CA',0.043],[6,'147.182.250.67','BR',0.015],[6,'165.227.194.81','US',0.086],[6,'185.134.23.8','US',0.086],[6,'192.248.178.127','US',25.214],[6,'192.248.178.127','GB',0.498],[6,'192.248.178.127','CA',0.043],[6,'209.38.67.66','US',0.054],[6,'216.126.227.152','US',4.812],[7,'137.184.173.234','CA',0.045],[7,'138.68.150.143','US',0.235],[7,'138.68.150.143','AU',0.029],[7,'138.68.150.143','GB',0.020],[7,'143.198.172.85','US',16.835],[7,'143.198.172.85','DO',1.610],[7,'143.198.172.85','CA',0.178],[7,'143.198.172.85','JM',0.059],[7,'143.198.172.85','IT',0.052],[7,'143.198.172.85','NL',0.010],[7,'143.198.176.127','DE',28.731],[7,'143.198.176.127','US',11.912],[7,'143.198.176.127','CA',0.037],[7,'146.190.124.95','CO',30.707],[7,'146.190.124.95','US',28.802],[7,'146.190.124.95','MX',0.073],[7,'146.190.124.95','CA',0.023],[7,'147.182.250.67','CA',0.052],[7,'147.182.250.67','BR',0.018],[7,'165.227.194.81','US',0.123],[7,'192.248.178.127','US',28.537],[7,'192.248.178.127','GB',0.035],[7,'192.248.178.127','CA',0.027],[7,'209.38.67.66','US',0.088],[7,'216.126.227.152','US',6.460],[8,'64.225.32.104','GB',0.037],[8,'137.184.173.234','CA',0.026],[8,'138.68.150.143','US',0.062],[8,'138.68.150.143','DE',0.015],[8,'138.68.150.143','AU',0.014],[8,'143.198.172.85','US',22.505],[8,'143.198.172.85','DO',1.449],[8,'143.198.172.85','CA',0.267],[8,'143.198.172.85','JM',0.139],[8,'143.198.172.85','JP',0.044],[8,'143.198.172.85','DE',0.017],[8,'143.198.176.127','DE',17.052],[8,'143.198.176.127','US',7.124],[8,'143.198.176.127','CA',0.022],[8,'146.190.124.95','CO',13.226],[8,'146.190.124.95','US',12.110],[8,'146.190.124.95','MX',0.074],[8,'147.182.250.67','CA',0.074],[8,'147.182.250.67','US',0.024],[8,'165.227.194.81','US',0.063],[8,'167.71.112.11','US',0.040],[8,'167.71.112.11','FR',0.013],[8,'185.134.23.8','US',0.050],[8,'192.248.178.127','US',16.996],[8,'192.248.178.127','GB',0.091],[8,'192.248.178.127','CA',0.043],[8,'209.38.67.66','US',0.056],[8,'216.126.227.152','US',9.090]];
 const ISO = {US:840,DE:276,CO:170,DO:214,GB:826,CA:124,MX:484,RO:642,JM:388,FR:250,NL:528,BG:100,SG:702,FI:246,CH:756,AU:36,BR:76,CZ:203,IT:380,BS:44,JP:392,ES:724,IN:356,RU:643,PK:586,SE:752,BE:56,PA:591,AR:32,PE:604,PH:608,VN:704,ZA:710,TR:792,UA:804,PL:616,HK:344,ID:360,IE:372,PT:620,AT:40,DK:208,NO:578,IL:376,AE:784,TH:764,MY:458,NZ:554,VE:862,EC:218,GT:320,HN:340,PR:630,TT:780,HT:332,CU:192,CR:188,KR:410,TW:158,CL:152,MD:498,SI:705,JO:400,BD:50,RS:688,AL:8};
 const CNAME = {US:'United States',DE:'Germany',CO:'Colombia',DO:'Dominican Republic',GB:'United Kingdom',CA:'Canada',MX:'Mexico',RO:'Romania',JM:'Jamaica',FR:'France',NL:'Netherlands',BG:'Bulgaria',SG:'Singapore',FI:'Finland',CH:'Switzerland',AU:'Australia',BR:'Brazil',CZ:'Czechia',IT:'Italy',BS:'Bahamas',JP:'Japan'};
-const ROLEC = {trunk:'#F5A623',client:'#3DD68C',prober:'#9199A8',unclear:'#3A4254'};
+const ROLEC = {sip_trunk:'#F5A623',sip_client:'#3DD68C',sip_scanner:'#A6D8CD',unclear:'#3F9C8A'};
 // class per (monitored, peer cc) for trunk pairs, from identities
-const PAIRCLS = {}; T.forEach(r => { const k = r[0] + '|' + r[2]; const c = cls(r[13]); PAIRCLS[k] = PAIRCLS[k] || {}; PAIRCLS[k][c] = (PAIRCLS[k][c] || 0) + r[3]; });
+const PAIRCLS = {}; T30.forEach(r => { const k = r[0] + '|' + r[2]; const c = cls(r[13]); PAIRCLS[k] = PAIRCLS[k] || {}; PAIRCLS[k][c] = (PAIRCLS[k][c] || 0) + r[3]; });
 
-const S = { mode:'roles', roles:new Set(['trunk','client']), mon:'', week:8, hideUS:false, country:null };
+const S = { mode:'roles', roles:new Set(['sip_trunk','sip_client']), mon:'', week:8, hideUS:false, country:null };
 const svg = d3.select('#map'); const tip = document.getElementById('tip'); const side = document.getElementById('side');
 const mons = Object.keys(HOME); document.getElementById('monsel').innerHTML += mons.map(m => '<option value="' + m + '">' + m + (NAMES[m] ? ' — ' + NAMES[m] : '') + '</option>').join('');
 let proj, path, g, feats = {}, zoomBehavior;
@@ -311,7 +326,7 @@ function monPt(m){ const c = centroid(HOME[m]); if (!c) return null; const i = m
 function edges(){
   if (S.mode === 'roles') {
     const agg = {};
-    PAIRS.forEach(([m, cc, role, n, mb]) => { if (!S.roles.has(role)) return; if (S.mon && m !== S.mon) return; if (S.hideUS && HOME[m] === 'US' && cc === 'US') return;
+    PAIRS.forEach(([m, cc, role, n, mb, conf]) => { if (!S.roles.has(role)) return; if (S.mon && m !== S.mon) return; if (S.hideUS && HOME[m] === 'US' && cc === 'US') return;
       const k = m + '|' + cc; agg[k] = agg[k] || {m, cc, mb:0, pairs:0, roles:{}}; agg[k].mb += mb; agg[k].pairs += n; agg[k].roles[role] = (agg[k].roles[role] || 0) + n; });
     return Object.values(agg);
   }
@@ -320,7 +335,7 @@ function edges(){
 function edgeColor(e){
   if (S.mode === 'weekly') return e.cc !== HOME[e.m] ? '#F5A623' : '#4C8DFF';
   const pc = PAIRCLS[e.m + '|' + e.cc];
-  if (pc && S.roles.has('trunk')) { const top = Object.entries(pc).sort((a,b)=>b[1]-a[1])[0][0]; return CLS[top][0]; }
+  if (pc && S.roles.has('sip_trunk')) { const top = Object.entries(pc).sort((a,b)=>b[1]-a[1])[0][0]; return CLS[top][0]; }
   const top = Object.entries(e.roles).sort((a,b)=>b[1]-a[1])[0][0]; return ROLEC[top];
 }
 const wscale = d3.scaleLog().domain([0.01, 200]).range([0.7, 8]).clamp(true);
@@ -331,7 +346,7 @@ function render(){
   const byCC = {}; E.forEach(e => { byCC[e.cc] = (byCC[e.cc] || 0) + e.mb; });
   const maxMB = Math.max(0.01, ...Object.values(byCC));
   const fill = d3.scaleLog().domain([0.01, maxMB]).range([0, 1]).clamp(true);
-  g.selectAll('.country').attr('class', d => 'country' + (byCC[d.cc2] ? ' lit' : '')).attr('fill', d => byCC[d.cc2] ? d3.interpolateRgb('#171B22', '#1E3A5F')(fill(byCC[d.cc2])) : '#13161C');
+  g.selectAll('.country').attr('class', d => 'country' + (byCC[d.cc2] ? ' lit' : '')).attr('fill', d => byCC[d.cc2] ? d3.interpolateRgb('#0F3133', '#1E3A5F')(fill(byCC[d.cc2])) : '#0B2628');
   const arcs = g.select('.arcs').selectAll('path').data(E, e => e.m + '|' + e.cc);
   arcs.exit().remove();
   arcs.enter().append('path').attr('class', 'arc').merge(arcs)
@@ -345,22 +360,22 @@ function render(){
   nodes.enter().append('path').attr('class', 'node').merge(nodes)
     .attr('transform', m => { const p = proj(monPt(m)); return 'translate(' + p[0] + ',' + p[1] + ')'; })
     .attr('d', d3.symbol().type(d3.symbolDiamond).size(m => KIND[m] ? 110 : 60))
-    .attr('fill', m => KIND[m] === 'cvs' ? '#E5484D' : KIND[m] === 'trunk' ? '#F5A623' : '#9199A8').attr('stroke', '#E7E9ED')
-    .on('mousemove', (ev, m) => showTip(ev, '<b>' + m + '</b>' + (NAMES[m] ? ' — ' + NAMES[m] : '') + '<br><span class="mono">home ' + HOME[m] + ' · click to focus</span>')).on('mouseleave', hideTip)
+    .attr('fill', m => KIND[m] === 'sip_trunk' ? '#F5A623' : KIND[m] === 'sip_server' ? '#E5484D' : '#A6D8CD').attr('stroke', '#E8FFF8')
+    .on('mousemove', (ev, m) => showTip(ev, '<b>' + m + '</b>' + (NAMES[m] ? ' — ' + NAMES[m] : '') + '<br><span class="mono">home ' + HOME[m] + '</span><br><span class="mono">reviewed role: ' + (KIND[m] || 'pending · heuristic proposes ' + (PROP[m] || '?')) + '</span>' + (TIPL[m] ? '<br><span class="chip tip">TIP · ' + TIPL[m] + '</span>' : '') + '<br><span class="mono" style="color:#6FA89E">click to focus</span>')).on('mouseleave', hideTip)
     .on('click', (ev, m) => { S.mon = S.mon === m ? '' : m; document.getElementById('monsel').value = S.mon; render(); });
   renderSide(E, byCC);
   document.getElementById('maplegend').innerHTML = (S.mode === 'roles'
-    ? Object.entries(CLS).map(([k,[c,n]]) => '<span class="lg" style="margin:0"><i style="background:' + c + '"></i>' + n + '</span>').join('') + '<span class="lg" style="margin:0"><i style="background:#3DD68C"></i>client (no identity)</span>'
-    : '<span class="lg" style="margin:0"><i style="background:#4C8DFF"></i>domestic</span><span class="lg" style="margin:0"><i style="background:#F5A623"></i>cross-border</span>') + '<span class="lg" style="margin:0"><i style="background:#E5484D;transform:rotate(45deg);border-radius:0"></i>monitored IP</span>';
+    ? Object.entries(CLS).map(([k,[c,n]]) => '<span class="lg" style="margin:0"><i style="background:' + c + '"></i>' + n + '</span>').join('') + '<span class="lg" style="margin:0"><i style="background:#3DD68C"></i>sip_client (no identity row)</span>'
+    : '<span class="lg" style="margin:0"><i style="background:#4C8DFF"></i>domestic</span><span class="lg" style="margin:0"><i style="background:#F5A623"></i>cross-border</span>') + '<span class="lg" style="margin:0"><i style="background:#A6D8CD;transform:rotate(45deg);border-radius:0"></i>monitored IP (role pending — all 16)</span>';
 }
 function renderSide(E, byCC){
   const tot = E.reduce((a,e)=>a+e.mb,0); const abroad = E.filter(e => e.cc !== HOME[e.m]).reduce((a,e)=>a+e.mb,0);
   let own = 0, carrier = 0; if (S.mode === 'roles') E.forEach(e => { if (e.cc === HOME[e.m]) return; const pc = PAIRCLS[e.m + '|' + e.cc]; if (!pc) { carrier += e.mb; return; } Object.entries(pc).forEach(([c,v]) => { if (c === 'cloud' || c === 'bph') own += v; else carrier += v; }); });
   const rows = Object.entries(byCC).sort((a,b)=>b[1]-a[1]);
-  side.innerHTML = '<div class="hd"><div style="font-size:13px;font-weight:600">' + (S.mode === 'roles' ? 'SIP peer pairs · 30d' : 'UDP media · week of ' + WEEKS[S.week]) + (S.mon ? ' · ' + S.mon : '') + '</div><div style="font-size:11px;color:#9199A8;margin-top:4px" class="mono">' + tot.toFixed(1) + ' MB · <span style="color:#F5A623">' + (tot ? Math.round(100*abroad/tot) : 0) + '% cross-border</span>' + (S.mode === 'roles' && abroad ? '<br>abroad: own nodes ' + Math.round(100*own/abroad) + '% · carriers ' + Math.round(100*carrier/abroad) + '%' : '') + '</div><div style="font-size:10px;color:#5D6472;margin-top:5px;line-height:1.4">cross-border = peer country ≠ the monitored IP\'s own country (so the DE-hosted node\'s US trunk counts). The strip below uses "non-US" — a different question, hence a different number.</div></div>' +
+  side.innerHTML = '<div class="hd"><div style="font-size:13px;font-weight:600">' + (S.mode === 'roles' ? 'SIP peer pairs · 30d' : 'UDP media · week of ' + WEEKS[S.week]) + (S.mon ? ' · ' + S.mon : '') + '</div><div style="font-size:11px;color:#A6D8CD;margin-top:4px" class="mono">' + tot.toFixed(1) + ' MB · <span style="color:#F5A623">' + (tot ? Math.round(100*abroad/tot) : 0) + '% cross-border</span>' + (S.mode === 'roles' && abroad ? '<br>abroad: own nodes ' + Math.round(100*own/abroad) + '% · carriers ' + Math.round(100*carrier/abroad) + '%' : '') + '</div><div style="font-size:10px;color:#6FA89E;margin-top:5px;line-height:1.4">cross-border = peer country ≠ the monitored IP\'s own country (so the DE-hosted node\'s US trunk counts). The strip below uses "non-US" — a different question, hence a different number.</div></div>' +
     rows.map(([cc, mb]) => { const es = E.filter(e => e.cc === cc); const on = S.country === cc;
-      const peers = on && S.mode === 'roles' ? T.filter(r => r[2] === cc && (!S.mon || r[0] === S.mon) && S.roles.has('trunk')).map(r => '<div class="peer"><span class="mono">' + r[1] + '</span> ↔ ' + r[0] + '<br>' + r[10] + ' · ' + CLS[cls(r[13])][1] + (r[12] ? ' · ' + r[12] : '') + ' · <span class="mono">' + r[3].toFixed(1) + ' MB</span></div>').join('') + es.map(e => Object.entries(e.roles).filter(([r]) => r !== 'trunk').map(([r,n]) => '<div class="peer">' + e.m + ' · ' + n + ' ' + r + ' pair' + (n>1?'s':'') + ' (no identity row)</div>').join('')).join('') : on ? es.map(e => '<div class="peer">' + e.m + ' → ' + cc + ' <span class="mono">' + e.mb.toFixed(2) + ' MB</span></div>').join('') : '';
-      return '<div class="srow' + (on ? ' on' : '') + '" data-cc="' + cc + '"><span class="cc">' + cc + '</span><span style="flex:1;color:#9199A8">' + (CNAME[cc] || cc) + '<span class="sub">' + es.length + ' monitored IP' + (es.length>1?'s':'') + (S.mode === 'roles' ? ' · ' + es.reduce((a,e)=>a+e.pairs,0) + ' pairs' : '') + '</span></span><span class="mb">' + (mb >= 1 ? mb.toFixed(1) + ' MB' : (mb*1000).toFixed(0) + ' KB') + '</span></div>' + peers; }).join('');
+      const peers = on && S.mode === 'roles' ? T30.filter(r => r[2] === cc && (!S.mon || r[0] === S.mon) && S.roles.has('sip_trunk')).map(r => '<div class="peer"><span class="mono">' + r[1] + '</span> ↔ ' + r[0] + '<br>' + r[10] + ' · ' + CLS[cls(r[13])][1] + (r[12] ? ' · ' + r[12] : '') + ' · <span class="mono">' + r[3].toFixed(1) + ' MB</span></div>').join('') + es.map(e => Object.entries(e.roles).filter(([r]) => r !== 'sip_trunk').map(([r,n]) => '<div class="peer">' + e.m + ' · ' + n + ' ' + r + ' pair' + (n>1?'s':'') + ' (no identity row)</div>').join('')).join('') : on ? es.map(e => '<div class="peer">' + e.m + ' → ' + cc + ' <span class="mono">' + e.mb.toFixed(2) + ' MB</span></div>').join('') : '';
+      return '<div class="srow' + (on ? ' on' : '') + '" data-cc="' + cc + '"><span class="cc">' + cc + '</span><span style="flex:1;color:#A6D8CD">' + (CNAME[cc] || cc) + '<span class="sub">' + es.length + ' monitored IP' + (es.length>1?'s':'') + (S.mode === 'roles' ? ' · ' + es.reduce((a,e)=>a+e.pairs,0) + ' pairs' : '') + '</span></span><span class="mb">' + (mb >= 1 ? mb.toFixed(1) + ' MB' : (mb*1000).toFixed(0) + ' KB') + '</span></div>' + peers; }).join('');
   side.querySelectorAll('.srow').forEach(r => r.addEventListener('click', () => { S.country = S.country === r.dataset.cc ? null : r.dataset.cc; render(); }));
 }
 function showTip(ev, html){ tip.innerHTML = html; tip.style.display = 'block'; const box = svg.node().parentElement.getBoundingClientRect(); tip.style.left = (ev.clientX - box.left + 14) + 'px'; tip.style.top = (ev.clientY - box.top + 14) + 'px'; }
@@ -375,7 +390,7 @@ async function initMap(){
     proj = d3.geoNaturalEarth1(); path = d3.geoPath(proj);
     const fit = () => { const w = Math.max(320, MW()); svg.attr('viewBox', '0 0 ' + w + ' ' + H); proj.fitExtent([[10, 10], [w - 10, H - 10]], {type:'Sphere'}); g.select('.sphere').attr('d', path({type:'Sphere'})); g.selectAll('.country').attr('d', path); };
     g = svg.append('g');
-    g.append('path').attr('class', 'sphere').attr('fill', '#0F1217').attr('stroke', '#262B35');
+    g.append('path').attr('class', 'sphere').attr('fill', '#0A2224').attr('stroke', '#2B7266');
     g.append('g').selectAll('path').data(fc.features).enter().append('path').attr('class', 'country')
       .on('mousemove', (ev, d) => { if (!d.cc2) return; showTip(ev, '<b>' + (CNAME[d.cc2] || d.cc2) + '</b><br><span class="mono">click to list peers</span>'); }).on('mouseleave', hideTip)
       .on('click', (ev, d) => { if (!d.cc2) return; S.country = S.country === d.cc2 ? null : d.cc2; render(); });

@@ -3,55 +3,59 @@
 <head>
 <meta charset="utf-8">
 <title>CVS Watch — Flow graph</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Orbitron:wght@500;600&display=swap">
 <style>
-body{margin:0;background:#0B0D10;color:#E7E9ED;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{margin:0;background:#061214;color:#E8FFF8;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 .mono{font-family:'IBM Plex Mono',monospace}
 a{color:#4C8DFF;text-decoration:none}
 a:hover{color:#78AAFF}
-.navlink{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;font-size:14px;font-weight:500;color:#9199A8}
-.navlink:hover{background:#171B22;color:#E7E9ED}
-.navlink.active{background:#1B2029;color:#E7E9ED}
-.card{background:#141821;border:1px solid #262B35;border-radius:10px}
-.pill{font-size:12px;font-weight:500;padding:5px 12px;border-radius:999px;border:1px solid #262B35;color:#9199A8;background:transparent;cursor:pointer}
-.pill.active{background:#1B2029;border-color:#3A4254;color:#E7E9ED}
-.src{font-size:10px;font-family:'IBM Plex Mono',monospace;color:#5D6472;background:#0F1217;border:1px solid #1B2029;padding:2px 7px;border-radius:4px;white-space:nowrap}
-.chip{font-size:11px;font-family:'IBM Plex Mono',monospace;background:#1B2029;border:1px solid #262B35;color:#9199A8;padding:3px 8px;border-radius:5px;display:inline-block}
+.navlink{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;font-size:14px;font-weight:500;color:#A6D8CD}
+.navlink:hover{background:#0F3133;color:#E8FFF8}
+.navlink.active{background:#133A3C;color:#E8FFF8}
+.card{background:#0C2A2C;border:1px solid #2B7266;border-radius:10px}
+.pill{font-size:12px;font-weight:500;padding:5px 12px;border-radius:999px;border:1px solid #2B7266;color:#A6D8CD;background:transparent;cursor:pointer}
+.pill.active{background:#133A3C;border-color:#3F9C8A;color:#E8FFF8}
+.src{font-size:10px;font-family:'IBM Plex Mono',monospace;color:#6FA89E;background:#0A2224;border:1px solid #133A3C;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.chip.tip{border-style:dashed;color:#C6EBE2;border-color:#3F9C8A}
+.chip.pend{border-style:dotted;color:#A6D8CD}
+.chip.rev{color:#F5A623;border-color:#5A4423}
+.chip{font-size:11px;font-family:'IBM Plex Mono',monospace;background:#133A3C;border:1px solid #2B7266;color:#A6D8CD;padding:3px 8px;border-radius:5px;display:inline-block}
 .node{position:absolute;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .08s ease}
 .node:hover{transform:scale(1.08)}
-.node.sel{box-shadow:0 0 0 3px #E7E9ED, 0 0 0 7px rgba(231,233,237,0.22)}
-.nodelabel{position:absolute;font-size:11px;color:#9199A8;white-space:nowrap}
-.dn{font-size:12px;color:#9199A8;line-height:1.5;display:flex;gap:8px}
-.dn b{color:#E7E9ED;font-weight:600}
-.tab{all:unset;cursor:pointer;font-size:13px;font-weight:500;padding:9px 4px;color:#5D6472;border-bottom:2px solid transparent}
-.tab.active{color:#E7E9ED;border-bottom:2px solid #4C8DFF}
-.src{font-size:10px;font-family:'IBM Plex Mono',monospace;color:#5D6472;background:#0F1217;border:1px solid #1B2029;padding:2px 7px;border-radius:4px;white-space:nowrap}
-.ctl{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid #1B2029}
-.ctl label{font-size:10px;color:#5D6472;text-transform:uppercase;letter-spacing:0.04em;margin-right:4px}
-.tog{all:unset;cursor:pointer;font-size:11px;font-weight:500;padding:5px 11px;border-radius:999px;border:1px solid #262B35;color:#9199A8;background:transparent}
-.tog.on{background:#1B2029;border-color:#3A4254;color:#E7E9ED}
-select.sel{background:#0F1217;color:#E7E9ED;border:1px solid #262B35;border-radius:6px;padding:5px 8px;font-size:12px;font-family:'IBM Plex Mono',monospace}
+.node.sel{box-shadow:0 0 0 3px #E8FFF8, 0 0 0 7px rgba(231,233,237,0.22)}
+.nodelabel{position:absolute;font-size:11px;color:#A6D8CD;white-space:nowrap}
+.dn{font-size:12px;color:#A6D8CD;line-height:1.5;display:flex;gap:8px}
+.dn b{color:#E8FFF8;font-weight:600}
+.tab{all:unset;cursor:pointer;font-size:13px;font-weight:500;padding:9px 4px;color:#6FA89E;border-bottom:2px solid transparent}
+.tab.active{color:#E8FFF8;border-bottom:2px solid #4C8DFF}
+.src{font-size:10px;font-family:'IBM Plex Mono',monospace;color:#6FA89E;background:#0A2224;border:1px solid #133A3C;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.ctl{display:flex;gap:14px;align-items:center;flex-wrap:wrap;padding:14px 18px;border-bottom:1px solid #133A3C}
+.ctl label{font-size:10px;color:#6FA89E;text-transform:uppercase;letter-spacing:0.04em;margin-right:4px}
+.tog{all:unset;cursor:pointer;font-size:11px;font-weight:500;padding:5px 11px;border-radius:999px;border:1px solid #2B7266;color:#A6D8CD;background:transparent}
+.tog.on{background:#133A3C;border-color:#3F9C8A;color:#E8FFF8}
+select.sel{background:#0A2224;color:#E8FFF8;border:1px solid #2B7266;border-radius:6px;padding:5px 8px;font-size:12px;font-family:'IBM Plex Mono',monospace}
 input[type=range]{accent-color:#4C8DFF;width:140px}
 #sk{width:100%;display:block}
 .sk-link{fill:none;mix-blend-mode:screen;opacity:0.42;transition:opacity .12s}
 .sk-link.hl{opacity:0.9}.sk-link.dim{opacity:0.06}
-.sk-node rect{stroke:#0B0D10;stroke-width:1;cursor:pointer}
+.sk-node rect{stroke:#061214;stroke-width:1;cursor:pointer}
 .sk-node.dim rect{opacity:0.25}
-.sk-node text{font-size:10px;fill:#C9CED8;pointer-events:none}
+.sk-node text{font-size:10px;fill:#D4F2EA;pointer-events:none}
 .sk-node.dim text{opacity:0.25}
 .sk-node .role{fill:#F5A623;font-weight:600}
-.sk-node .meta{fill:#5D6472}
-.lhd{font-size:10px;font-weight:600;letter-spacing:0.04em;color:#5D6472;text-transform:uppercase}
-.tip{position:absolute;pointer-events:none;background:#171B22;border:1px solid #3A4254;border-radius:7px;padding:8px 10px;font-size:11px;line-height:1.5;color:#E7E9ED;max-width:300px;z-index:5;display:none;box-shadow:0 6px 20px rgba(0,0,0,0.5)}
-.tip .mono{color:#9199A8}
-.note{font-size:11px;color:#5D6472;line-height:1.5;padding:12px 20px 14px 20px;border-top:1px solid #1B2029}
+.sk-node .meta{fill:#6FA89E}
+.lhd{font-size:10px;font-weight:600;letter-spacing:0.04em;color:#6FA89E;text-transform:uppercase}
+.tip{position:absolute;pointer-events:none;background:#0F3133;border:1px solid #3F9C8A;border-radius:7px;padding:8px 10px;font-size:11px;line-height:1.5;color:#E8FFF8;max-width:300px;z-index:5;display:none;box-shadow:0 6px 20px rgba(0,0,0,0.5)}
+.tip .mono{color:#A6D8CD}
+.note{font-size:11px;color:#6FA89E;line-height:1.5;padding:12px 20px 14px 20px;border-top:1px solid #133A3C}
 </style>
+<link rel="stylesheet" href="theme.css">
 </head>
 <body>
 
-<div style="display:flex;width:100%;min-height:100vh;background:#0B0D10">
+<div style="display:flex;width:100%;min-height:100vh;background:transparent">
 
-<div style="width:240px;flex-shrink:0;background:#0F1217;border-right:1px solid #262B35;display:flex;flex-direction:column;padding:24px 16px;box-sizing:border-box;gap:4px">
+<div class="sidebar" style="width:240px;flex-shrink:0;background:#0A2224;border-right:1px solid #2B7266;display:flex;flex-direction:column;padding:24px 16px;box-sizing:border-box;gap:4px">
   <div style="display:flex;align-items:center;gap:10px;padding:8px 8px 22px 8px">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4C8DFF" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9" stroke-opacity="0.45"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke-opacity="0.45"/></svg>
     <span style="font-size:15px;font-weight:600;letter-spacing:0.2px">CVS Watch</span>
@@ -65,9 +69,9 @@ input[type=range]{accent-color:#4C8DFF;width:140px}
   <a href="CandidateReview.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l2.2-5h13.6L21 8M3 8v10.5A1.5 1.5 0 004.5 20h15a1.5 1.5 0 001.5-1.5V8M3 8h6.2l.9 3h3.8l.9-3H21"/></svg>Candidates</a>
   <a href="PipelineHealth.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg>Pipeline health</a>
   <div style="flex:1"></div>
-  <div style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-top:1px solid #262B35;margin-top:8px">
-    <div style="width:28px;height:28px;border-radius:50%;background:#1B2029;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#9199A8;flex-shrink:0">JF</div>
-    <div style="font-size:12px;color:#9199A8;line-height:1.4">J. Finley<br><span style="color:#5D6472">Analyst</span></div>
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-top:1px solid #2B7266;margin-top:8px">
+    <div style="width:28px;height:28px;border-radius:50%;background:#133A3C;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#A6D8CD;flex-shrink:0">JF</div>
+    <div style="font-size:12px;color:#A6D8CD;line-height:1.4">J. Finley<br><span style="color:#6FA89E">Analyst</span></div>
   </div>
 </div>
 
@@ -76,7 +80,7 @@ input[type=range]{accent-color:#4C8DFF;width:140px}
   <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:16px">
     <div>
       <h1 style="margin:0 0 4px 0;font-size:22px;font-weight:600">Flow graph</h1>
-      <div style="font-size:13px;color:#5D6472">Edges from <span class="mono">tagged_entity_contacts_daily</span> (one per unordered IP pair) · node color from <span class="mono">flow_rollup_daily</span> flags · click any node</div>
+      <div style="font-size:13px;color:#6FA89E">Edges from <span class="mono">rollup__confirmed_contacts_daily</span> (one per unordered IP pair) · peer color from <span class="mono">rollup__flow_daily</span>.<span class="mono">peer_categories</span> · monitored-node ring from <span class="mono">review__ip_roles</span>.<span class="mono">accepted_role</span> (none accepted yet — every watched IP is grey) · OpenCTI labels are chips in the panel, never a color · click any node</div>
     </div>
     <div style="display:flex;gap:6px">
       <button class="pill">24h</button>
@@ -85,7 +89,7 @@ input[type=range]{accent-color:#4C8DFF;width:140px}
     </div>
   </div>
 
-  <div style="display:flex;gap:28px;border-bottom:1px solid #262B35;margin-bottom:22px">
+  <div style="display:flex;gap:28px;border-bottom:1px solid #2B7266;margin-bottom:22px">
     <button class="tab active" data-tab="graph">Node graph</button>
     <button class="tab" data-tab="sankey">Sankey — SIP/VoIP bytes, 30d</button>
   </div>
@@ -97,27 +101,27 @@ input[type=range]{accent-color:#4C8DFF;width:140px}
 
       <svg width="800" height="620" viewBox="0 0 800 620" style="position:absolute;left:0;top:0;pointer-events:none">
         <line x1="90" y1="130" x2="395" y2="75" style="stroke:#F5A623;stroke-width:6;stroke-linecap:round;stroke-dasharray:3 7"/>
-        <line x1="90" y1="130" x2="415" y2="275" style="stroke:#3E4863;stroke-width:5;stroke-linecap:round"/>
-        <line x1="90" y1="130" x2="293" y2="443" style="stroke:#3E4863;stroke-width:2;stroke-linecap:round"/>
-        <line x1="90" y1="130" x2="550" y2="290" style="stroke:#3E4863;stroke-width:2;stroke-linecap:round"/>
-        <line x1="90" y1="130" x2="262" y2="242" style="stroke:#3E4863;stroke-width:4;stroke-linecap:round"/>
-        <line x1="90" y1="310" x2="537" y2="67" style="stroke:#3E4863;stroke-width:3;stroke-linecap:round"/>
+        <line x1="90" y1="130" x2="415" y2="275" style="stroke:#4D8C80;stroke-width:5;stroke-linecap:round"/>
+        <line x1="90" y1="130" x2="293" y2="443" style="stroke:#4D8C80;stroke-width:2;stroke-linecap:round"/>
+        <line x1="90" y1="130" x2="550" y2="290" style="stroke:#4D8C80;stroke-width:2;stroke-linecap:round"/>
+        <line x1="90" y1="130" x2="262" y2="242" style="stroke:#4D8C80;stroke-width:4;stroke-linecap:round"/>
+        <line x1="90" y1="310" x2="537" y2="67" style="stroke:#4D8C80;stroke-width:3;stroke-linecap:round"/>
         <line x1="90" y1="310" x2="90" y2="490" style="stroke:#F5A623;stroke-width:7;stroke-linecap:round;stroke-dasharray:3 7"/>
-        <line x1="90" y1="490" x2="395" y2="75" style="stroke:#3E4863;stroke-width:3;stroke-linecap:round"/>
-        <line x1="90" y1="490" x2="638" y2="478" style="stroke:#3E4863;stroke-width:7;stroke-linecap:round"/>
+        <line x1="90" y1="490" x2="395" y2="75" style="stroke:#4D8C80;stroke-width:3;stroke-linecap:round"/>
+        <line x1="90" y1="490" x2="638" y2="478" style="stroke:#4D8C80;stroke-width:7;stroke-linecap:round"/>
       </svg>
 
-      <div class="node" data-id="m1" style="width:48px;height:48px;left:66px;top:106px;background:#2A1216;border:2px solid #E5484D;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></div>
-      <div class="nodelabel" style="left:16px;top:157px;color:#E5484D;font-weight:600">OUTSIDERS</div>
+      <div class="node" data-id="m1" style="width:48px;height:48px;left:66px;top:106px;background:#0F3133;border:2px solid #A6D8CD;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></div>
+      <div class="nodelabel" style="left:16px;top:157px;color:#E8FFF8;font-weight:600">OUTSIDERS <span class="chip tip" style="font-size:9px;padding:0 4px">TIP: cvs</span></div>
 
-      <div class="node" data-id="m2" style="width:44px;height:44px;left:68px;top:288px;background:#2A1216;border:2px solid #E5484D;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></div>
-      <div class="nodelabel" style="left:4px;top:335px;color:#E5484D;font-weight:600">confirmed CVS #2</div>
+      <div class="node" data-id="m2" style="width:44px;height:44px;left:68px;top:288px;background:#0F3133;border:2px solid #A6D8CD;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></div>
+      <div class="nodelabel" style="left:4px;top:335px;color:#E8FFF8;font-weight:600">CVS #2 <span class="chip tip" style="font-size:9px;padding:0 4px">TIP: cvs</span></div>
 
-      <div class="node" data-id="m3" style="width:44px;height:44px;left:68px;top:468px;background:#2A2013;border:2px solid #F5A623;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%)"></div>
-      <div class="nodelabel" style="left:30px;top:515px;color:#F5A623;font-weight:600">SIP trunk</div>
+      <div class="node" data-id="m3" style="width:44px;height:44px;left:68px;top:468px;background:#0F3133;border:2px solid #A6D8CD;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></div>
+      <div class="nodelabel" style="left:8px;top:515px;color:#E8FFF8;font-weight:600">SIP trunk node <span class="chip tip" style="font-size:9px;padding:0 4px">TIP: sip_trunk</span></div>
 
-      <div class="node" data-id="p1" style="width:34px;height:34px;left:378px;top:58px;background:#171B22;border:2px solid #9199A8;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></div>
-      <div class="nodelabel" style="left:398px;top:48px">Magnus Billing <span style="color:#5D6472">· monitored</span></div>
+      <div class="node" data-id="p1" style="width:34px;height:34px;left:378px;top:58px;background:#0F3133;border:2px solid #A6D8CD;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%)"></div>
+      <div class="nodelabel" style="left:398px;top:48px">Magnus Billing <span style="color:#6FA89E">· monitored</span></div>
 
       <div class="node" data-id="p2" style="width:34px;height:34px;left:520px;top:50px;background:#132033;border:2px solid #4C8DFF"></div>
       <div class="nodelabel" style="left:540px;top:40px">cloud host</div>
@@ -143,7 +147,7 @@ input[type=range]{accent-color:#4C8DFF;width:140px}
       <div class="node" data-id="p9" style="width:26px;height:26px;left:280px;top:430px;background:#2A2013;border:2px solid #F5A623"></div>
       <div class="nodelabel" style="left:260px;top:460px">T-Mobile</div>
 
-      <div class="node" data-id="p8" style="width:36px;height:36px;left:620px;top:460px;background:#171B22;border:2px dashed #5D6472"></div>
+      <div class="node" data-id="p8" style="width:36px;height:36px;left:620px;top:460px;background:#0F3133;border:2px dashed #6FA89E"></div>
       <div class="nodelabel" style="left:600px;top:500px">AS20122 ×10 <span style="color:#F5A623">· needs ASN</span></div>
 
     </div>
@@ -151,31 +155,32 @@ input[type=range]{accent-color:#4C8DFF;width:140px}
     <div style="width:284px;flex-shrink:0;display:flex;flex-direction:column;gap:16px">
 
       <div class="card" style="padding:16px 18px">
-        <div style="font-size:12px;font-weight:600;margin-bottom:10px;color:#9199A8">Legend</div>
+        <div style="font-size:12px;font-weight:600;margin-bottom:10px;color:#A6D8CD">Legend</div>
         <div style="display:flex;flex-direction:column;gap:7px;font-size:12px">
-          <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;background:#2A1216;border:2px solid #E5484D;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);display:inline-block;flex-shrink:0"></span>Monitored — confirmed CVS</div>
-          <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border:2px solid #F5A623;clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);display:inline-block;flex-shrink:0"></span>Monitored — SIP trunk</div>
-          <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;background:#171B22;border:2px solid #9199A8;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);display:inline-block;flex-shrink:0"></span>Monitored — watchlist only</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;background:#2A2013;border:2px solid #F5A623;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);display:inline-block;flex-shrink:0"></span>Monitored — reviewed <span class="mono">sip_trunk</span> <span style="color:#6FA89E">(none yet)</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;background:#2A1216;border:2px solid #E5484D;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);display:inline-block;flex-shrink:0"></span>Monitored — reviewed <span class="mono">sip_server</span> <span style="color:#6FA89E">(none yet)</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;background:#0F3133;border:2px solid #A6D8CD;clip-path:polygon(50% 0,100% 50%,50% 100%,0 50%);display:inline-block;flex-shrink:0"></span>Monitored — role pending review <span style="color:#6FA89E">(all 16 today)</span></div>
+          <div style="display:flex;align-items:center;gap:8px"><span class="chip tip" style="font-size:9px;padding:0 4px;flex-shrink:0">TIP: …</span>OpenCTI label — an analyst's suggestion, never a color or a rule input</div>
           <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:50%;background:#132033;border:2px solid #4C8DFF;display:inline-block;flex-shrink:0"></span>Peer — cloud</div>
           <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:50%;background:#1C1530;border:2px solid #8B5CF6;display:inline-block;flex-shrink:0"></span>Peer — satellite</div>
           <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:50%;background:#2A2013;border:2px solid #F5A623;display:inline-block;flex-shrink:0"></span>Peer — mobile</div>
           <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:50%;background:#0F2A27;border:2px solid #2DD4BF;display:inline-block;flex-shrink:0"></span>Peer — residential ISP</div>
-          <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:50%;background:#171B22;border:2px dashed #5D6472;display:inline-block;flex-shrink:0"></span>Peer — unclassified</div>
-          <div style="height:1px;background:#262B35;margin:4px 0"></div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:12px;height:12px;border-radius:50%;background:#0F3133;border:2px dashed #6FA89E;display:inline-block;flex-shrink:0"></span>Peer — unclassified</div>
+          <div style="height:1px;background:#2B7266;margin:4px 0"></div>
           <div style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:2px;background:#F5A623;display:inline-block;flex-shrink:0"></span>Monitored ↔ monitored</div>
-          <div style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:3px;background:#3E4863;display:inline-block;flex-shrink:0"></span>Monitored ↔ peer (width ~ bytes)</div>
+          <div style="display:flex;align-items:center;gap:8px"><span style="width:18px;height:3px;background:#4D8C80;display:inline-block;flex-shrink:0"></span>Monitored ↔ peer (width ~ bytes)</div>
         </div>
       </div>
 
       <div class="card" style="padding:16px 18px;min-height:200px">
-        <div id="info-empty" style="font-size:13px;color:#5D6472;line-height:1.5">Click a node on the left to inspect it — monitored-IP tags, provider classification, and a short note on why it's in the graph.</div>
+        <div id="info-empty" style="font-size:13px;color:#6FA89E;line-height:1.5">Click a node on the left to inspect it — its reviewed role (netflow-rollups), the heuristic's proposal, its OpenCTI labels, provider classification, and a short note on why it's in the graph.</div>
         <div id="info" style="display:none">
           <div id="i-label" style="font-size:14px;font-weight:600;margin-bottom:2px"></div>
-          <div id="i-ip" class="mono" style="font-size:12px;color:#9199A8;margin-bottom:10px"></div>
-          <div id="i-role" style="font-size:12px;color:#9199A8;margin-bottom:10px"></div>
+          <div id="i-ip" class="mono" style="font-size:12px;color:#A6D8CD;margin-bottom:10px"></div>
+          <div id="i-role" style="font-size:12px;color:#A6D8CD;margin-bottom:10px"></div>
           <div id="i-tags" style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px"></div>
-          <div id="i-bytes" style="font-size:12px;color:#5D6472;margin-bottom:10px"></div>
-          <div id="i-note" style="font-size:12px;line-height:1.5;color:#B7BCC6"></div>
+          <div id="i-bytes" style="font-size:12px;color:#6FA89E;margin-bottom:10px"></div>
+          <div id="i-note" style="font-size:12px;line-height:1.5;color:#C6EBE2"></div>
         </div>
       </div>
 
@@ -183,8 +188,8 @@ input[type=range]{accent-color:#4C8DFF;width:140px}
         <div style="font-size:12px;font-weight:600;margin-bottom:10px;color:#F5A623">Data notes</div>
         <div style="display:flex;flex-direction:column;gap:9px">
           <div class="dn"><span>①</span><span><b>Every monitored↔monitored edge is stored twice</b> — once from each side's pull (17.52 MB / 17.51 MB for the trunk ↔ CVS #2 pair). Key on the unordered pair and keep one, don't sum.</span></div>
-          <div class="dn"><span>②</span><span><b>The edge view carries no provider flags</b> — <span class="mono">tagged_entity_contacts_daily</span> kept only the four tag flags, so peer color needs a join back to <span class="mono">flow_rollup_daily</span>.</span></div>
-          <div class="dn"><span>③</span><span><b>No rollup view carries ASN</b> — the AS20122 cluster collapse needs <span class="mono">peer_asn</span> added to <span class="mono">flow_rollup_hourly</span>, or a <span class="mono">flow_records</span> lookup.</span></div>
+          <div class="dn"><span>②</span><span><b>The edge view carries roles, not provider categories</b> — <span class="mono">rollup__confirmed_contacts_daily</span> has <span class="mono">monitored_ip_role</span> / <span class="mono">peer_role</span> / <span class="mono">pair_confirmed</span> but no <span class="mono">peer_categories</span>, so peer color needs a join back to <span class="mono">rollup__flow_daily</span>. "Confirmed" now means a human confirmed the pair or role in netflow-rollups, not an OpenCTI label.</span></div>
+          <div class="dn"><span>③</span><span><b>No rollup view carries ASN</b> — the AS20122 cluster collapse needs <span class="mono">peer_asn</span> added to <span class="mono">rollup__flow_hourly</span>, or a <span class="mono">flow__records</span> lookup.</span></div>
           <div class="dn"><span>④</span><span><b>216.126.227.152 is on the watchlist</b> (<span class="mono">msk:voip_analysis</span>) — drawn as a plain peer in the first draft; it's a monitored node and its OUTSIDERS edge is monitored↔monitored.</span></div>
         </div>
       </div>
@@ -210,7 +215,7 @@ input[type=range]{accent-color:#4C8DFF;width:140px}
         <svg id="sk"></svg>
         <div class="tip" id="sk-tip"></div>
       </div>
-      <div class="note">Width = bytes of <span class="mono">rtp_media</span> + <span class="mono">voip_signaling</span> + <span class="mono">voip_admin</span> over the last 30 days (<span class="mono">flow_rollup_daily</span>); every other port family is excluded. Left-to-right: what kind of network the peer is (<span class="mono">peer_is_*</span>, first match wins: monitored → bph → cloud → satellite → mobile → residential → wholesale → proxy → unclassified) → the peer host (top 28 by bytes individually, the other 5,777 collapsed into one node per class, labelled with the peer count) → which watched IP it talks to → whether that was media or signaling. A conversation between two monitored IPs is stored twice upstream, once per side's pull; it's counted once here, on the side with the lower address. Hover a node to trace everything through it, click to pin; the role tag on a peer comes from <span class="mono">sip_peer_candidates</span>. The 208.69.81–82.x pool is eight BL Networks hosts with near-identical volume to the SIP trunk node — grouped by default so they read as the one thing they probably are.</div>
+      <div class="note">Width = bytes of <span class="mono">rtp_media</span> + <span class="mono">voip_signaling</span> + <span class="mono">voip_admin</span> over the last 30 days (<span class="mono">rollup__flow_daily</span>); every other port family is excluded. Left-to-right: what kind of network the peer is (<span class="mono">peer_is_*</span>, first match wins: monitored → bph → cloud → satellite → mobile → residential → wholesale → proxy → unclassified) → the peer host (top 28 by bytes individually, the other 5,777 collapsed into one node per class, labelled with the peer count) → which watched IP it talks to → whether that was media or signaling. A conversation between two monitored IPs is stored twice upstream, once per side's pull; it's counted once here, on the side with the lower address. Hover a node to trace everything through it, click to pin; the role tag on a peer comes from <span class="mono">review__sip_pairs</span>. The 208.69.81–82.x pool is eight BL Networks hosts with near-identical volume to the SIP trunk node — grouped by default so they read as the one thing they probably are.</div>
     </div>
   </div>
 
@@ -219,18 +224,18 @@ input[type=range]{accent-color:#4C8DFF;width:140px}
 
 <script>
 const INFO = {
-  m1: {label:'OUTSIDERS', ip:'143.198.172.85', role:'Monitored IP — confirmed CVS', tags:['msk:voip_analysis','infrastructure_type:criminal_voip_service'], bytes:'20.7 MB / 7d · 17.2 MB BPH contact / 30d', note:'Persistent SIP 5060 registration plus 16,667 distinct RTP sessions to the Magnus Billing host, weekday-biased. Signaling collapsed ~98% after Sep 28 while media held.'},
-  m2: {label:'Unnamed CVS #2', ip:'192.248.178.127', role:'Monitored IP — confirmed CVS', tags:['msk:voip_analysis','infrastructure_type:criminal_voip_service'], bytes:'18.8 MB / 7d', note:'17.5 MB of that is one edge to the SIP trunk node — talks directly to the trunk.'},
-  m3: {label:'SIP trunk node', ip:'143.198.176.127', role:'Monitored IP — SIP trunk', tags:['msk:voip_analysis','infrastructure:sip_trunk'], bytes:'26.7 MB / 7d · 308 unclassified peers', note:'Reads as a relay, not an endpoint: the confirmed CVS on one side, a 308-peer unclassified fan-out (incl. the AS20122 pool) on the other.'},
-  p1: {label:'Magnus Billing host', ip:'216.126.227.152', role:'Monitored IP (watchlist only) — also cloud + bulletproof hosting as a peer', tags:['msk:voip_analysis','AS14956 RouterHosting LLC','US'], bytes:'7.6 MB / 7d', note:'On the watchlist itself — the first draft drew it as a plain peer. Its edge to OUTSIDERS appears twice in tagged_entity_contacts_daily (7.43 MB from one side, 6.61 MB from the other). Independently flagged by Spamhaus ASN-DROP and the hrbrmstr BPH watch.'},
+  m1: {label:'OUTSIDERS', ip:'143.198.172.85', role:'Monitored IP · reviewed role: none (pending) · heuristic proposes sip_server', tags:['msk:voip_analysis','TIP:infrastructure_type:criminal_voip_service'], bytes:'20.7 MB / 7d · 17.2 MB BPH contact / 30d', note:'Persistent SIP 5060 registration plus 16,667 distinct RTP sessions to the Magnus Billing host, weekday-biased. Signaling collapsed ~98% after Sep 28 while media held.'},
+  m2: {label:'CVS #2 · callspoofing.org', ip:'192.248.178.127', role:'Monitored IP · reviewed role: none (pending) · heuristic proposes sip_server', tags:['msk:voip_analysis','TIP:infrastructure_type:criminal_voip_service'], bytes:'18.8 MB / 7d', note:'17.5 MB of that is one edge to the SIP trunk node — talks directly to the trunk.'},
+  m3: {label:'SIP trunk node', ip:'143.198.176.127', role:'Monitored IP · reviewed role: none (pending) · heuristic proposes sip_server — disagrees with the TIP label', tags:['msk:voip_analysis','TIP:infrastructure:sip_trunk'], bytes:'26.7 MB / 7d · 308 unclassified peers', note:'Reads as a relay, not an endpoint: the confirmed CVS on one side, a 308-peer unclassified fan-out (incl. the AS20122 pool) on the other.'},
+  p1: {label:'Magnus Billing host', ip:'216.126.227.152', role:'Monitored IP · reviewed role: none (pending) · heuristic proposes sip_trunk — the only watched IP it reads as a trunk · also cloud + bph as a peer', tags:['msk:voip_analysis','AS14956 RouterHosting LLC','US'], bytes:'7.6 MB / 7d', note:'On the watchlist itself — the first draft drew it as a plain peer. Its edge to OUTSIDERS appears twice in rollup__confirmed_contacts_daily (7.43 MB from one side, 6.61 MB from the other). Independently flagged by Spamhaus ASN-DROP and the hrbrmstr BPH watch.'},
   p2: {label:'Cloud host', ip:'50.116.38.139', role:'Peer — cloud', tags:[], bytes:'19.0 MB / 7d', note:'Top RTP peer by volume this week.'},
   p3: {label:'GlobalTelehost Corp.', ip:'23.162.200.132', role:'Peer — cloud (AS62563, CA)', tags:[], bytes:'—', note:'Graduated from the agentic review queue Oct 8. Rollup rows older than the 3-day refresh window still show it unclassified.'},
   p4: {label:'Cloud host', ip:'3.235.74.192', role:'Peer — cloud', tags:[], bytes:'367 KB / 7d', note:''},
-  p10: {label:'Residential ISP pool', ip:'multiple /24s', role:'Peer — residential ISP (peer_is_residential_isp)', tags:['AS7018','AS22773'], bytes:'6.2 MB / 7d to OUTSIDERS', note:'New category (migration 0065, Oct 2026). Callers, not infrastructure — 30% of OUTSIDERS\' 7d bytes touch residential ranges.'},
+  p10: {label:'Residential ISP pool', ip:'multiple /24s', role:'Peer — residential ISP (peer_categories ∋ residential_isp)', tags:['AS7018','AS22773'], bytes:'6.2 MB / 7d to OUTSIDERS', note:'New category (migration 0065, Oct 2026). Callers, not infrastructure — 30% of OUTSIDERS\' 7d bytes touch residential ranges.'},
   p5: {label:'Satellite ISP', ip:'45.226.112.91', role:'Peer — satellite (AS265861, CO)', tags:[], bytes:'18.1 MB / 7d', note:'Sistemas Satelitales de Colombia.'},
   p6: {label:'Satellite ISP', ip:'45.226.115.144', role:'Peer — satellite (AS265861, CO)', tags:[], bytes:'1.8 MB / 7d', note:''},
   p7: {label:'Satellite ISP', ip:'45.226.112.202', role:'Peer — satellite (AS265861, CO)', tags:[], bytes:'360 KB / 7d', note:''},
-  p9: {label:'T-Mobile USA', ip:'AS21928', role:'Peer — mobile carrier', tags:[], bytes:'264 distinct peer IPs (7d)', note:'Shows talked_to_confirmed_cvs = true for this window.'},
+  p9: {label:'T-Mobile USA', ip:'AS21928', role:'Peer — mobile carrier', tags:[], bytes:'264 distinct peer IPs (7d)', note:'19 of its peer IPs carry a human-confirmed sip_client role in review__ip_roles (Oct 15) — callers, confirmed as such.'},
   p8: {label:'AS20122 cluster', ip:'10 IPs · 208.69.81–82.x', role:'Peer — unclassified (NOS Network Operations Group)', tags:[], bytes:'~3.0 MB combined / 7d · 284–343 KB each', note:'Near-identical per-IP volume across all 10, 7 of 7 days — the shape of a wholesale SBC pool. Top of the Unclassified tab; collapsing it here needs ASN, which no rollup view carries.'}
 };
 document.querySelectorAll('.node').forEach(n => n.addEventListener('click', () => {
@@ -244,7 +249,7 @@ document.querySelectorAll('.node').forEach(n => n.addEventListener('click', () =
   document.getElementById('i-role').textContent = i.role;
   document.getElementById('i-bytes').textContent = i.bytes;
   document.getElementById('i-note').textContent = i.note;
-  document.getElementById('i-tags').innerHTML = i.tags.map(t => '<span class="chip">' + t + '</span>').join('');
+  document.getElementById('i-tags').innerHTML = i.tags.map(t => t.startsWith('TIP:') ? '<span class="chip tip" title="OpenCTI label — analyst suggestion, read by no logic">TIP · ' + t.slice(4) + '</span>' : '<span class="chip">' + t + '</span>').join('');
 }));
 document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('.tab').forEach(x => x.classList.toggle('active', x === b));
@@ -259,13 +264,13 @@ if (location.hash === '#sankey') document.querySelector('[data-tab=sankey]').cli
 <script src="vendor/d3-sankey.v0.12.min.js"></script>
 <script>
 // ---------- sankey: SIP/VoIP bytes, 30d ----------
-// monitored, peer, family, MB, flows, peer class, role (from sip_peer_candidates)
+// monitored, peer, family, MB, flows, peer class, accepted role (review__ip_roles, confirmed rows only; Oct 15)
 // peers named other:<class>:<n> are the non-top-28 peers of that class for that monitored IP, collapsed upstream in SQL
 const SK = [
-['143.198.176.127','192.248.178.127','rtp_media',86.165,433461,'monitored','trunk'],['146.190.124.95','45.226.112.91','rtp_media',75.126,432371,'satellite','trunk'],['146.190.124.95','50.116.38.139','rtp_media',60.245,302133,'cloud','trunk'],['143.198.172.85','216.126.227.152','rtp_media',19.535,97875,'monitored','trunk'],['146.190.124.95','139.144.17.68','rtp_media',14.001,70247,'cloud','trunk'],['146.190.124.95','185.182.194.239','voip_signaling',13.436,26580,'unclassified',''],['146.190.124.95','45.226.115.144','rtp_media',5.264,26438,'satellite','trunk'],['146.190.124.95','190.2.155.71','voip_signaling',4.051,8103,'unclassified',''],['143.198.172.85','117.55.202.187','voip_signaling',3.317,5860,'unclassified',''],['143.198.172.85','136.175.82.92','voip_signaling',2.391,4248,'unclassified',''],['146.190.124.95','3.235.74.192','rtp_media',2.359,34884,'cloud','trunk'],['128.199.103.165','190.2.155.71','voip_signaling',2.040,4014,'unclassified',''],['143.198.176.127','162.33.177.141','rtp_media',1.988,33068,'unclassified','trunk'],['143.198.176.127','170.81.198.236','rtp_media',1.837,9199,'unclassified',''],['143.198.172.85','162.19.19.234','voip_signaling',1.793,3178,'cloud',''],['143.198.176.127','51.81.64.133','voip_signaling',1.752,3169,'cloud',''],['143.198.172.85','158.51.78.105','voip_signaling',1.707,3016,'residential',''],['192.248.178.127','165.232.104.188','rtp_media',1.535,7689,'cloud','trunk'],['146.190.124.95','206.0.24.6','voip_signaling',1.434,2023,'residential','client'],['143.198.176.127','208.69.82.149','rtp_media',1.431,7278,'unclassified',''],['143.198.176.127','157.90.226.70','rtp_media',1.410,7155,'cloud','trunk'],['143.198.176.127','208.69.81.188','rtp_media',1.336,6805,'unclassified',''],['143.198.176.127','208.69.81.220','rtp_media',1.327,6748,'unclassified',''],['143.198.176.127','208.69.81.171','rtp_media',1.327,6762,'unclassified',''],['143.198.176.127','208.69.81.187','rtp_media',1.314,6679,'unclassified',''],['143.198.176.127','208.69.82.187','rtp_media',1.292,6581,'unclassified',''],['143.198.176.127','208.69.82.148','rtp_media',1.292,6574,'unclassified',''],['143.198.176.127','208.69.81.172','rtp_media',1.280,6533,'unclassified',''],['146.190.124.95','206.0.24.6','rtp_media',1.135,16284,'residential','client'],['143.198.176.127','192.248.178.127','voip_signaling',1.098,1590,'monitored','trunk'],['128.199.103.165','185.182.194.239','voip_signaling',0.590,1149,'unclassified',''],['167.71.112.11','162.19.19.234','voip_signaling',0.577,1181,'cloud',''],['137.184.173.234','45.148.9.11','voip_signaling',0.545,1244,'bph','client'],['128.199.103.165','45.148.9.11','voip_signaling',0.500,1007,'bph',''],['167.71.112.11','45.148.9.11','voip_signaling',0.425,856,'bph',''],['137.184.173.234','45.148.9.11','rtp_media',0.177,361,'bph','client'],['64.225.32.104','45.148.9.11','voip_signaling',0.093,171,'bph',''],['143.198.176.127','162.33.177.141','voip_signaling',0.073,107,'unclassified','trunk'],['146.190.124.95','45.226.112.91','voip_signaling',0.072,114,'satellite','trunk'],['143.198.172.85','216.126.227.152','voip_signaling',0.063,91,'monitored','trunk'],['146.190.124.95','50.116.38.139','voip_signaling',0.062,88,'cloud','trunk'],['64.225.32.104','136.175.82.92','voip_signaling',0.021,39,'unclassified',''],['146.190.124.95','139.144.17.68','voip_signaling',0.020,30,'cloud','trunk'],['143.198.176.127','157.90.226.70','voip_signaling',0.020,31,'cloud','trunk'],['146.190.124.95','45.226.115.144','voip_signaling',0.019,30,'satellite','trunk'],['192.248.178.127','165.232.104.188','voip_signaling',0.013,23,'cloud','trunk'],['146.190.124.95','3.235.74.192','voip_signaling',0.012,18,'cloud','trunk'],['128.199.103.165','136.175.82.92','voip_signaling',0.003,7,'unclassified',''],['138.68.150.143','45.148.9.11','voip_signaling',0.002,4,'bph',''],
+['143.198.176.127','192.248.178.127','rtp_media',86.165,433461,'monitored',''],['146.190.124.95','45.226.112.91','rtp_media',75.126,432371,'satellite','sip_trunk'],['146.190.124.95','50.116.38.139','rtp_media',60.245,302133,'cloud','sip_trunk'],['143.198.172.85','216.126.227.152','rtp_media',19.535,97875,'monitored',''],['146.190.124.95','139.144.17.68','rtp_media',14.001,70247,'cloud','sip_trunk'],['146.190.124.95','185.182.194.239','voip_signaling',13.436,26580,'unclassified',''],['146.190.124.95','45.226.115.144','rtp_media',5.264,26438,'satellite','sip_trunk'],['146.190.124.95','190.2.155.71','voip_signaling',4.051,8103,'unclassified',''],['143.198.172.85','117.55.202.187','voip_signaling',3.317,5860,'unclassified',''],['143.198.172.85','136.175.82.92','voip_signaling',2.391,4248,'unclassified',''],['146.190.124.95','3.235.74.192','rtp_media',2.359,34884,'cloud','sip_trunk'],['128.199.103.165','190.2.155.71','voip_signaling',2.040,4014,'unclassified',''],['143.198.176.127','162.33.177.141','rtp_media',1.988,33068,'unclassified','sip_trunk'],['143.198.176.127','170.81.198.236','rtp_media',1.837,9199,'unclassified',''],['143.198.172.85','162.19.19.234','voip_signaling',1.793,3178,'cloud',''],['143.198.176.127','51.81.64.133','voip_signaling',1.752,3169,'cloud',''],['143.198.172.85','158.51.78.105','voip_signaling',1.707,3016,'residential',''],['192.248.178.127','165.232.104.188','rtp_media',1.535,7689,'cloud','sip_trunk'],['146.190.124.95','206.0.24.6','voip_signaling',1.434,2023,'residential','sip_client'],['143.198.176.127','208.69.82.149','rtp_media',1.431,7278,'unclassified',''],['143.198.176.127','157.90.226.70','rtp_media',1.410,7155,'cloud','sip_trunk'],['143.198.176.127','208.69.81.188','rtp_media',1.336,6805,'unclassified',''],['143.198.176.127','208.69.81.220','rtp_media',1.327,6748,'unclassified',''],['143.198.176.127','208.69.81.171','rtp_media',1.327,6762,'unclassified',''],['143.198.176.127','208.69.81.187','rtp_media',1.314,6679,'unclassified',''],['143.198.176.127','208.69.82.187','rtp_media',1.292,6581,'unclassified',''],['143.198.176.127','208.69.82.148','rtp_media',1.292,6574,'unclassified',''],['143.198.176.127','208.69.81.172','rtp_media',1.280,6533,'unclassified',''],['146.190.124.95','206.0.24.6','rtp_media',1.135,16284,'residential','sip_client'],['143.198.176.127','192.248.178.127','voip_signaling',1.098,1590,'monitored',''],['128.199.103.165','185.182.194.239','voip_signaling',0.590,1149,'unclassified',''],['167.71.112.11','162.19.19.234','voip_signaling',0.577,1181,'cloud',''],['137.184.173.234','45.148.9.11','voip_signaling',0.545,1244,'bph',''],['128.199.103.165','45.148.9.11','voip_signaling',0.500,1007,'bph',''],['167.71.112.11','45.148.9.11','voip_signaling',0.425,856,'bph',''],['137.184.173.234','45.148.9.11','rtp_media',0.177,361,'bph',''],['64.225.32.104','45.148.9.11','voip_signaling',0.093,171,'bph',''],['143.198.176.127','162.33.177.141','voip_signaling',0.073,107,'unclassified','sip_trunk'],['146.190.124.95','45.226.112.91','voip_signaling',0.072,114,'satellite','sip_trunk'],['143.198.172.85','216.126.227.152','voip_signaling',0.063,91,'monitored',''],['146.190.124.95','50.116.38.139','voip_signaling',0.062,88,'cloud','sip_trunk'],['64.225.32.104','136.175.82.92','voip_signaling',0.021,39,'unclassified',''],['146.190.124.95','139.144.17.68','voip_signaling',0.020,30,'cloud','sip_trunk'],['143.198.176.127','157.90.226.70','voip_signaling',0.020,31,'cloud','sip_trunk'],['146.190.124.95','45.226.115.144','voip_signaling',0.019,30,'satellite','sip_trunk'],['192.248.178.127','165.232.104.188','voip_signaling',0.013,23,'cloud','sip_trunk'],['146.190.124.95','3.235.74.192','voip_signaling',0.012,18,'cloud','sip_trunk'],['128.199.103.165','136.175.82.92','voip_signaling',0.003,7,'unclassified',''],['138.68.150.143','45.148.9.11','voip_signaling',0.002,4,'bph',''],
 ['143.198.172.85','other:mobile:1642','rtp_media',22.489,112342,'mobile',''],['143.198.176.127','other:wholesale_voip:209','rtp_media',10.410,52147,'wholesale_voip',''],['165.227.194.81','other:mobile:838','rtp_media',8.388,41850,'mobile',''],['143.198.176.127','other:unclassified:829','rtp_media',8.146,41277,'unclassified',''],['143.198.172.85','other:residential:138','rtp_media',7.150,35851,'residential',''],['143.198.172.85','other:cloud:214','rtp_media',3.832,19091,'cloud',''],['143.198.172.85','other:unclassified:193','rtp_media',3.121,15586,'unclassified',''],['143.198.176.127','other:cloud:134','rtp_media',2.613,13023,'cloud',''],['192.248.178.127','other:cloud:115','voip_signaling',2.146,3708,'cloud',''],['185.134.23.8','other:cloud:27','voip_signaling',1.717,3333,'cloud',''],['165.227.194.81','other:unclassified:106','rtp_media',1.537,7668,'unclassified',''],['165.227.194.81','other:residential:87','rtp_media',1.363,6793,'residential',''],['143.198.172.85','other:unclassified:79','voip_signaling',1.347,2350,'unclassified',''],['192.248.178.127','other:cloud:66','rtp_media',1.289,8376,'cloud',''],['167.71.112.11','other:cloud:42','voip_signaling',1.210,2288,'cloud',''],['128.199.103.165','other:cloud:37','voip_signaling',1.122,2007,'cloud',''],['64.225.32.104','other:cloud:51','voip_signaling',0.897,1378,'cloud',''],['146.190.124.95','other:cloud:15','rtp_media',0.772,6833,'cloud',''],['165.227.194.81','other:cloud:74','rtp_media',0.764,3793,'cloud',''],['143.198.176.127','other:cloud:46','voip_signaling',0.763,1339,'cloud',''],['146.190.124.95','other:cloud:44','voip_signaling',0.689,1255,'cloud',''],['138.68.150.143','other:wholesale_voip:173','rtp_media',0.665,3329,'wholesale_voip',''],['64.225.32.104','other:unclassified:22','voip_signaling',0.614,725,'unclassified',''],['146.190.124.95','other:unclassified:9','voip_signaling',0.608,1095,'unclassified',''],['146.190.124.95','other:satellite:5','rtp_media',0.607,4539,'satellite',''],['138.68.150.143','other:unclassified:25','rtp_media',0.594,2971,'unclassified',''],['143.198.176.127','other:unclassified:15','voip_signaling',0.542,1000,'unclassified',''],['143.198.172.85','other:mobile:555','voip_signaling',0.465,924,'mobile',''],['165.227.194.81','other:mobile:385','voip_signaling',0.419,720,'mobile',''],['143.198.172.85','other:cloud:82','voip_signaling',0.335,546,'cloud',''],['165.227.194.81','other:unclassified:47','voip_signaling',0.302,496,'unclassified',''],['143.198.172.85','other:residential:67','voip_signaling',0.281,474,'residential',''],['128.199.103.165','other:unclassified:9','voip_signaling',0.279,541,'unclassified',''],['209.38.67.66','other:cloud:49','voip_signaling',0.253,454,'cloud',''],['137.184.173.234','other:cloud:40','voip_signaling',0.247,564,'cloud',''],['143.198.172.85','other:satellite:7','rtp_media',0.222,1106,'satellite',''],['138.68.150.143','other:cloud:26','voip_signaling',0.221,402,'cloud',''],['138.68.150.143','other:unclassified:3','voip_signaling',0.161,217,'unclassified',''],['185.134.23.8','other:cloud:4','rtp_media',0.157,2480,'cloud',''],['147.182.250.67','other:residential:8','voip_signaling',0.156,1524,'residential',''],['143.198.176.127','other:residential:408','rtp_media',0.149,745,'residential',''],['165.227.194.81','other:satellite:4','rtp_media',0.132,656,'satellite',''],['137.184.173.234','other:unclassified:11','voip_signaling',0.132,246,'unclassified',''],['165.227.194.81','other:cloud:60','voip_signaling',0.119,211,'cloud',''],['143.198.176.127','other:bph:2','voip_signaling',0.113,197,'bph',''],['64.225.32.104','other:monitored:1','rtp_media',0.086,432,'monitored',''],['147.182.250.67','other:unclassified:10','voip_signaling',0.086,756,'unclassified',''],['138.68.150.143','other:mobile:2','rtp_media',0.075,375,'mobile',''],['209.38.67.66','other:wholesale_voip:34','rtp_media',0.068,345,'wholesale_voip',''],['147.182.250.67','other:residential:1','rtp_media',0.060,605,'residential',''],['216.126.227.152','other:cloud:5','rtp_media',0.056,939,'cloud',''],['64.225.32.104','other:cloud:10','rtp_media',0.054,78,'cloud',''],['165.227.194.81','other:residential:36','voip_signaling',0.046,78,'residential',''],['167.71.112.11','other:unclassified:12','voip_admin',0.035,540,'unclassified',''],['146.190.124.95','other:residential:5','voip_signaling',0.032,57,'residential',''],['147.182.250.67','other:mobile:1','voip_signaling',0.030,327,'mobile',''],['147.182.250.67','other:wholesale_voip:5','rtp_media',0.029,145,'wholesale_voip',''],['137.184.173.234','other:residential:2','voip_signaling',0.028,49,'residential',''],['137.184.173.234','other:bph:1','voip_signaling',0.024,45,'bph',''],['147.182.250.67','other:unclassified:11','rtp_media',0.023,106,'unclassified',''],['167.71.112.11','other:cloud:14','rtp_media',0.019,39,'cloud',''],['64.225.32.104','other:bph:2','voip_signaling',0.017,32,'bph',''],['209.38.67.66','other:unclassified:18','voip_signaling',0.017,35,'unclassified',''],['167.71.112.11','other:unclassified:11','voip_signaling',0.017,32,'unclassified',''],['209.38.67.66','other:bph:7','voip_signaling',0.015,37,'bph',''],['138.68.150.143','other:wholesale_voip:1','voip_signaling',0.014,16,'wholesale_voip',''],['64.225.32.104','other:monitored:1','voip_signaling',0.014,24,'monitored',''],['216.126.227.152','other:cloud:2','voip_signaling',0.012,19,'cloud',''],['165.227.194.81','other:bph:2','voip_signaling',0.012,19,'bph',''],['209.38.67.66','other:cloud:9','rtp_media',0.011,20,'cloud',''],['137.184.173.234','other:satellite:3','rtp_media',0.011,9,'satellite',''],['209.38.67.66','other:residential:2','rtp_media',0.011,95,'residential',''],['137.184.173.234','other:cloud:10','rtp_media',0.011,23,'cloud',''],['137.184.173.234','other:unclassified:3','rtp_media',0.010,51,'unclassified',''],['167.71.112.11','other:residential:1','rtp_media',0.005,14,'residential',''],['167.71.112.11','other:residential:3','voip_signaling',0.005,8,'residential',''],['165.227.194.81','other:bph:1','rtp_media',0.005,26,'bph',''],['162.243.77.115','other:residential:1','rtp_media',0.005,12,'residential',''],['146.190.124.95','other:satellite:1','voip_signaling',0.005,9,'satellite',''],['138.68.150.143','other:residential:1','voip_signaling',0.004,5,'residential',''],['128.199.103.165','other:bph:1','voip_signaling',0.004,8,'bph',''],['146.190.124.95','other:residential:3','rtp_media',0.003,4,'residential',''],['167.71.112.11','other:cloud:7','voip_admin',0.003,59,'cloud',''],['167.71.112.11','other:residential:2','voip_admin',0.003,55,'residential',''],['147.182.250.67','other:cloud:8','voip_signaling',0.002,11,'cloud',''],['143.198.176.127','other:residential:2','voip_signaling',0.002,4,'residential',''],['146.190.124.95','other:bph:2','voip_signaling',0.002,4,'bph',''],['138.68.150.143','other:cloud:3','rtp_media',0.002,3,'cloud',''],['128.199.103.165','other:cloud:2','rtp_media',0.002,5,'cloud',''],['209.38.67.66','other:residential:3','voip_signaling',0.002,3,'residential',''],['143.198.172.85','other:satellite:2','voip_signaling',0.002,6,'satellite',''],['143.198.172.85','other:bph:1','voip_signaling',0.001,2,'bph','']
 ];
-const SKC = { monitored:'#E5484D', bph:'#E5484D', cloud:'#4C8DFF', satellite:'#8B5CF6', mobile:'#F59E0B', residential:'#2DD4BF', wholesale_voip:'#EC4899', reverse_proxy:'#A3A3A3', unclassified:'#5D6472' };
+const SKC = { monitored:'#E5484D', bph:'#E5484D', cloud:'#4C8DFF', satellite:'#8B5CF6', mobile:'#F59E0B', residential:'#2DD4BF', wholesale_voip:'#EC4899', reverse_proxy:'#A3A3A3', unclassified:'#6FA89E' };
 const SKN = { monitored:'other watchlist IP', bph:'bulletproof + cloud', cloud:'cloud / hosting', satellite:'satellite', mobile:'mobile', residential:'residential ISP', wholesale_voip:'wholesale VoIP', reverse_proxy:'reverse proxy', unclassified:'unclassified' };
 const SKF = { rtp_media:'#4C8DFF', voip_signaling:'#D946EF', voip_admin:'#F5A623' };
 const SKNAME = {'143.198.172.85':'OUTSIDERS','143.198.176.127':'SIP trunk node','192.248.178.127':'CVS #2 · Vultr DE','216.126.227.152':'Magnus Billing host','165.227.194.81':'OUTSIDERZ "SIP IP"'};
@@ -295,7 +300,7 @@ function skBuild(){
     if (pairTot[x.m + '|' + x.pid] < thr) return;
     const c = node('c:' + x.cls, 0, SKN[x.cls], SKC[x.cls], {});
     const p = node('p:' + x.pid, 1, x.plabel, SKC[x.cls], {cls:x.cls, role:x.role, count: x.isOther ? counts[x.pid] : (x.pid === 'pool:208.69' ? 8 : 0)});
-    const m = node('m:' + x.m, 2, x.m, {'143.198.172.85':'#E5484D','192.248.178.127':'#E5484D','143.198.176.127':'#F5A623'}[x.m] || '#9199A8', {name:SKNAME[x.m]});
+    const m = node('m:' + x.m, 2, x.m, ({}/* reviewed roles only: accepted_role is null for every watched IP as of Oct 15 */)[x.m] || '#A6D8CD', {name:SKNAME[x.m]});
     const f = node('f:' + x.fam, 3, x.fam, SKF[x.fam], {});
     [c, p, m, f].forEach(n => { n.mb += x.mb; n.flows += x.f; });
     link(c.id, p.id, x.mb, x.f, SKC[x.cls]); link(p.id, m.id, x.mb, x.f, SKC[x.cls]); link(m.id, f.id, x.mb, x.f, SKF[x.fam]);
@@ -340,6 +345,8 @@ document.getElementById('sk-min').addEventListener('input', ev => { SS.min = +ev
 document.getElementById('sk-pool').addEventListener('click', ev => { SS.pool = !SS.pool; ev.target.classList.toggle('on', SS.pool); SS.pin = null; skDraw(); });
 document.getElementById('sk-reset').addEventListener('click', () => { SS.pin = null; if (window.skHl) skHl(null); });
 let skRt = null; new ResizeObserver(() => { if (document.getElementById('tab-sankey').style.display !== 'none') { clearTimeout(skRt); skRt = setTimeout(skDraw, 150); } }).observe(document.getElementById('sk'));
+// a #sankey deep link clicks the tab before this block has defined skDraw — draw now if the tab is already showing
+if (document.getElementById('tab-sankey').style.display !== 'none') skDraw();
 if (typeof d3 === 'undefined' || !d3.sankey) { const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/d3@7/dist/d3.min.js'; s.onload = () => { const t = document.createElement('script'); t.src = 'https://cdn.jsdelivr.net/npm/d3-sankey@0.12/dist/d3-sankey.min.js'; t.onload = () => { if (document.getElementById('tab-sankey').style.display !== 'none') skDraw(); }; document.head.appendChild(t); }; document.head.appendChild(s); }
 </script>
 </body>

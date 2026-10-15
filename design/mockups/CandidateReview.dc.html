@@ -3,36 +3,37 @@
 <head>
 <meta charset="utf-8">
 <title>CVS Watch — Candidate review</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Orbitron:wght@500;600&display=swap">
 <style>
-body{margin:0;background:#0B0D10;color:#E7E9ED;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{margin:0;background:#061214;color:#E8FFF8;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 .mono{font-family:'IBM Plex Mono',monospace}
 a{color:#4C8DFF;text-decoration:none}
 a:hover{color:#78AAFF}
-.navlink{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;font-size:14px;font-weight:500;color:#9199A8}
-.navlink:hover{background:#171B22;color:#E7E9ED}
-.navlink.active{background:#1B2029;color:#E7E9ED}
-.card{background:#141821;border:1px solid #262B35;border-radius:10px}
+.navlink{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;font-size:14px;font-weight:500;color:#A6D8CD}
+.navlink:hover{background:#0F3133;color:#E8FFF8}
+.navlink.active{background:#133A3C;color:#E8FFF8}
+.card{background:#0C2A2C;border:1px solid #2B7266;border-radius:10px}
 .btn{all:unset;cursor:pointer;font-size:13px;font-weight:500;padding:9px 18px;border-radius:6px;text-align:center}
 .btn-approve{background:#153226;color:#3DD68C;border:1px solid #1E4D37}
 .btn-approve:hover{background:#1A3C2D}
 .btn-reject{background:#241518;color:#E5484D;border:1px solid #442025}
 .btn-reject:hover{background:#2C1A1E}
-.chip{font-size:11px;font-family:'IBM Plex Mono',monospace;background:#1B2029;border:1px solid #262B35;color:#9199A8;padding:3px 8px;border-radius:5px;display:inline-block}
-.src{font-size:10px;font-family:'IBM Plex Mono',monospace;color:#5D6472;background:#0F1217;border:1px solid #1B2029;padding:2px 7px;border-radius:4px;white-space:nowrap}
-.info{display:flex;gap:10px;align-items:flex-start;font-size:12px;line-height:1.5;color:#B7BCC6;background:#0F1A2B;border:1px solid #1E3A5F;border-radius:8px;padding:12px 14px;margin-bottom:20px}
+.chip{font-size:11px;font-family:'IBM Plex Mono',monospace;background:#133A3C;border:1px solid #2B7266;color:#A6D8CD;padding:3px 8px;border-radius:5px;display:inline-block}
+.src{font-size:10px;font-family:'IBM Plex Mono',monospace;color:#6FA89E;background:#0A2224;border:1px solid #133A3C;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.info{display:flex;gap:10px;align-items:flex-start;font-size:12px;line-height:1.5;color:#C6EBE2;background:#0F1A2B;border:1px solid #1E3A5F;border-radius:8px;padding:12px 14px;margin-bottom:20px}
 .info b{color:#4C8DFF}
-.ev{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;background:#0F1217;border:1px solid #1B2029;border-radius:7px;padding:12px 14px;margin-top:12px}
-.ev .k{font-size:10px;color:#5D6472;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px}
+.ev{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;background:#0A2224;border:1px solid #133A3C;border-radius:7px;padding:12px 14px;margin-top:12px}
+.ev .k{font-size:10px;color:#6FA89E;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:3px}
 .ev .v{font-size:13px;font-family:'IBM Plex Mono',monospace}
 .dim{opacity:0.55}
 </style>
+<link rel="stylesheet" href="theme.css">
 </head>
 <body>
 
-<div style="display:flex;width:100%;min-height:100vh;background:#0B0D10">
+<div style="display:flex;width:100%;min-height:100vh;background:transparent">
 
-<div style="width:240px;flex-shrink:0;background:#0F1217;border-right:1px solid #262B35;display:flex;flex-direction:column;padding:24px 16px;box-sizing:border-box;gap:4px">
+<div class="sidebar" style="width:240px;flex-shrink:0;background:#0A2224;border-right:1px solid #2B7266;display:flex;flex-direction:column;padding:24px 16px;box-sizing:border-box;gap:4px">
   <div style="display:flex;align-items:center;gap:10px;padding:8px 8px 22px 8px">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4C8DFF" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9" stroke-opacity="0.45"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke-opacity="0.45"/></svg>
     <span style="font-size:15px;font-weight:600;letter-spacing:0.2px">CVS Watch</span>
@@ -46,9 +47,9 @@ a:hover{color:#78AAFF}
   <a href="CandidateReview.dc.html" class="navlink active"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l2.2-5h13.6L21 8M3 8v10.5A1.5 1.5 0 004.5 20h15a1.5 1.5 0 001.5-1.5V8M3 8h6.2l.9 3h3.8l.9-3H21"/></svg>Candidates</a>
   <a href="PipelineHealth.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg>Pipeline health</a>
   <div style="flex:1"></div>
-  <div style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-top:1px solid #262B35;margin-top:8px">
-    <div style="width:28px;height:28px;border-radius:50%;background:#1B2029;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#9199A8;flex-shrink:0">JF</div>
-    <div style="font-size:12px;color:#9199A8;line-height:1.4">J. Finley<br><span style="color:#5D6472">Analyst</span></div>
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-top:1px solid #2B7266;margin-top:8px">
+    <div style="width:28px;height:28px;border-radius:50%;background:#133A3C;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#A6D8CD;flex-shrink:0">JF</div>
+    <div style="font-size:12px;color:#A6D8CD;line-height:1.4">J. Finley<br><span style="color:#6FA89E">Analyst</span></div>
   </div>
 </div>
 
@@ -56,10 +57,19 @@ a:hover{color:#78AAFF}
 
   <div style="margin-bottom:20px">
     <h1 style="margin:0 0 4px 0;font-size:22px;font-weight:600">Candidate review</h1>
-    <div style="font-size:13px;color:#5D6472"><span id="pending">2</span> pending · agentic-asn-classification, nightly · <span class="mono">asn_classification_candidates</span></div>
+    <div style="font-size:13px;color:#6FA89E"><span id="pending">20</span> pending · agentic ASN classification, nightly · <span class="mono">review__asn_candidates</span> · 17 approved, 2 rejected since Oct 8</div>
   </div>
 
-  <div class="info"><span>ⓘ</span><span><b>Approve writes to netflow-rollups.</b> It inserts the ASN into the suggested <span class="mono">*_providers</span> table and marks the row reviewed (the <span class="mono">dashboard_app</span> role's only write grants). Rollup rows re-materialize going forward plus a 3-day refresh window — older rows for this peer stay <em>unclassified</em> on the Top talkers tab until a manual refresh. Reject just marks the row; the peer stays in the unclassified bucket.</span></div>
+  <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-bottom:18px">
+    <span style="font-size:11px;color:#6FA89E;margin-right:4px">Queue</span>
+    <button class="chip" style="color:#E8FFF8;border-color:#3F9C8A;background:#133A3C;cursor:pointer">ASN candidates · <b>20</b></button>
+    <button class="chip" style="cursor:pointer">Peer roles · <b>48</b> <span style="color:#6FA89E">review__ip_roles · vantage = peer</span></button>
+    <button class="chip" style="cursor:pointer">Watched roles · <b>16</b> <span style="color:#6FA89E">vantage = watched · 0 accepted</span></button>
+    <button class="chip" style="cursor:pointer">SIP pairs · <b>71</b> <span style="color:#6FA89E">review__sip_pairs · confirmed_role is null</span></button>
+    <span style="font-size:11px;color:#F5A623;margin-left:6px">switcher not wired — four review tables, one screen (requirements gotcha 13)</span>
+  </div>
+
+  <div class="info"><span>ⓘ</span><span><b>Approve writes to netflow-rollups.</b> It inserts the ASN into <span class="mono">ref__providers</span> under the suggested <span class="mono">category</span> and marks the row reviewed (the <span class="mono">dashboard_app</span> role's only write grants). Rollup rows re-materialize going forward plus a 3-day refresh window — older rows for this peer stay <em>unclassified</em> on the Top talkers tab until a manual refresh. Reject just marks the row; the peer stays in the unclassified bucket.</span></div>
 
   <div style="display:flex;flex-direction:column;gap:16px">
 
@@ -68,23 +78,23 @@ a:hover{color:#78AAFF}
         <div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
             <span class="mono" style="font-size:15px;font-weight:600">AS62563</span>
-            <span style="font-size:14px;color:#9199A8">GlobalTelehost Corp.</span>
+            <span style="font-size:14px;color:#A6D8CD">GlobalTelehost Corp.</span>
           </div>
-          <div style="font-size:12px;color:#5D6472">→ <span class="mono" style="color:#4C8DFF">cloud_providers</span> · CA · triggered by <a href="EntityDetail.dc.html" class="mono">23.162.200.132</a> · 48 min ago</div>
+          <div style="font-size:12px;color:#6FA89E">→ <span class="mono" style="color:#4C8DFF">ref__providers · cloud</span> · CA · triggered by <a href="EntityDetail.dc.html" class="mono">23.162.200.132</a> · 48 min ago</div>
         </div>
         <div style="display:flex;gap:8px;flex-shrink:0" id="act1">
           <button class="btn btn-reject" data-card="1" data-d="rejected">Reject</button>
           <button class="btn btn-approve" data-card="1" data-d="approved">Approve</button>
         </div>
       </div>
-      <div style="font-size:13px;line-height:1.5;color:#B7BCC6;background:#0F1217;border:1px solid #1B2029;border-radius:7px;padding:12px 14px">GlobalTelehost Corp. operates as a hosting and VPS provider, renting infrastructure and server resources to third parties, which is the defining characteristic of cloud/hosting providers.</div>
+      <div style="font-size:13px;line-height:1.5;color:#C6EBE2;background:#0A2224;border:1px solid #133A3C;border-radius:7px;padding:12px 14px">GlobalTelehost Corp. operates as a hosting and VPS provider, renting infrastructure and server resources to third parties, which is the defining characteristic of cloud/hosting providers.</div>
       <div class="ev">
-        <div style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><span style="font-size:11px;font-weight:600;color:#9199A8;white-space:nowrap">Evidence — what the triggering peer actually did</span><span class="src">unclassified_peer_contacts_daily · flow_rollup_daily · 30d</span></div>
-        <div><div class="k">Monitored IPs touched</div><div class="v">1 <span style="color:#5D6472">(143.198.176.127)</span></div></div>
+        <div style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><span style="font-size:11px;font-weight:600;color:#A6D8CD;white-space:nowrap">Evidence — what the triggering peer actually did</span><span class="src">rollup__unclassified_contacts_daily · rollup__flow_daily · 30d</span></div>
+        <div><div class="k">Monitored IPs touched</div><div class="v">1 <span style="color:#6FA89E">(143.198.176.127)</span></div></div>
         <div><div class="k">Bytes / flows</div><div class="v">41 KB / 212</div></div>
         <div><div class="k">Days seen</div><div class="v">2 of 30</div></div>
         <div><div class="k">Port families</div><div class="v" style="font-size:12px">voip_signaling, rtp_media</div></div>
-        <div><div class="k">Other IPs in ASN seen</div><div class="v">— <span style="color:#5D6472">needs ASN</span></div></div>
+        <div><div class="k">Other IPs in ASN seen</div><div class="v">— <span style="color:#6FA89E">needs ASN</span></div></div>
       </div>
     </div>
 
@@ -93,29 +103,29 @@ a:hover{color:#78AAFF}
         <div>
           <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
             <span class="mono" style="font-size:15px;font-weight:600">AS8075</span>
-            <span style="font-size:14px;color:#9199A8">Microsoft Corporation</span>
+            <span style="font-size:14px;color:#A6D8CD">Microsoft Corporation</span>
           </div>
-          <div style="font-size:12px;color:#5D6472">→ <span class="mono" style="color:#4C8DFF">cloud_providers</span> · US · triggered by <a href="EntityDetail.dc.html" class="mono">158.23.180.16</a> · 47 min ago</div>
+          <div style="font-size:12px;color:#6FA89E">→ <span class="mono" style="color:#4C8DFF">ref__providers · cloud</span> · US · triggered by <a href="EntityDetail.dc.html" class="mono">158.23.180.16</a> · 47 min ago</div>
         </div>
         <div style="display:flex;gap:8px;flex-shrink:0" id="act2">
           <button class="btn btn-reject" data-card="2" data-d="rejected">Reject</button>
           <button class="btn btn-approve" data-card="2" data-d="approved">Approve</button>
         </div>
       </div>
-      <div style="font-size:13px;line-height:1.5;color:#B7BCC6;background:#0F1217;border:1px solid #1B2029;border-radius:7px;padding:12px 14px">Microsoft Corporation operates Azure and other cloud services that rent infrastructure and computing resources to third parties, which is the primary business purpose of this ASN.</div>
+      <div style="font-size:13px;line-height:1.5;color:#C6EBE2;background:#0A2224;border:1px solid #133A3C;border-radius:7px;padding:12px 14px">Microsoft Corporation operates Azure and other cloud services that rent infrastructure and computing resources to third parties, which is the primary business purpose of this ASN.</div>
       <div class="ev">
-        <div style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><span style="font-size:11px;font-weight:600;color:#9199A8;white-space:nowrap">Evidence — what the triggering peer actually did</span><span class="src">unclassified_peer_contacts_daily · flow_rollup_daily · 30d</span></div>
+        <div style="grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px"><span style="font-size:11px;font-weight:600;color:#A6D8CD;white-space:nowrap">Evidence — what the triggering peer actually did</span><span class="src">rollup__unclassified_contacts_daily · rollup__flow_daily · 30d</span></div>
         <div><div class="k">Monitored IPs touched</div><div class="v">3</div></div>
         <div><div class="k">Bytes / flows</div><div class="v">118 KB / 640</div></div>
         <div><div class="k">Days seen</div><div class="v">5 of 30</div></div>
         <div><div class="k">Port families</div><div class="v" style="font-size:12px">web_admin, other</div></div>
-        <div><div class="k">Other IPs in ASN seen</div><div class="v">— <span style="color:#5D6472">needs ASN</span></div></div>
+        <div><div class="k">Other IPs in ASN seen</div><div class="v">— <span style="color:#6FA89E">needs ASN</span></div></div>
       </div>
     </div>
 
   </div>
 
-  <div style="font-size:11px;color:#5D6472;line-height:1.5;margin-top:20px">Evidence block values are illustrative — both of these candidates were approved on Oct 8 and their recent rows have already re-materialized as cloud, so the live unclassified view returns nothing for them. The point of the block: the analyst sees the data that triggered the card next to the model's reasoning, not just the reasoning. "Other IPs in ASN seen" is the one field that needs ASN in a rollup view.</div>
+  <div style="font-size:11px;color:#6FA89E;line-height:1.5;margin-top:20px">Evidence block values are illustrative — both of these candidates were approved on Oct 8 and their recent rows have already re-materialized as cloud, so the live unclassified view returns nothing for them. The point of the block: the analyst sees the data that triggered the card next to the model's reasoning, not just the reasoning. "Other IPs in ASN seen" is the one field that needs ASN in a rollup view.</div>
 
 </div>
 </div>
@@ -125,7 +135,7 @@ let pending = 2;
 document.querySelectorAll('[data-card]').forEach(b => b.addEventListener('click', () => {
   const c = b.dataset.card, d = b.dataset.d;
   const ok = d === 'approved';
-  document.getElementById('act' + c).innerHTML = '<span class="chip" style="' + (ok ? 'background:#153226;color:#3DD68C;border-color:#1E4D37' : 'background:#241518;color:#E5484D;border-color:#442025') + '">' + (ok ? 'Approved → cloud_providers' : 'Rejected') + '</span>';
+  document.getElementById('act' + c).innerHTML = '<span class="chip" style="' + (ok ? 'background:#153226;color:#3DD68C;border-color:#1E4D37' : 'background:#241518;color:#E5484D;border-color:#442025') + '">' + (ok ? 'Approved → ref__providers · cloud' : 'Rejected') + '</span>';
   document.getElementById('card' + c).classList.add('dim');
   document.getElementById('pending').textContent = --pending;
 }));

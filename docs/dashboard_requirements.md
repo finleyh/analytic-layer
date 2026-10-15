@@ -574,9 +574,163 @@ flow stays `Failed` in Prefect for as long as anything is stale, so red rows the
 display, not a bug; and after a scheduler restart the stranded run shows as `Crashed`, which is
 the scheduler cleaning up after itself, not a failure to investigate.
 
-Every table name on this page and in the mocks revised on 2026-10-13 should be read against
-`netflow-rollups/docs/data_model.md`: the schema was consolidated on 2026-10-14/15 (35 tables →
-20, every table now `<word>__<thing>`; `sip_peer_candidates`/`sip_peer_identities` became
-`review__ip_roles`/`review__sip_pairs`/`lookup__ip_identities`; the eleven `peer_is_*` rollup
-flags became one `peer_categories` array; `flow_rollup_*` became `rollup__flow_*`). The earlier
-sections of this document still use the old names and are due a pass.
+Every table name on this page should be read against `netflow-rollups/docs/data_model.md`: the
+schema was consolidated on 2026-10-14/15 (35 tables → 20, every table now `<word>__<thing>`). The
+mocks were swept to the new names on 2026-10-15 — see "Revision 2026-10-15" below. The earlier
+sections of this document keep the names they were written against, as dated records; the rename
+table in that revision is the key.
+
+## Who asserted this label — settled 2026-10-15
+
+netflow-rollups' migration 0077 recorded the rule (2026-10-14) that OpenCTI labels other than
+`msk:*` are analyst suggestions from the TIP, not facts, and that no logic may key off them. Its
+rollups now carry its own human-reviewed roles (`review__ip_roles.accepted_role`,
+`review__sip_pairs.confirmed_role`) and the OpenCTI labels survive only as data on
+`watch__ips.tags`. As of 2026-10-15 the two already disagree: the heuristic proposes `sip_trunk`
+for `216.126.227.152` and `sip_server` for `143.198.176.127`, which carries the
+`infrastructure:sip_trunk` label; and all 16 watched IPs are still `pending` review, so no watched
+IP has a reviewed role yet.
+
+**Decision (user, 2026-10-15):** the analyst app shows the two side by side and visibly
+distinct, never merged into one badge. Every label on an entity names who asserted it:
+
+| chip | source | meaning |
+|---|---|---|
+| reviewed role (sip_server / sip_trunk / sip_client) | `review__ip_roles.accepted_role`, `review__sip_pairs.confirmed_role` | what netflow-rollups measured and a human confirmed; the only kind a rule may read |
+| proposed role, marked pending | `review__ip_roles.proposed_role` | the heuristic's current opinion, unreviewed |
+| TIP label (e.g. `infrastructure_type:criminal_voip_service`) | `watch__ips.tags`, or OpenCTI directly | what an analyst recorded in OpenCTI; context for a human, never a rule input |
+
+Consequences for the mocks: the red "confirmed CVS" and orange "SIP trunk" node styling on
+Flow graph, Geo and Watchlist was derived from TIP labels and has to be re-sourced from the
+reviewed role (grey/unstyled while pending), with the TIP label shown as a separate chip in a
+distinct style. Where the two disagree the UI should show both, not pick one. This is the same
+principle as `CLAUDE.md` §10's "facts and reasons, never a score": provenance stays attached to
+the claim. It also gives the analysis pillar (`CLAUDE.md` §2 #3) its first concrete derived-fact
+rule — a disagreement between the TIP label and the reviewed role is itself a queue-worthy
+finding.
+
+
+## Revision 2026-10-15 — the consolidated schema, the role columns, and who-said-what
+
+netflow-rollups' migrations 0077–0082 (Oct 14/15) renamed every table and re-shaped three things
+the mocks leaned on. All nine older mocks were swept the same day; the Pipeline health page was
+built on the new names and needed nothing. The netflow feed was still stale while this was done
+(newest record Oct 14 03:57 UTC; the puller completes every four hours with zero records), so
+counts below are Oct 15 and traffic widgets keep the vintage their badge says.
+
+### Rename key (old badge → what it reads now)
+
+| old | now | note |
+|---|---|---|
+| `flow_rollup_hourly` / `flow_rollup_daily` | `rollup__flow_hourly` / `rollup__flow_daily` | eleven `peer_is_*` booleans → one `peer_categories TEXT[]`; four OpenCTI-tag flags → `monitored_ip_role`, `peer_role`, `pair_confirmed` |
+| `monitored_ip_provider_mix_daily` | `rollup__provider_mix_daily` | `provider_category` now includes an explicit `unclassified` row; the two tag-derived pseudo-categories are gone |
+| `port_family_mix_daily`, `bph_contact_daily` | `rollup__port_family_mix_daily`, `rollup__bph_contact_daily` | rename only |
+| `unclassified_peer_contacts_daily` | `rollup__unclassified_contacts_daily` | "unclassified" now means `peer_categories = {}` **and** no accepted role |
+| `tagged_entity_contacts_daily` | `rollup__confirmed_contacts_daily` | different meaning: pairs/roles a human confirmed in netflow-rollups, not IPs an analyst labelled in OpenCTI; carries roles, still no provider categories |
+| `scan_fingerprints` (+ `scan_snapshots`) | `lookup__host_scans` | one table, `subject` = watched \| peer; raw record and fingerprint hash on the same row |
+| `monitored_ips` + `monitored_ip_tags` | `watch__ips` with `tags TEXT[]` | the tag mirror is a column read by nothing |
+| `asn_classification_candidates` | `review__asn_candidates` | `suggested_table` → `suggested_category` |
+| `sip_peer_candidates` | `review__sip_pairs` + `review__ip_roles` | pair roles: sip_trunk / sip_client / sip_scanner / unclear (prober → sip_scanner, media_only gone); IP roles: sip_server / sip_trunk / sip_client / unclear, `vantage` = watched \| peer, `proposed_role` beside `accepted_role` |
+| `sip_peer_identities` | `lookup__ip_identities` | `provider_categories TEXT[]` replaces the provider-table list |
+| `cloud_providers` and the other ten `*_providers` | `ref__providers` with `category` | registry in `ref__provider_categories` (`llm_classifiable`) |
+| `flow_records` | `flow__records` | time column is `time` |
+
+### What changed per screen
+
+- **Watchlist** — 16 rows (`51.198.100.9` added Oct 13 with the OpenCTI label
+  `infrastructure:criminal_voip_client`). The tags column became two: the **reviewed role**
+  from `review__ip_roles` (dotted "proposed … · pending" while `accepted_role` is null — true for
+  all 16 on Oct 15) and the **TIP labels** from `watch__ips.tags` as dashed chips. Fingerprint
+  column re-sourced from `lookup__host_scans` (distinct hashes since Oct 2; all 16 swept Oct 15,
+  so the Oct 9 collection-gap finding is closed). "Last seen" became "Last record" from
+  `flow__records`, which is what showed `51.198.100.9` stopping nine hours before the fleet.
+- **Overview** — a stale-feed banner linking to Pipeline health; tiles re-sourced: "Confirmed
+  CVS" → "Reviewed roles 0 / 16", "SIP trunks tagged" → "TIP labels on watched IPs 4", "Pending
+  candidates" → 20 ASN + 48 peer roles + 16 watched roles + 71 unconfirmed SIP pairs. Traffic
+  widgets keep the Oct 9 pull and say so.
+- **Entity detail** — the red CONFIRMED CVS badge became a dotted "ROLE PENDING · proposed
+  sip_server" badge; the OpenCTI label is a dashed `TIP ·` chip beside it.
+- **Flow graph** — the three monitored nodes lost their red/orange styling (no accepted role
+  exists to drive it) and carry a `TIP: …` chip in the label instead; legend rewritten (reviewed
+  sip_trunk / reviewed sip_server / pending, plus the TIP-chip row); edges re-sourced to
+  `rollup__confirmed_contacts_daily` with note ② rewritten for what that view now carries. Sankey:
+  the peer role column is `review__ip_roles.accepted_role` for confirmed rows only, and the
+  monitored-node colour map is empty for the same reason.
+- **Geo** — rebuilt on `review__sip_pairs` ⋈ `lookup__ip_identities` (Oct 15): 155 pairs, 32
+  sip_trunk / 54 sip_client / 39 sip_scanner / 30 unclear, 84 human-confirmed; trunk media
+  421 MB to 7 countries, 44% non-US (DE 100, CO 82), split 55% own-switches-abroad / 45% foreign
+  carriers — now backed by `peer_is_hosting` on the pair rather than inferred from provider
+  tables. Role chips use the new vocabulary; monitored diamonds are grey with the heuristic's
+  proposal and any TIP label in the tooltip as text; the trunk table shows all 33 trunk-called
+  pairs and flags the 5 a reviewer re-called sip_client and the 1 still pending. The weekly
+  `flow__records` backfill mode is unchanged (no new data to add).
+- **Top talkers** — "Confirmed-CVS link" → "Reviewed-role link", defined over `review__ip_roles`
+  / `rollup__confirmed_contacts_daily` and never over OpenCTI labels. The 208.69.81–82.x pool is
+  now 14 pending `unclear` rows in `review__ip_roles`.
+- **Candidate review** — 20 pending ASN candidates (17 approved, 2 rejected since Oct 8) and a
+  queue switcher strip across the four review tables (not wired; this is gotcha 13 made visible).
+  The two example cards stay illustrative.
+- **Domains / Domain detail** — "confirmed CVS" wording → "TIP label: criminal_voip_service";
+  `peer_is_cloud` → `peer_categories ∋ cloud`.
+
+### Gotchas and open questions this adds
+
+15. **No watched IP has a reviewed role yet.** Everything the earlier mocks coloured red or
+    orange came from OpenCTI labels; under the 2026-10-14 rule those are suggestions, and the
+    watched-vantage review in `review__ip_roles` has not been done. Until it is, every monitored
+    node is grey and the only machine-readable "what is this" is the heuristic's
+    `proposed_role`. The heuristic and the TIP already disagree on which IP is the trunk
+    (`216.126.227.152` proposed sip_trunk; `143.198.176.127` labelled sip_trunk but proposed
+    sip_server). That disagreement is the first concrete queue item this project could raise.
+16. **Per-IP freshness is invisible to the fleet-wide check.** `51.198.100.9` stopped at Oct 13
+    18:22, nine hours before every other exporter, and nothing flagged it because the freshness
+    check looks at `max(time)` across the fleet. A per-monitored-IP "last record" row on the
+    Pipeline health page (or a per-IP probe in `ops/freshness.py`) would have shown it.
+17. **`dashboard_app` narrowed.** The role survives the consolidation with INSERT/UPDATE on
+    `review__asn_candidates` only; the provider-table grants went with the tables. Open question
+    7 (is this repo that dashboard?) stands.
+18. **Trunk media is now a pair-window number, not a 30-day one.** `review__sip_pairs.media_bytes`
+    is measured over each pair's own window; the Geo KPI says so. A true 30-day figure still needs
+    the `rollup__flow_daily` scan the Sankey does.
+
+### Theme and a visualization idea, 2026-10-15
+
+The mocks were re-skinned to a "galaxy map" theme (see `design/mockups/README.md`, "Theme") from
+a Stellaris-style screenshot the analyst shared. While looking at it they raised a visualization
+idea worth keeping: **the galaxy map as a model for the Flow graph.** Infrastructure categories as
+coloured nebulae that *envelop* the IPs sitting in them (a provider's ASN or CIDR as a soft region,
+coloured by `ref__providers.category`), IPs as stars, edges as the flows between them, and the
+edge's brightness as magnitude — flow count — with width for bytes. That is a different visual
+grammar from the current node graph (hand-laid nodes with a colour per class): the enclosing
+region carries the classification, which frees node colour for something else (reviewed role,
+say) and makes "this peer sits inside a bulletproof host's range" a spatial fact rather than a
+legend lookup. Not built. What it needs from the data is already there for cloud/bph/satellite
+peers (`ref__providers` has ASN or CIDR per row; `rollup__flow_daily` has `flow_count` and
+`bytes_sum` per edge); the hull/region rendering is a d3 question (force layout with per-category
+cluster forces, blurred convex hulls per category). Candidate for the next Flow graph tab.
+
+**Two nebula modes, raised the same day (parked, not scheduled).** The analyst wants the map's
+rendering to be switchable by click: nebulae as **ASN ownership** or as **infrastructure
+relationships** (the OpenCTI graph: Infrastructure → domain → IP). Assessment against the data:
+
+- *ASN mode is cheap and complete.* Every raw flow row carries `src_asn`/`dst_asn`, every
+  identified peer has `lookup__ip_identities.asn`, and `ref__providers` maps ASN → category for the
+  nebula colour. The only gap is the standing one: the rollups drop ASN, so the edge list comes
+  from a `flow__records` scan until `peer_asn` is added upstream (gotcha 1/12).
+- *Infrastructure mode is not hard to compute, it is sparse.* The OpenCTI graph this watchlist
+  touches is small (the Oct 9 pull: ~47 Infrastructure objects, 15 domains, ~90 relationships
+  across `consists-of`, `related-to`, `derived-from`, `resolves-to`, `part-of`), so a
+  bounded-depth walk per IP is trivial. What makes it tough is semantics, not hops: which
+  relationship types mean "belongs to" (`consists-of` yes; `related-to` is a judgment;
+  `derived-from` between two IPs is an analyst pivot, not ownership) and in which direction. Only
+  two watchlist IPs are `consists-of` an Infrastructure directly; most tracked IPs reach one only
+  via a domain or another IP, and the thousands of peers reach none. So the map would show a few
+  infrastructure nebulae around tracked IPs and open space everywhere else — which is itself the
+  point: it draws where the TIP's knowledge ends.
+- *Recommendation.* Build ASN mode first. For infrastructure mode, do not walk the graph at
+  render time: precompute one derived-fact row per IP — nearest Infrastructure, the path
+  (`OUTSIDERZ ← consists-of`, `M3 ← resolves-to panel.m3zapp.com`), hop count, with a 2-hop cap
+  and an explicit relationship-type allowlist — in this project's own store. That is a
+  textbook analysis-pillar table (`CLAUDE.md` §2 #3), it answers "what does this belong to" on
+  Entity detail too, and it keeps OpenCTI labels in their place: the nebula is drawn from
+  relationships, which are structure, not from labels, which are suggestions.

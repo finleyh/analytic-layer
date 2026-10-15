@@ -3,37 +3,38 @@
 <head>
 <meta charset="utf-8">
 <title>CVS Watch — Top talkers</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Orbitron:wght@500;600&display=swap">
 <style>
-body{margin:0;background:#0B0D10;color:#E7E9ED;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{margin:0;background:#061214;color:#E8FFF8;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 .mono{font-family:'IBM Plex Mono',monospace}
 a{color:#4C8DFF;text-decoration:none}
 a:hover{color:#78AAFF}
-.navlink{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;font-size:14px;font-weight:500;color:#9199A8}
-.navlink:hover{background:#171B22;color:#E7E9ED}
-.navlink.active{background:#1B2029;color:#E7E9ED}
-.card{background:#141821;border:1px solid #262B35;border-radius:10px}
-.pill{font-size:12px;font-weight:500;padding:5px 12px;border-radius:999px;border:1px solid #262B35;color:#9199A8;background:transparent;cursor:pointer}
-.pill.active{background:#1B2029;border-color:#3A4254;color:#E7E9ED}
+.navlink{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;font-size:14px;font-weight:500;color:#A6D8CD}
+.navlink:hover{background:#0F3133;color:#E8FFF8}
+.navlink.active{background:#133A3C;color:#E8FFF8}
+.card{background:#0C2A2C;border:1px solid #2B7266;border-radius:10px}
+.pill{font-size:12px;font-weight:500;padding:5px 12px;border-radius:999px;border:1px solid #2B7266;color:#A6D8CD;background:transparent;cursor:pointer}
+.pill.active{background:#133A3C;border-color:#3F9C8A;color:#E8FFF8}
 .pill.dim{opacity:0.4;cursor:not-allowed}
-.src{font-size:10px;font-family:'IBM Plex Mono',monospace;color:#5D6472;background:#0F1217;border:1px solid #1B2029;padding:2px 7px;border-radius:4px;white-space:nowrap}
-.seg{all:unset;cursor:pointer;font-size:13px;font-weight:500;padding:8px 18px;color:#9199A8;border:1px solid #262B35;background:transparent}
-.seg.active{background:#1B2029;border-color:#3A4254;color:#E7E9ED}
+.src{font-size:10px;font-family:'IBM Plex Mono',monospace;color:#6FA89E;background:#0A2224;border:1px solid #133A3C;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.seg{all:unset;cursor:pointer;font-size:13px;font-weight:500;padding:8px 18px;color:#A6D8CD;border:1px solid #2B7266;background:transparent}
+.seg.active{background:#133A3C;border-color:#3F9C8A;color:#E8FFF8}
 .chip{font-size:11px;font-weight:500;padding:3px 9px;border-radius:5px;display:inline-block}
-th{text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em;color:#5D6472;text-transform:uppercase;padding:0 16px 10px 16px;border-bottom:1px solid #262B35}
-td{padding:13px 16px;font-size:13px;border-bottom:1px solid #1B2029}
+th{text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em;color:#6FA89E;text-transform:uppercase;padding:0 16px 10px 16px;border-bottom:1px solid #2B7266}
+td{padding:13px 16px;font-size:13px;border-bottom:1px solid #133A3C}
 tr:last-child td{border-bottom:none}
-.warn{display:flex;gap:10px;align-items:flex-start;font-size:12px;line-height:1.5;color:#B7BCC6;background:#241A0F;border:1px solid #5A4423;border-radius:8px;padding:12px 14px;margin-bottom:16px}
+.warn{display:flex;gap:10px;align-items:flex-start;font-size:12px;line-height:1.5;color:#C6EBE2;background:#241A0F;border:1px solid #5A4423;border-radius:8px;padding:12px 14px;margin-bottom:16px}
 .warn b{color:#F5A623}
-.pool td{border-left:2px solid #3A4254}
-.note{font-size:11px;color:#5D6472;line-height:1.5;padding:14px 20px;border-top:1px solid #1B2029}
+.pool td{border-left:2px solid #3F9C8A}
+.note{font-size:11px;color:#6FA89E;line-height:1.5;padding:14px 20px;border-top:1px solid #133A3C}
 </style>
+<link rel="stylesheet" href="theme.css">
 </head>
 <body>
 
-<div style="display:flex;width:100%;min-height:100vh;background:#0B0D10">
+<div style="display:flex;width:100%;min-height:100vh;background:transparent">
 
-<div style="width:240px;flex-shrink:0;background:#0F1217;border-right:1px solid #262B35;display:flex;flex-direction:column;padding:24px 16px;box-sizing:border-box;gap:4px">
+<div class="sidebar" style="width:240px;flex-shrink:0;background:#0A2224;border-right:1px solid #2B7266;display:flex;flex-direction:column;padding:24px 16px;box-sizing:border-box;gap:4px">
   <div style="display:flex;align-items:center;gap:10px;padding:8px 8px 22px 8px">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4C8DFF" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9" stroke-opacity="0.45"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke-opacity="0.45"/></svg>
     <span style="font-size:15px;font-weight:600;letter-spacing:0.2px">CVS Watch</span>
@@ -47,9 +48,9 @@ tr:last-child td{border-bottom:none}
   <a href="CandidateReview.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l2.2-5h13.6L21 8M3 8v10.5A1.5 1.5 0 004.5 20h15a1.5 1.5 0 001.5-1.5V8M3 8h6.2l.9 3h3.8l.9-3H21"/></svg>Candidates</a>
   <a href="PipelineHealth.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg>Pipeline health</a>
   <div style="flex:1"></div>
-  <div style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-top:1px solid #262B35;margin-top:8px">
-    <div style="width:28px;height:28px;border-radius:50%;background:#1B2029;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#9199A8;flex-shrink:0">JF</div>
-    <div style="font-size:12px;color:#9199A8;line-height:1.4">J. Finley<br><span style="color:#5D6472">Analyst</span></div>
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-top:1px solid #2B7266;margin-top:8px">
+    <div style="width:28px;height:28px;border-radius:50%;background:#133A3C;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#A6D8CD;flex-shrink:0">JF</div>
+    <div style="font-size:12px;color:#A6D8CD;line-height:1.4">J. Finley<br><span style="color:#6FA89E">Analyst</span></div>
   </div>
 </div>
 
@@ -58,7 +59,7 @@ tr:last-child td{border-bottom:none}
   <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:24px;flex-wrap:wrap;gap:16px">
     <div>
       <h1 style="margin:0 0 4px 0;font-size:22px;font-weight:600">Top talkers</h1>
-      <div id="subtitle" style="font-size:13px;color:#5D6472">port_family = rtp_media · tagged peers excluded · <span class="mono">flow_rollup_daily</span></div>
+      <div id="subtitle" style="font-size:13px;color:#6FA89E">port_family = rtp_media · tagged peers excluded · <span class="mono">rollup__flow_daily</span></div>
     </div>
     <div style="display:flex;gap:6px;align-items:center">
       <button class="pill dim" id="pill24" title="Daily view — no 24h">24h</button>
@@ -76,49 +77,49 @@ tr:last-child td{border-bottom:none}
   <div id="view-ip" class="card">
     <table style="width:100%;border-collapse:collapse;margin-top:16px">
       <tr><th>Peer IP</th><th>Category</th><th style="text-align:right">Bytes</th><th style="text-align:right">Flows</th><th>Last seen</th></tr>
-      <tr><td><a href="EntityDetail.dc.html" class="mono">50.116.38.139</a></td><td><span class="chip" style="background:#132033;color:#4C8DFF">cloud</span></td><td style="text-align:right" class="mono">19.0 MB</td><td style="text-align:right" class="mono">100,159</td><td class="mono" style="color:#9199A8">Oct 9, 07:00</td></tr>
-      <tr><td><a href="EntityDetail.dc.html" class="mono">45.226.112.91</a></td><td><span class="chip" style="background:#1C1530;color:#8B5CF6">satellite</span></td><td style="text-align:right" class="mono">18.1 MB</td><td style="text-align:right" class="mono">100,739</td><td class="mono" style="color:#9199A8">Oct 7, 10:00</td></tr>
-      <tr><td><a href="EntityDetail.dc.html" class="mono">45.226.115.144</a></td><td><span class="chip" style="background:#1C1530;color:#8B5CF6">satellite</span></td><td style="text-align:right" class="mono">1.8 MB</td><td style="text-align:right" class="mono">9,648</td><td class="mono" style="color:#9199A8">Oct 9, 07:00</td></tr>
-      <tr><td><a href="EntityDetail.dc.html" class="mono">170.81.198.236</a></td><td><span class="chip" style="background:#171B22;color:#5D6472">unclassified</span></td><td style="text-align:right" class="mono">704 KB</td><td style="text-align:right" class="mono">3,523</td><td class="mono" style="color:#9199A8">Oct 9, 07:00</td></tr>
-      <tr><td><a href="EntityDetail.dc.html" class="mono">162.33.177.141</a></td><td><span class="chip" style="background:#171B22;color:#5D6472">unclassified</span></td><td style="text-align:right" class="mono">432 KB</td><td style="text-align:right" class="mono">6,891</td><td class="mono" style="color:#9199A8">Oct 9, 07:00</td></tr>
-      <tr><td><a href="EntityDetail.dc.html" class="mono">66.56.12.130</a></td><td><span class="chip" style="background:#171B22;color:#5D6472">unclassified</span></td><td style="text-align:right" class="mono">371 KB</td><td style="text-align:right" class="mono">2,633</td><td class="mono" style="color:#9199A8">Oct 9, 06:00</td></tr>
-      <tr><td><a href="EntityDetail.dc.html" class="mono">208.69.82.149</a></td><td><span class="chip" style="background:#171B22;color:#5D6472">unclassified</span></td><td style="text-align:right" class="mono">343 KB</td><td style="text-align:right" class="mono">1,746</td><td class="mono" style="color:#9199A8">Oct 9, 06:00</td></tr>
-      <tr><td><a href="EntityDetail.dc.html" class="mono">3.235.74.192</a></td><td><span class="chip" style="background:#132033;color:#4C8DFF">cloud</span></td><td style="text-align:right" class="mono">367 KB</td><td style="text-align:right" class="mono">4,556</td><td class="mono" style="color:#9199A8">Oct 9, 07:00</td></tr>
-      <tr><td><a href="EntityDetail.dc.html" class="mono">45.226.112.202</a></td><td><span class="chip" style="background:#1C1530;color:#8B5CF6">satellite</span></td><td style="text-align:right" class="mono">351 KB</td><td style="text-align:right" class="mono">3,298</td><td class="mono" style="color:#9199A8">Oct 7, 23:00</td></tr>
+      <tr><td><a href="EntityDetail.dc.html" class="mono">50.116.38.139</a></td><td><span class="chip" style="background:#132033;color:#4C8DFF">cloud</span></td><td style="text-align:right" class="mono">19.0 MB</td><td style="text-align:right" class="mono">100,159</td><td class="mono" style="color:#A6D8CD">Oct 9, 07:00</td></tr>
+      <tr><td><a href="EntityDetail.dc.html" class="mono">45.226.112.91</a></td><td><span class="chip" style="background:#1C1530;color:#8B5CF6">satellite</span></td><td style="text-align:right" class="mono">18.1 MB</td><td style="text-align:right" class="mono">100,739</td><td class="mono" style="color:#A6D8CD">Oct 7, 10:00</td></tr>
+      <tr><td><a href="EntityDetail.dc.html" class="mono">45.226.115.144</a></td><td><span class="chip" style="background:#1C1530;color:#8B5CF6">satellite</span></td><td style="text-align:right" class="mono">1.8 MB</td><td style="text-align:right" class="mono">9,648</td><td class="mono" style="color:#A6D8CD">Oct 9, 07:00</td></tr>
+      <tr><td><a href="EntityDetail.dc.html" class="mono">170.81.198.236</a></td><td><span class="chip" style="background:#0F3133;color:#6FA89E">unclassified</span></td><td style="text-align:right" class="mono">704 KB</td><td style="text-align:right" class="mono">3,523</td><td class="mono" style="color:#A6D8CD">Oct 9, 07:00</td></tr>
+      <tr><td><a href="EntityDetail.dc.html" class="mono">162.33.177.141</a></td><td><span class="chip" style="background:#0F3133;color:#6FA89E">unclassified</span></td><td style="text-align:right" class="mono">432 KB</td><td style="text-align:right" class="mono">6,891</td><td class="mono" style="color:#A6D8CD">Oct 9, 07:00</td></tr>
+      <tr><td><a href="EntityDetail.dc.html" class="mono">66.56.12.130</a></td><td><span class="chip" style="background:#0F3133;color:#6FA89E">unclassified</span></td><td style="text-align:right" class="mono">371 KB</td><td style="text-align:right" class="mono">2,633</td><td class="mono" style="color:#A6D8CD">Oct 9, 06:00</td></tr>
+      <tr><td><a href="EntityDetail.dc.html" class="mono">208.69.82.149</a></td><td><span class="chip" style="background:#0F3133;color:#6FA89E">unclassified</span></td><td style="text-align:right" class="mono">343 KB</td><td style="text-align:right" class="mono">1,746</td><td class="mono" style="color:#A6D8CD">Oct 9, 06:00</td></tr>
+      <tr><td><a href="EntityDetail.dc.html" class="mono">3.235.74.192</a></td><td><span class="chip" style="background:#132033;color:#4C8DFF">cloud</span></td><td style="text-align:right" class="mono">367 KB</td><td style="text-align:right" class="mono">4,556</td><td class="mono" style="color:#A6D8CD">Oct 9, 07:00</td></tr>
+      <tr><td><a href="EntityDetail.dc.html" class="mono">45.226.112.202</a></td><td><span class="chip" style="background:#1C1530;color:#8B5CF6">satellite</span></td><td style="text-align:right" class="mono">351 KB</td><td style="text-align:right" class="mono">3,298</td><td class="mono" style="color:#A6D8CD">Oct 7, 23:00</td></tr>
     </table>
-    <div class="note">Category stays on <span class="mono">flow_rollup_daily</span>, not the mix view — it's the only place a multi-flag peer (<span class="mono">cloud+bph</span>) shows both. The 216.126.227.152 row from the first draft is gone: it's on the watchlist, so it's excluded here with the other tagged entities and lives on the Flow graph instead.</div>
+    <div class="note">Category stays on <span class="mono">rollup__flow_daily</span>, not the mix view — it's the only place a multi-flag peer (<span class="mono">cloud+bph</span>) shows both. The 216.126.227.152 row from the first draft is gone: it's on the watchlist, so it's excluded here with the other tagged entities and lives on the Flow graph instead.</div>
   </div>
 
   <div id="view-asn" class="card" style="display:none">
     <div style="padding:16px 20px 0 20px">
-      <div class="warn"><span>⚠</span><span><b>Blocked by the data, not the UI.</b> No rollup view carries ASN — <span class="mono">flow_rollup_hourly</span>'s GROUP BY has no <span class="mono">peer_asn</span>, so it exists only in raw <span class="mono">flow_records</span> (180d, large) and in <span class="mono">asn_classification_candidates.asn</span>. The <span class="mono">review-rtp-top-asns</span> skill this tab productionizes must be scanning <span class="mono">flow_records</span> today. Two ways out: netflow-rollups adds <span class="mono">peer_asn</span> to the hourly rollup's grouping (cheap — ASN is near-static per IP), or this tab accepts a <span class="mono">flow_records</span> query. Same blocker hits the Flow graph's ASN cluster and the Candidate column on the Unclassified tab.</span></div>
+      <div class="warn"><span>⚠</span><span><b>Blocked by the data, not the UI.</b> No rollup view carries ASN — <span class="mono">rollup__flow_hourly</span>'s GROUP BY has no <span class="mono">peer_asn</span>, so it exists only in raw <span class="mono">flow__records</span> (180d, large) and in <span class="mono">review__asn_candidates.asn</span>. The <span class="mono">review-rtp-top-asns</span> skill this tab productionizes must be scanning <span class="mono">flow__records</span> today. Two ways out: netflow-rollups adds <span class="mono">peer_asn</span> to the hourly rollup's grouping (cheap — ASN is near-static per IP), or this tab accepts a <span class="mono">flow__records</span> query. Same blocker hits the Flow graph's ASN cluster and the Candidate column on the Unclassified tab.</span></div>
     </div>
     <table style="width:100%;border-collapse:collapse;opacity:0.7">
-      <tr><th>ASN</th><th>Org</th><th>Category</th><th style="text-align:right">Bytes</th><th style="text-align:right">Peer IPs</th><th>Confirmed-CVS link</th></tr>
-      <tr><td class="mono">AS265861</td><td>Sistemas Satelitales de Colombia</td><td><span class="chip" style="background:#1C1530;color:#8B5CF6">satellite</span></td><td style="text-align:right" class="mono">21.4 MB</td><td style="text-align:right" class="mono">4</td><td style="color:#5D6472">—</td></tr>
-      <tr><td class="mono">AS63949</td><td style="color:#5D6472">unresolved</td><td><span class="chip" style="background:#171B22;color:#5D6472">unclassified</span></td><td style="text-align:right" class="mono">20.1 MB</td><td style="text-align:right" class="mono">2</td><td style="color:#5D6472">—</td></tr>
-      <tr><td class="mono">AS6167</td><td style="color:#5D6472">unresolved</td><td><span class="chip" style="background:#171B22;color:#5D6472">unclassified</span></td><td style="text-align:right" class="mono">3.8 MB</td><td style="text-align:right" class="mono">275</td><td style="color:#E5484D;font-weight:600">yes</td></tr>
+      <tr><th>ASN</th><th>Org</th><th>Category</th><th style="text-align:right">Bytes</th><th style="text-align:right">Peer IPs</th><th>Reviewed-role link</th></tr>
+      <tr><td class="mono">AS265861</td><td>Sistemas Satelitales de Colombia</td><td><span class="chip" style="background:#1C1530;color:#8B5CF6">satellite</span></td><td style="text-align:right" class="mono">21.4 MB</td><td style="text-align:right" class="mono">4</td><td style="color:#6FA89E">—</td></tr>
+      <tr><td class="mono">AS63949</td><td style="color:#6FA89E">unresolved</td><td><span class="chip" style="background:#0F3133;color:#6FA89E">unclassified</span></td><td style="text-align:right" class="mono">20.1 MB</td><td style="text-align:right" class="mono">2</td><td style="color:#6FA89E">—</td></tr>
+      <tr><td class="mono">AS6167</td><td style="color:#6FA89E">unresolved</td><td><span class="chip" style="background:#0F3133;color:#6FA89E">unclassified</span></td><td style="text-align:right" class="mono">3.8 MB</td><td style="text-align:right" class="mono">275</td><td style="color:#E5484D;font-weight:600">yes</td></tr>
       <tr><td class="mono">AS21928</td><td>T-Mobile USA</td><td><span class="chip" style="background:#2A2013;color:#F5A623">mobile</span></td><td style="text-align:right" class="mono">2.9 MB</td><td style="text-align:right" class="mono">264</td><td style="color:#E5484D;font-weight:600">yes</td></tr>
-      <tr><td class="mono">AS20122</td><td>NOS Network Operations Group</td><td><span class="chip" style="background:#171B22;color:#5D6472">unclassified</span></td><td style="text-align:right" class="mono">2.58 MB</td><td style="text-align:right" class="mono">10</td><td style="color:#5D6472">—</td></tr>
+      <tr><td class="mono">AS20122</td><td>NOS Network Operations Group</td><td><span class="chip" style="background:#0F3133;color:#6FA89E">unclassified</span></td><td style="text-align:right" class="mono">2.58 MB</td><td style="text-align:right" class="mono">10</td><td style="color:#6FA89E">—</td></tr>
     </table>
-    <div class="note">"Confirmed-CVS link" = any of this ASN's peer IPs appears with <span class="mono">monitored_ip_is_confirmed_cvs</span> in <span class="mono">tagged_entity_contacts_daily</span> — that join works once ASN is available.</div>
+    <div class="note">"Reviewed-role link" = any of this ASN's peer IPs carries an <span class="mono">accepted_role</span> in <span class="mono">review__ip_roles</span> or a confirmed pair in <span class="mono">rollup__confirmed_contacts_daily</span> (T-Mobile: 19 peers confirmed <span class="mono">sip_client</span> as of Oct 15). The join never reads OpenCTI labels — the TIP's <span class="mono">criminal_voip_service</span> is shown as a chip on the entity, not used as a fact. Works once ASN is available in a rollup. Cells are the Oct 9 illustration.</div>
   </div>
 
   <div id="view-uncl" class="card" style="display:none">
     <table style="width:100%;border-collapse:collapse;margin-top:16px">
       <tr><th>Peer IP</th><th style="text-align:right">Monitored IPs touched</th><th style="text-align:right">Bytes</th><th style="text-align:right">Flows</th><th style="text-align:right">Days seen</th><th>Last</th><th>Candidate</th></tr>
-      <tr><td><a href="EntityDetail.dc.html" class="mono">170.81.198.236</a></td><td style="text-align:right" class="mono">1</td><td style="text-align:right" class="mono">704 KB</td><td style="text-align:right" class="mono">3,523</td><td style="text-align:right" class="mono">7 / 7</td><td class="mono" style="color:#9199A8">Oct 9</td><td style="color:#5D6472">—</td></tr>
-      <tr><td><a href="EntityDetail.dc.html" class="mono">162.33.177.141</a></td><td style="text-align:right" class="mono">1</td><td style="text-align:right" class="mono">432 KB</td><td style="text-align:right" class="mono">6,891</td><td style="text-align:right" class="mono">7 / 7</td><td class="mono" style="color:#9199A8">Oct 9</td><td style="color:#5D6472">—</td></tr>
-      <tr class="pool"><td><a href="EntityDetail.dc.html" class="mono">208.69.82.149</a></td><td style="text-align:right" class="mono">1</td><td style="text-align:right" class="mono">343 KB</td><td style="text-align:right" class="mono">1,746</td><td style="text-align:right" class="mono">7 / 7</td><td class="mono" style="color:#9199A8">Oct 9</td><td style="color:#5D6472">—</td></tr>
-      <tr class="pool"><td><a href="EntityDetail.dc.html" class="mono">208.69.82.187</a></td><td style="text-align:right" class="mono">1</td><td style="text-align:right" class="mono">306 KB</td><td style="text-align:right" class="mono">1,562</td><td style="text-align:right" class="mono">7 / 7</td><td class="mono" style="color:#9199A8">Oct 9</td><td style="color:#5D6472">—</td></tr>
-      <tr class="pool"><td><a href="EntityDetail.dc.html" class="mono">208.69.82.148</a></td><td style="text-align:right" class="mono">1</td><td style="text-align:right" class="mono">292 KB</td><td style="text-align:right" class="mono">1,498</td><td style="text-align:right" class="mono">7 / 7</td><td class="mono" style="color:#9199A8">Oct 9</td><td style="color:#5D6472">—</td></tr>
-      <tr class="pool"><td><a href="EntityDetail.dc.html" class="mono">208.69.81.68</a></td><td style="text-align:right" class="mono">1</td><td style="text-align:right" class="mono">289 KB</td><td style="text-align:right" class="mono">1,476</td><td style="text-align:right" class="mono">7 / 7</td><td class="mono" style="color:#9199A8">Oct 9</td><td style="color:#5D6472">—</td></tr>
-      <tr class="pool"><td><a href="EntityDetail.dc.html" class="mono">208.69.81.172</a></td><td style="text-align:right" class="mono">1</td><td style="text-align:right" class="mono">288 KB</td><td style="text-align:right" class="mono">1,473</td><td style="text-align:right" class="mono">7 / 7</td><td class="mono" style="color:#9199A8">Oct 9</td><td style="color:#5D6472">—</td></tr>
-      <tr class="pool"><td><a href="EntityDetail.dc.html" class="mono">208.69.81.188</a></td><td style="text-align:right" class="mono">1</td><td style="text-align:right" class="mono">286 KB</td><td style="text-align:right" class="mono">1,465</td><td style="text-align:right" class="mono">7 / 7</td><td class="mono" style="color:#9199A8">Oct 9</td><td style="color:#5D6472">—</td></tr>
-      <tr class="pool"><td><a href="EntityDetail.dc.html" class="mono">208.69.81.69</a></td><td style="text-align:right" class="mono">1</td><td style="text-align:right" class="mono">286 KB</td><td style="text-align:right" class="mono">1,458</td><td style="text-align:right" class="mono">7 / 7</td><td class="mono" style="color:#9199A8">Oct 9</td><td style="color:#5D6472">—</td></tr>
-      <tr class="pool"><td><a href="EntityDetail.dc.html" class="mono">208.69.81.220</a></td><td style="text-align:right" class="mono">1</td><td style="text-align:right" class="mono">284 KB</td><td style="text-align:right" class="mono">1,449</td><td style="text-align:right" class="mono">7 / 7</td><td class="mono" style="color:#9199A8">Oct 9</td><td style="color:#5D6472">—</td></tr>
+      <tr><td><a href="EntityDetail.dc.html" class="mono">170.81.198.236</a></td><td style="text-align:right" class="mono">1</td><td style="text-align:right" class="mono">704 KB</td><td style="text-align:right" class="mono">3,523</td><td style="text-align:right" class="mono">7 / 7</td><td class="mono" style="color:#A6D8CD">Oct 9</td><td style="color:#6FA89E">—</td></tr>
+      <tr><td><a href="EntityDetail.dc.html" class="mono">162.33.177.141</a></td><td style="text-align:right" class="mono">1</td><td style="text-align:right" class="mono">432 KB</td><td style="text-align:right" class="mono">6,891</td><td style="text-align:right" class="mono">7 / 7</td><td class="mono" style="color:#A6D8CD">Oct 9</td><td style="color:#6FA89E">—</td></tr>
+      <tr class="pool"><td><a href="EntityDetail.dc.html" class="mono">208.69.82.149</a></td><td style="text-align:right" class="mono">1</td><td style="text-align:right" class="mono">343 KB</td><td style="text-align:right" class="mono">1,746</td><td style="text-align:right" class="mono">7 / 7</td><td class="mono" style="color:#A6D8CD">Oct 9</td><td style="color:#6FA89E">—</td></tr>
+      <tr class="pool"><td><a href="EntityDetail.dc.html" class="mono">208.69.82.187</a></td><td style="text-align:right" class="mono">1</td><td style="text-align:right" class="mono">306 KB</td><td style="text-align:right" class="mono">1,562</td><td style="text-align:right" class="mono">7 / 7</td><td class="mono" style="color:#A6D8CD">Oct 9</td><td style="color:#6FA89E">—</td></tr>
+      <tr class="pool"><td><a href="EntityDetail.dc.html" class="mono">208.69.82.148</a></td><td style="text-align:right" class="mono">1</td><td style="text-align:right" class="mono">292 KB</td><td style="text-align:right" class="mono">1,498</td><td style="text-align:right" class="mono">7 / 7</td><td class="mono" style="color:#A6D8CD">Oct 9</td><td style="color:#6FA89E">—</td></tr>
+      <tr class="pool"><td><a href="EntityDetail.dc.html" class="mono">208.69.81.68</a></td><td style="text-align:right" class="mono">1</td><td style="text-align:right" class="mono">289 KB</td><td style="text-align:right" class="mono">1,476</td><td style="text-align:right" class="mono">7 / 7</td><td class="mono" style="color:#A6D8CD">Oct 9</td><td style="color:#6FA89E">—</td></tr>
+      <tr class="pool"><td><a href="EntityDetail.dc.html" class="mono">208.69.81.172</a></td><td style="text-align:right" class="mono">1</td><td style="text-align:right" class="mono">288 KB</td><td style="text-align:right" class="mono">1,473</td><td style="text-align:right" class="mono">7 / 7</td><td class="mono" style="color:#A6D8CD">Oct 9</td><td style="color:#6FA89E">—</td></tr>
+      <tr class="pool"><td><a href="EntityDetail.dc.html" class="mono">208.69.81.188</a></td><td style="text-align:right" class="mono">1</td><td style="text-align:right" class="mono">286 KB</td><td style="text-align:right" class="mono">1,465</td><td style="text-align:right" class="mono">7 / 7</td><td class="mono" style="color:#A6D8CD">Oct 9</td><td style="color:#6FA89E">—</td></tr>
+      <tr class="pool"><td><a href="EntityDetail.dc.html" class="mono">208.69.81.69</a></td><td style="text-align:right" class="mono">1</td><td style="text-align:right" class="mono">286 KB</td><td style="text-align:right" class="mono">1,458</td><td style="text-align:right" class="mono">7 / 7</td><td class="mono" style="color:#A6D8CD">Oct 9</td><td style="color:#6FA89E">—</td></tr>
+      <tr class="pool"><td><a href="EntityDetail.dc.html" class="mono">208.69.81.220</a></td><td style="text-align:right" class="mono">1</td><td style="text-align:right" class="mono">284 KB</td><td style="text-align:right" class="mono">1,449</td><td style="text-align:right" class="mono">7 / 7</td><td class="mono" style="color:#A6D8CD">Oct 9</td><td style="color:#6FA89E">—</td></tr>
     </table>
-    <div class="note">Every <span class="mono">peer_is_*</span> flag false, scanners already excluded upstream — this is the whole "we can't explain it yet" bucket, and the input to the Candidates screen. The eight marked rows are <span class="mono">208.69.81–82.x</span>, 284–343 KB each, all 7 of 7 days: the SBC-pool shape from the graph, which a By-ASN grouping would collapse to one line if ASN were available. All ten talk to the same monitored IP (the SIP trunk). Candidate column fills in once a row exists for the peer's ASN in <span class="mono">asn_classification_candidates</span> — approved rows stay listed here for history older than the 3-day refresh window.</div>
+    <div class="note">Every <span class="mono">peer_is_*</span> flag false, scanners already excluded upstream — this is the whole "we can't explain it yet" bucket, and the input to the Candidates screen. The eight marked rows are <span class="mono">208.69.81–82.x</span>, 284–343 KB each, all 7 of 7 days: the SBC-pool shape from the graph, which a By-ASN grouping would collapse to one line if ASN were available. All ten talk to the same monitored IP (the one OpenCTI labels <span class="mono">sip_trunk</span>); as of Oct 15 every IP in the pool sits in <span class="mono">review__ip_roles</span> as proposed <span class="mono">unclear</span>, pending. Candidate column fills in once a row exists for the peer's ASN in <span class="mono">review__asn_candidates</span> — approved rows stay listed here for history older than the 3-day refresh window.</div>
   </div>
 
 </div>
@@ -126,9 +127,9 @@ tr:last-child td{border-bottom:none}
 
 <script>
 const SUB = {
-  ip: 'port_family = rtp_media · tagged peers excluded · <span class="mono">flow_rollup_daily</span>',
+  ip: 'port_family = rtp_media · tagged peers excluded · <span class="mono">rollup__flow_daily</span>',
   asn: 'port_family = rtp_media · tagged peers excluded · <span style="color:#F5A623">needs ASN — see note</span>',
-  uncl: 'all port families · every peer_is_* flag false · 1,754 peers / 7.6 MB in 7d · <span class="mono">unclassified_peer_contacts_daily</span>'
+  uncl: 'all port families · peer_categories = {} and no accepted role · 1,754 peers / 7.6 MB in 7d · <span class="mono">rollup__unclassified_contacts_daily</span>'
 };
 function show(v) {
   document.querySelectorAll('[data-view]').forEach(x => x.classList.toggle('active', x.dataset.view === v));

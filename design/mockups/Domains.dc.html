@@ -3,52 +3,53 @@
 <head>
 <meta charset="utf-8">
 <title>CVS Watch — Domains</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=Orbitron:wght@500;600&display=swap">
 <style>
-body{margin:0;background:#0B0D10;color:#E7E9ED;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{margin:0;background:#061214;color:#E8FFF8;font-family:'IBM Plex Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
 .mono{font-family:'IBM Plex Mono',monospace}
 a{color:#4C8DFF;text-decoration:none}
 a:hover{color:#78AAFF}
-.navlink{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;font-size:14px;font-weight:500;color:#9199A8}
-.navlink:hover{background:#171B22;color:#E7E9ED}
-.navlink.active{background:#1B2029;color:#E7E9ED}
-.card{background:#141821;border:1px solid #262B35;border-radius:10px}
-.src{font-size:10px;font-family:'IBM Plex Mono',monospace;color:#5D6472;background:#0F1217;border:1px solid #1B2029;padding:2px 7px;border-radius:4px;white-space:nowrap}
-.chip{font-size:10px;font-family:'IBM Plex Mono',monospace;background:#1B2029;border:1px solid #262B35;color:#9199A8;padding:1px 6px;border-radius:4px;display:inline-block;margin:3px 3px 0 0}
-.chip.cvs{color:#E5484D;border-color:#5A2327}.chip.zombie{color:#F5A623;border-color:#5A4423}.chip.retired{color:#5D6472;text-decoration:line-through}.chip.gap{color:#E5484D;border-color:#5A2327;background:#2A1216}.chip.ta{color:#EC4899;border-color:#5A2340}
+.navlink{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:6px;font-size:14px;font-weight:500;color:#A6D8CD}
+.navlink:hover{background:#0F3133;color:#E8FFF8}
+.navlink.active{background:#133A3C;color:#E8FFF8}
+.card{background:#0C2A2C;border:1px solid #2B7266;border-radius:10px}
+.src{font-size:10px;font-family:'IBM Plex Mono',monospace;color:#6FA89E;background:#0A2224;border:1px solid #133A3C;padding:2px 7px;border-radius:4px;white-space:nowrap}
+.chip{font-size:10px;font-family:'IBM Plex Mono',monospace;background:#133A3C;border:1px solid #2B7266;color:#A6D8CD;padding:1px 6px;border-radius:4px;display:inline-block;margin:3px 3px 0 0}
+.chip.cvs{color:#E5484D;border-color:#5A2327}.chip.zombie{color:#F5A623;border-color:#5A4423}.chip.retired{color:#6FA89E;text-decoration:line-through}.chip.gap{color:#E5484D;border-color:#5A2327;background:#2A1216}.chip.ta{color:#EC4899;border-color:#5A2340}
 .st{font-size:10px;font-weight:600;padding:2px 7px;border-radius:4px;display:inline-block;white-space:nowrap}
-.st.active{background:#153226;color:#3DD68C}.st.demoted{background:#2A2013;color:#F5A623}.st.retired{background:#171B22;color:#5D6472}.st.gap{background:#2A1216;color:#E5484D}
-.seg{all:unset;cursor:pointer;font-size:13px;font-weight:500;padding:8px 18px;color:#9199A8;border:1px solid #262B35;background:transparent}
-.seg.active{background:#1B2029;border-color:#3A4254;color:#E7E9ED}
-th{text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em;color:#5D6472;text-transform:uppercase;padding:0 10px 10px 10px;border-bottom:1px solid #262B35;white-space:nowrap}
-td{padding:10px;font-size:13px;border-bottom:1px solid #1B2029;vertical-align:middle}
+.st.active{background:#153226;color:#3DD68C}.st.demoted{background:#2A2013;color:#F5A623}.st.retired{background:#0F3133;color:#6FA89E}.st.gap{background:#2A1216;color:#E5484D}
+.seg{all:unset;cursor:pointer;font-size:13px;font-weight:500;padding:8px 18px;color:#A6D8CD;border:1px solid #2B7266;background:transparent}
+.seg.active{background:#133A3C;border-color:#3F9C8A;color:#E8FFF8}
+th{text-align:left;font-size:11px;font-weight:600;letter-spacing:0.04em;color:#6FA89E;text-transform:uppercase;padding:0 10px 10px 10px;border-bottom:1px solid #2B7266;white-space:nowrap}
+td{padding:10px;font-size:13px;border-bottom:1px solid #133A3C;vertical-align:middle}
 tr:last-child td{border-bottom:none}
-tr:hover td{background:#171B22}
-.sub{font-size:11px;color:#5D6472;display:block;margin-top:2px}
+tr:hover td{background:#0F3133}
+.sub{font-size:11px;color:#6FA89E;display:block;margin-top:2px}
 .cl{display:flex;flex-direction:column;gap:0}
-.cl .hd{padding:16px 20px 12px 20px;border-bottom:1px solid #1B2029;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start}
+.cl .hd{padding:16px 20px 12px 20px;border-bottom:1px solid #133A3C;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;align-items:flex-start}
 .cl .ttl{font-size:14px;font-weight:600}
-.cl .typ{font-size:11px;color:#5D6472;margin-top:2px}
-.cl .desc{font-size:12px;color:#9199A8;line-height:1.5;margin-top:8px}
+.cl .typ{font-size:11px;color:#6FA89E;margin-top:2px}
+.cl .desc{font-size:12px;color:#A6D8CD;line-height:1.5;margin-top:8px}
 .cl .body{padding:12px 20px 16px 20px;display:grid;grid-template-columns:minmax(260px,1.2fr) minmax(220px,1fr);gap:18px}
-.cl .dom{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #1B2029;font-size:12px;align-items:flex-start}
+.cl .dom{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid #133A3C;font-size:12px;align-items:flex-start}
 .cl .dom:last-child{border-bottom:none}
-.k{font-size:10px;color:#5D6472;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px}
-.rel{font-size:12px;color:#9199A8;line-height:1.55}
-.rel b{color:#E7E9ED;font-weight:500}
-.note{font-size:11px;color:#5D6472;line-height:1.5;padding:12px 20px 14px 20px;border-top:1px solid #1B2029}
-.dn{font-size:12px;color:#9199A8;line-height:1.5;display:flex;gap:8px}
-.dn b{color:#E7E9ED;font-weight:600}
-.ev{display:flex;gap:10px;font-size:13px;padding:9px 0;border-bottom:1px solid #1B2029}
+.k{font-size:10px;color:#6FA89E;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:5px}
+.rel{font-size:12px;color:#A6D8CD;line-height:1.55}
+.rel b{color:#E8FFF8;font-weight:500}
+.note{font-size:11px;color:#6FA89E;line-height:1.5;padding:12px 20px 14px 20px;border-top:1px solid #133A3C}
+.dn{font-size:12px;color:#A6D8CD;line-height:1.5;display:flex;gap:8px}
+.dn b{color:#E8FFF8;font-weight:600}
+.ev{display:flex;gap:10px;font-size:13px;padding:9px 0;border-bottom:1px solid #133A3C}
 .ev:last-child{border-bottom:none}
-.ev .d{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#9199A8;width:52px;flex-shrink:0}
+.ev .d{font-family:'IBM Plex Mono',monospace;font-size:12px;color:#A6D8CD;width:52px;flex-shrink:0}
 </style>
+<link rel="stylesheet" href="theme.css">
 </head>
 <body>
 
-<div style="display:flex;width:100%;min-height:100vh;background:#0B0D10">
+<div style="display:flex;width:100%;min-height:100vh;background:transparent">
 
-<div style="width:240px;flex-shrink:0;background:#0F1217;border-right:1px solid #262B35;display:flex;flex-direction:column;padding:24px 16px;box-sizing:border-box;gap:4px">
+<div class="sidebar" style="width:240px;flex-shrink:0;background:#0A2224;border-right:1px solid #2B7266;display:flex;flex-direction:column;padding:24px 16px;box-sizing:border-box;gap:4px">
   <div style="display:flex;align-items:center;gap:10px;padding:8px 8px 22px 8px">
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4C8DFF" stroke-width="2"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="9" stroke-opacity="0.45"/><path d="M12 3v3M12 18v3M3 12h3M18 12h3" stroke-opacity="0.45"/></svg>
     <span style="font-size:15px;font-weight:600;letter-spacing:0.2px">CVS Watch</span>
@@ -62,9 +63,9 @@ tr:hover td{background:#171B22}
   <a href="CandidateReview.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8l2.2-5h13.6L21 8M3 8v10.5A1.5 1.5 0 004.5 20h15a1.5 1.5 0 001.5-1.5V8M3 8h6.2l.9 3h3.8l.9-3H21"/></svg>Candidates</a>
   <a href="PipelineHealth.dc.html" class="navlink"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2.5-6 4 12 2.5-6H21"/></svg>Pipeline health</a>
   <div style="flex:1"></div>
-  <div style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-top:1px solid #262B35;margin-top:8px">
-    <div style="width:28px;height:28px;border-radius:50%;background:#1B2029;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#9199A8;flex-shrink:0">JF</div>
-    <div style="font-size:12px;color:#9199A8;line-height:1.4">J. Finley<br><span style="color:#5D6472">Analyst</span></div>
+  <div style="display:flex;align-items:center;gap:10px;padding:10px 8px;border-top:1px solid #2B7266;margin-top:8px">
+    <div style="width:28px;height:28px;border-radius:50%;background:#133A3C;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;color:#A6D8CD;flex-shrink:0">JF</div>
+    <div style="font-size:12px;color:#A6D8CD;line-height:1.4">J. Finley<br><span style="color:#6FA89E">Analyst</span></div>
   </div>
 </div>
 
@@ -73,7 +74,7 @@ tr:hover td{background:#171B22}
   <div style="display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:16px">
     <div>
       <h1 style="margin:0 0 4px 0;font-size:22px;font-weight:600">Domains</h1>
-      <div style="font-size:13px;color:#5D6472">Proof-of-life from <span class="mono">spoiler-alert</span> · what they belong to from <span class="mono">OpenCTI</span> GraphQL · 16 monitored + 3 retired, grouped by the Infrastructure / Organization object that owns them</div>
+      <div style="font-size:13px;color:#6FA89E">Proof-of-life from <span class="mono">spoiler-alert</span> · what they belong to from <span class="mono">OpenCTI</span> GraphQL · 17 monitored + 3 retired, grouped by the Infrastructure / Organization object that owns them · rebuilt Oct 15 15:30 UTC</div>
     </div>
     <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
       <span class="src">spoiler-alert /status · /monitored · /retired · /monitored/{id}</span>
@@ -82,13 +83,13 @@ tr:hover td{background:#171B22}
   </div>
 
   <div class="card" style="padding:14px 22px;margin-bottom:22px;display:flex;align-items:center;gap:30px;flex-wrap:wrap">
-    <div><div class="k">Monitored</div><div style="font-size:20px;font-weight:600">16</div><div style="font-size:11px;color:#9199A8">13 active · <span style="color:#F5A623">3 zombie</span></div></div>
-    <div><div class="k">Retired</div><div style="font-size:20px;font-weight:600">3</div><div style="font-size:11px;color:#9199A8">0 resurrected</div></div>
-    <div><div class="k">Cadences</div><div style="font-size:13px;font-weight:600;margin-top:6px" class="mono">daily 1 · weekly 10 · monthly 2 · zombie 3</div></div>
-    <div><div class="k">Checks (24h)</div><div style="font-size:20px;font-weight:600">44</div><div style="font-size:11px;color:#3DD68C">0 errors · next due 19:01 UTC</div></div>
-    <div><div class="k">Results (24h)</div><div style="font-size:13px;font-weight:600;margin-top:6px" class="mono"><span style="color:#3DD68C">ok 21</span> · <span style="color:#9199A8">empty 17</span> · <span style="color:#F5A623">parked 6</span></div></div>
-    <div><div class="k">Owning objects</div><div style="font-size:20px;font-weight:600">8</div><div style="font-size:11px;color:#9199A8">5 Infrastructure · 3 Organization</div></div>
-    <div><div class="k">Monitoring gaps</div><div style="font-size:20px;font-weight:600;color:#E5484D">3 + 3</div><div style="font-size:11px;color:#9199A8">domains · IPs — see below</div></div>
+    <div><div class="k">Monitored</div><div style="font-size:20px;font-weight:600">17</div><div style="font-size:11px;color:#A6D8CD">12 active · <span style="color:#F5A623">5 zombie</span> · +trustsmmzon.com Oct 14</div></div>
+    <div><div class="k">Retired</div><div style="font-size:20px;font-weight:600">3</div><div style="font-size:11px;color:#A6D8CD">0 resurrected</div></div>
+    <div><div class="k">Cadences</div><div style="font-size:13px;font-weight:600;margin-top:6px" class="mono">daily 1 · weekly 10 · monthly 1 · zombie 5</div></div>
+    <div><div class="k">Checks (24h)</div><div style="font-size:20px;font-weight:600">96</div><div style="font-size:11px;color:#3DD68C">0 errors · next due Oct 16 14:01 UTC</div></div>
+    <div><div class="k">Results (24h)</div><div style="font-size:13px;font-weight:600;margin-top:6px" class="mono"><span style="color:#3DD68C">ok 84</span> · <span style="color:#A6D8CD">empty 1</span> · <span style="color:#F5A623">parked 10</span> · <span style="color:#E5484D">timeout 1</span></div></div>
+    <div><div class="k">Owning objects</div><div style="font-size:20px;font-weight:600">8</div><div style="font-size:11px;color:#A6D8CD">5 Infrastructure · 3 Organization · 17 registrar Orgs ignored</div></div>
+    <div><div class="k">Monitoring gaps</div><div style="font-size:20px;font-weight:600;color:#E5484D">9 + 4</div><div style="font-size:11px;color:#A6D8CD">domains · IPs — 8 of them one Infrastructure (Spoofbase)</div></div>
   </div>
 
   <div style="display:flex;margin-bottom:18px">
@@ -103,7 +104,7 @@ tr:hover td{background:#171B22}
     <table id="dl" style="width:100%;border-collapse:collapse;margin-top:18px;min-width:980px">
       <tr><th>Domain · labels</th><th>Owner</th><th>State</th><th>Last check</th><th>Next due</th><th>Expires</th><th>Current A</th><th>Netflow peer?</th><th></th></tr>
     </table>
-    <div class="note">Source: spoiler-alert <span class="mono">/monitored</span> + <span class="mono">/retired</span>; A records from each domain's <span class="mono">/monitored/{id}</span> run history (<span class="mono">observations.records.A</span> — the only place this mapping survives, spoiler-alert no longer writes A/AAAA to OpenCTI). Owner = the Infrastructure/Organization the domain is related to in OpenCTI; "— (text only)" = the description names it but no relationship exists. "Netflow peer?" = the current A record appears as a <span class="mono">peer_ip</span> in <span class="mono">flow_rollup_daily</span>; every hit is <span class="mono">165.227.194.81</span> fetching the site over <span class="mono">web_admin</span>. Zombie = demoted after 2 consecutive <span class="mono">parked</span> results; retired = 6 more, tombstoned, rechecked yearly.</div>
+    <div class="note">Source: spoiler-alert <span class="mono">/monitored</span> + <span class="mono">/retired</span>; A records from each domain's <span class="mono">/monitored/{id}</span> run history (<span class="mono">observations.records.A</span> — the only place this mapping survives, spoiler-alert no longer writes A/AAAA to OpenCTI). Owner = the Infrastructure/Organization the domain is related to in OpenCTI; "— (text only)" = the description names it but no relationship exists. "Netflow peer?" = the current A record appears as a <span class="mono">peer_ip</span> in <span class="mono">rollup__flow_daily</span>; every hit is <span class="mono">165.227.194.81</span> fetching the site over <span class="mono">web_admin</span>. Zombie = demoted after 2 consecutive <span class="mono">parked</span> results; retired = 6 more, tombstoned, rechecked yearly.</div>
   </div>
 
   <div id="view-links" style="display:none">
@@ -112,10 +113,10 @@ tr:hover td{background:#171B22}
       <div class="card" style="flex:1 1 440px;min-width:0">
         <div style="padding:16px 20px 10px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px"><div style="font-size:13px;font-weight:600">Cross-links to the IP watchlist</div><span class="src">OpenCTI relationships + netflow</span></div>
         <div style="padding:0 20px 14px 20px;display:flex;flex-direction:column;gap:10px">
-          <div class="dn"><span>①</span><span><b>OUTSIDERZ aka SPOOF WORLD</b> (Infrastructure) <span class="mono">consists-of</span> two watchlist IPs — <a href="EntityDetail.dc.html" class="mono">143.198.172.85</a> (confirmed CVS) and <a href="EntityDetail.dc.html" class="mono">165.227.194.81</a>. The domain <span class="mono">outsiderzvpn.com</span> names OUTSIDERZ in its description but has no relationship to the object.</span></div>
-          <div class="dn"><span>②</span><span><b>PlugValley → Ukraine VPS → watchlist.</b> <span class="mono">plugvalley.sh</span> <span class="mono">resolves-to</span> <span class="mono">176.97.113.106</span> ("hosting plugvalley.sh", <span class="mono">hosting:virtual_systems_ukraine</span>); watchlist IP <a href="EntityDetail.dc.html" class="mono">162.243.77.115</a> is <span class="mono">derived-from</span> that IP and from <span class="mono">95.214.235.200</span> (same label, "hosting plugvalley"). The only path in the graph from a monitored domain to a monitored IP.</span></div>
-          <div class="dn"><span>③</span><span><b>Confirmed CVS → unmonitored domain.</b> <a href="EntityDetail.dc.html" class="mono">192.248.178.127</a> <span class="mono">related-to</span> <span class="mono">callspoofing.org</span>, itself labelled <span class="mono">infrastructure_type:criminal_voip_service</span> — and carrying no <span class="mono">monitor:*</span> label, so spoiler-alert never checks it.</span></div>
-          <div class="dn"><span>④</span><span><b>Netflow, not the graph:</b> five domains' hosting IPs (Wix, Shopify, the m3zapp lander) are peers of <span class="mono">165.227.194.81</span> on <span class="mono">web_admin</span>. The direct join (A record = watchlist IP) is empty for all 16.</span></div>
+          <div class="dn"><span>①</span><span><b>OUTSIDERZ aka SPOOF WORLD</b> (Infrastructure) <span class="mono">consists-of</span> two watchlist IPs — <a href="EntityDetail.dc.html" class="mono">143.198.172.85</a> and <a href="EntityDetail.dc.html" class="mono">165.227.194.81</a>, both now TIP-labelled <span class="mono">criminal_voip_service</span> (the second one since <span style="color:#F5A623">Oct 15 15:28</span>; its description: "distributed as a SIP credential pair … by OUTSIDERZ after signing up through their onboarding process"). The domain <span class="mono">outsiderzvpn.com</span> names OUTSIDERZ in its description but has no relationship to the object.</span></div>
+          <div class="dn"><span>②</span><span><b>PlugValley → Ukraine VPS → watchlist.</b> <span class="mono">plugvalley.sh</span> <span class="mono">resolves-to</span> <span class="mono">176.97.113.106</span> ("hosting plugvalley.sh", <span class="mono">hosting:virtual_systems_ukraine</span>); watchlist IP <a href="EntityDetail.dc.html" class="mono">162.243.77.115</a> is <span class="mono">derived-from</span> that IP and from <span class="mono">95.214.235.200</span> (same label, "hosting plugvalley"). The only path in the graph from a monitored domain to a monitored IP — and since <span style="color:#F5A623">Oct 14</span> it is also the live one: plugvalley.sh dropped its Cloudflare front and now resolves straight to 176.97.113.106. Netflow agrees from the other side: both hosting IPs are <span class="mono">ssh_admin</span> peers of 162.243.77.115 (4.1 MB / 3,980 flows and 355 KB / 302 flows in 30d, through Oct 13), and 95.214.235.200 is a <span class="mono">web_admin</span> peer of 64.225.32.104.</span></div>
+          <div class="dn"><span>③</span><span><b>TIP-labelled CVS → unmonitored domain.</b> <a href="EntityDetail.dc.html" class="mono">192.248.178.127</a> <span class="mono">related-to</span> <span class="mono">callspoofing.org</span>, itself labelled <span class="mono">infrastructure_type:criminal_voip_service</span> — and carrying no <span class="mono">monitor:*</span> label, so spoiler-alert never checks it.</span></div>
+          <div class="dn"><span>④</span><span><b>Netflow, not the graph:</b> five domains' hosting IPs (Wix, Shopify, the m3zapp lander) are peers of <span class="mono">165.227.194.81</span> on <span class="mono">web_admin</span>, none after Oct 8. The direct join (A record = watchlist IP) is still empty for all 17. <b>The two lander IPs are a category, not a link.</b> <span class="mono">104.219.250.37</span> (AS22612 Namecheap, rDNS <span class="mono">nc-ph-3812.web-hosting.com</span>) and <span class="mono">2.59.170.20</span> (AS49981 WorldStream NL) sit behind <span class="mono">ns1/ns2.lander.d.parity.domains</span>; they were auto-created by spoiler-alert on Oct 1 and the analyst labelled them <span class="mono">infrastructure:domain_parking_infrastructure</span>. Any parked domain on those registrars resolves there, so "resolves to a parking IP" means <em>parked</em>, never <em>related to M3</em>; and a watchlist IP touching them on web_admin (165.227.194.81: 4 flows, 382 B) is a page fetch, not infrastructure. That is categorical knowledge in the <span class="mono">CLAUDE.md</span> §7 sense — it belongs in a provider category (<span class="mono">ref__providers</span> row, say <span class="mono">domain_parking</span>) so every rule and every page benefits, not in a per-rule suppression.</span></div>
           <div class="dn"><span>⑤</span><span><b>Derived-from chains among the IPs</b> are the analyst's own pivots, written into OpenCTI: 185.134.23.8 → 64.225.32.104, 143.198.176.127 → 192.248.178.127, 143.198.172.85 → 216.126.227.152, 165.227.194.81 → <span class="mono">185.233.247.245</span> ("SIP traffic to a known criminal SIP service" — no labels, not on the watchlist).</span></div>
         </div>
       </div>
@@ -124,14 +125,14 @@ tr:hover td{background:#171B22}
         <div style="padding:16px 20px 10px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px"><div style="font-size:13px;font-weight:600;color:#E5484D">Monitoring gaps — queue candidates</div><span class="src">graph says tracked · no tracker has it</span></div>
         <table style="width:100%;border-collapse:collapse">
           <tr><th>Object</th><th>Why it's in the graph</th><th>Proposed</th></tr>
-          <tr><td class="mono">tox3in.in</td><td style="font-size:12px;color:#9199A8">4th domain of <b style="color:#E7E9ED">Tox Carding Forum</b>; the other three are monitored</td><td><span class="chip gap">+ monitor:weekly</span></td></tr>
-          <tr><td class="mono">doomcall.app</td><td style="font-size:12px;color:#9199A8">2nd domain of <b style="color:#E7E9ED">doom voip</b>, hosts the app docs URL</td><td><span class="chip gap">+ monitor:weekly</span></td></tr>
-          <tr><td class="mono">callspoofing.org</td><td style="font-size:12px;color:#9199A8">labelled criminal_voip_service, related to confirmed CVS 192.248.178.127</td><td><span class="chip gap">+ monitor:weekly</span></td></tr>
-          <tr><td class="mono">185.233.247.245</td><td style="font-size:12px;color:#9199A8">derived-from 165.227.194.81; "SIP traffic to a known criminal SIP service"; no labels at all</td><td><span class="chip gap">+ msk:voip_analysis</span></td></tr>
-          <tr><td class="mono">176.97.113.106</td><td style="font-size:12px;color:#9199A8">hosts plugvalley.sh; source of 162.243.77.115</td><td><span class="chip gap">+ msk:voip_analysis</span></td></tr>
-          <tr><td class="mono">95.214.235.200</td><td style="font-size:12px;color:#9199A8">"hosting plugvalley"; source of 162.243.77.115 and 64.225.32.104</td><td><span class="chip gap">+ msk:voip_analysis</span></td></tr>
+          <tr><td class="mono">Spoofbase · 8 domains</td><td style="font-size:12px;color:#A6D8CD">Infrastructure labelled <b style="color:#E8FFF8">criminal_voip_service</b>; spoofbase.sbs, otp/sms/p1/www/callcenter.spoofbase.sbs, otp/sms.sbelite.it.com carry no labels at all (4 sb-elite.online names were retired as nxdomain Sep 1)</td><td><span class="chip gap">+ monitor:weekly ×8</span></td></tr>
+          <tr><td class="mono">142.93.249.153</td><td style="font-size:12px;color:#A6D8CD">related-to the Spoofbase domains; not on the IP watchlist</td><td><span class="chip gap">+ msk:voip_analysis</span></td></tr>
+          <tr><td class="mono">callspoofing.org</td><td style="font-size:12px;color:#A6D8CD">labelled criminal_voip_service, related to 192.248.178.127 (TIP: criminal_voip_service)</td><td><span class="chip gap">+ monitor:weekly</span></td></tr>
+          <tr><td class="mono">185.233.247.245</td><td style="font-size:12px;color:#A6D8CD">derived-from 165.227.194.81; "SIP traffic to a known criminal SIP service"; no labels at all</td><td><span class="chip gap">+ msk:voip_analysis</span></td></tr>
+          <tr><td class="mono">176.97.113.106</td><td style="font-size:12px;color:#A6D8CD">hosts plugvalley.sh (live A record since Oct 14); source of 162.243.77.115; ssh_admin peer of it in netflow</td><td><span class="chip gap">+ msk:voip_analysis</span></td></tr>
+          <tr><td class="mono">95.214.235.200</td><td style="font-size:12px;color:#A6D8CD">"hosting plugvalley"; source of 162.243.77.115 and 64.225.32.104; ssh_admin / web_admin peer of both</td><td><span class="chip gap">+ msk:voip_analysis</span></td></tr>
         </table>
-        <div class="note">This is a rule, not a page: "an object related to tracked infrastructure carries no proof-of-life / watchlist label" → queue entry, resolution = add the label (TIP write — pillar #4, deliberately last; the entry exists before the button is wired). Also graph hygiene the queue could surface: <span class="mono">outsiderzvpn.com</span>, <span class="mono">m3zapp.com</span>, <span class="mono">plugvalley.ws</span> and <span class="mono">status.plugvalley.pro</span> name their owner in free text but have no relationship to it; and three <span class="mono">scope:derived</span> IPv4 observables (172.67.179.26, 104.21.35.200, 65.87.7.74) are leftovers spoiler-alert created before it went domain-only.</div>
+        <div class="note">This is a rule, not a page: "an object related to tracked infrastructure carries no proof-of-life / watchlist label" → queue entry, resolution = add the label (TIP write — pillar #4, deliberately last; the entry exists before the button is wired). Two rows left this table since Oct 9 because they were never gaps: <span class="mono">tox3in.in</span> and <span class="mono">doomcall.app</span> carry <span class="mono">monitor:retired</span> + <span class="mono">lifecycle:nxdomain</span> in OpenCTI (Aug 31) — but neither appears in spoiler-alert's <span class="mono">/retired</span>, which lists only the three it retired itself; the same is true of the four sb-elite.online names. A tracker whose retired list disagrees with the labels is its own hygiene item. Also graph hygiene the queue could surface: <span class="mono">outsiderzvpn.com</span>, <span class="mono">m3zapp.com</span>, <span class="mono">plugvalley.ws</span>, <span class="mono">status.plugvalley.pro</span> and <span class="mono">trustsmmzon.com</span> name their owner in free text (or not at all) but have no relationship to one; since Oct 15 spoiler-alert also writes registrar and nameserver objects into the graph (17 registrar Organizations, GoDaddy to Purple IT), so "owner" must mean a labelled Infrastructure / threat-actor Organization, never just any related Organization; and three <span class="mono">scope:derived</span> IPv4 observables (172.67.179.26, 104.21.35.200, 65.87.7.74) are leftovers spoiler-alert created before it went domain-only.</div>
       </div>
 
     </div>
@@ -139,8 +140,12 @@ tr:hover td{background:#171B22}
     <div class="card">
       <div style="padding:16px 20px 6px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px"><div style="font-size:13px;font-weight:600">Lifecycle timeline — 30d</div><span class="src">derived from state + check history (events feed is SSO-gated)</span></div>
       <div style="padding:4px 20px 14px 20px">
+        <div class="ev"><span class="d">Oct 15</span><span><span class="st active">TIP</span> <a href="EntityDetail.dc.html" class="mono">165.227.194.81</a> labelled <span class="chip" style="border-style:dashed;color:#C6EBE2">infrastructure_type:criminal_voip_service</span>, <span class="mono">monitor:monthly</span> removed <span class="sub">15:28 UTC · OpenCTI updated_at — an IP-side event the IP feed still has no table for; netflow-rollups mirrors it on the next hourly reconcile</span></span></div>
+        <div class="ev"><span class="d">Oct 15</span><span><span class="st demoted">zombie</span> <a href="DomainDetail.dc.html" class="mono">panel.m3zapp.com</a>, <span class="mono">m3zapp.com</span> — nameserver-based parking detection (<span class="mono">ns1/ns2.lander.d.parity.domains</span>) → <span class="mono">monitor:zombie</span> + <span class="mono">lifecycle:parked</span>, next check Feb 12 2027 <span class="sub">02:20 UTC · the A records had said "lander" since Oct 1; the NS rule is what finally called it</span></span></div>
+        <div class="ev"><span class="d">Oct 14</span><span><span class="st active">added</span> <span class="mono">trustsmmzon.com</span> (<span class="mono">monitor:monthly</span>, <span class="mono">infrastructure:money_laundering</span>, no owning object) <span class="sub">19:51 UTC · first check saw 104.21.28.91 / 172.67.145.52, by 00:38 the Cloudflare anycast 172.64.80.1</span></span></div>
+        <div class="ev"><span class="d">Oct 14</span><span><span class="st active">A moved</span> <span class="mono">plugvalley.sh</span> 172.64.80.1 (Cloudflare) → <span style="color:#F5A623">176.97.113.106</span> (the Ukraine VPS the graph already linked) <span class="sub">19:00 UTC · the front door came off; the origin is now public and is an ssh_admin peer of 162.243.77.115</span></span></div>
         <div class="ev"><span class="d">Oct 8</span><span><span class="st retired">retired</span> <span class="mono">mysql.mundossp.com</span>, <span class="mono">status.plugvalley.pro</span>, <span class="mono">go.elitemetaltools.com</span> → tombstones, yearly recheck <span class="sub">status.plugvalley.pro already rechecked once (forced) the same evening</span></span></div>
-        <div class="ev"><span class="d">Oct 8</span><span><span class="st demoted">zombie</span> <span class="mono">plugvalley.ws</span>, <span class="mono">bigdata.mundossp.com</span>, <span class="mono">pgsql.mundossp.com</span> — 2 consecutive <span class="mono">parked</span> → <span class="mono">monitor:zombie</span> + <span class="mono">lifecycle:parked</span>, next check Feb 5 2027</span></div>
+        <div class="ev"><span class="d">Oct 8</span><span><span class="st demoted">zombie</span> <span class="mono">plugvalley.ws</span>, <span class="mono">bigdata.mundossp.com</span>, <span class="mono">pgsql.mundossp.com</span> — 2 consecutive <span class="mono">parked</span> → <span class="mono">monitor:zombie</span> + <span class="mono">lifecycle:parked</span>, next check Feb 12 2027 (rescheduled from Feb 5)</span></div>
         <div class="ev"><span class="d">Oct 8</span><span><span class="st active">forced</span> 8 rechecks of <a href="DomainDetail.dc.html" class="mono">panel.m3zapp.com</a> by <span class="mono">fh</span> in one minute — recheck-button testing; <span class="mono">forced_by</span> is the actor stamp</span></div>
         <div class="ev"><span class="d">Oct 1</span><span><span class="st active">A moved</span> <a href="DomainDetail.dc.html" class="mono">panel.m3zapp.com</a> 164.92.90.138 (DigitalOcean) → 104.219.250.37 + 2.59.170.20 (parity.domains lander); <span class="mono">m3zapp.com</span> gained the same A set the same day <span class="sub">still "ok" to the lifecycle — the name resolves and has NS. Reading "parked on a lander" off the A history is a judgment, hence a queue candidate</span></span></div>
         <div class="ev"><span class="d">Sep 23</span><span><span class="st active">A moved</span> <span class="mono">blueoceanglobe.com</span> 98.81.239.139 → 100.56.24.49</span></div>
@@ -154,36 +159,40 @@ tr:hover td{background:#171B22}
 <script>
 const CL = [
   {name:'OUTSIDERZ aka SPOOF WORLD', type:'Infrastructure · anonymization', desc:'Suspected Criminal VOIP service — referral from Houston DOJ — associated victim losses — possibly associated with SPOOF WORLD botnet.', hot:true,
-   doms:[{v:'outsiderzvpn.com',st:'active',cad:'weekly',next:'Oct 14',a:'— NS only · Cloudflare',textonly:true}],
-   ips:['143.198.172.85 (confirmed CVS)','165.227.194.81'],
-   rels:{'Url':['https://btcpay.outsiderzvpn.com/i/8LKF…']}, gapnote:'outsiderzvpn.com names OUTSIDERZ in its description only — no relationship to the object.'},
+   doms:[{v:'outsiderzvpn.com',st:'active',cad:'weekly',next:'Oct 22',a:'— NS only · Cloudflare · Squarespace',textonly:true}],
+   ips:['143.198.172.85 (TIP: criminal_voip_service)','165.227.194.81 (TIP: criminal_voip_service — <span style="color:#F5A623">added Oct 15 15:28</span>, monitor:monthly removed)'],
+   rels:{'Url':['https://btcpay.outsiderzvpn.com/i/8LKF…'],'Credential (165.227.194.81)':['SIP credential pair handed out at onboarding']}, gapnote:'outsiderzvpn.com names OUTSIDERZ in its description only — no relationship to the object.'},
   {name:'M3 VHISHING INFRA', type:'Infrastructure', desc:'Confirmed criminal vhishing service M3. The panel was deployed on :8443.', hot:true,
-   doms:[{v:'panel.m3zapp.com',st:'active',cad:'monthly',next:'Nov 07',a:'104.219.250.37 · 2.59.170.20 (lander, since Oct 1)',link:'DomainDetail.dc.html',score:100},{v:'m3zapp.com',st:'active',cad:'monthly',next:'Nov 07',a:'same lander IPs',textonly:true,score:100}],
-   rels:{'Url':['https://panel.m3zapp.com:8443'],'Phone-Number':['5092689159'],'Email-Addr':['pennyboy1200@gmail.com']}, gapnote:'m3zapp.com (score 100) is not linked to the Infrastructure object.'},
+   doms:[{v:'panel.m3zapp.com',st:'demoted',cad:'zombie',cause:'parked',next:'Feb 12 2027',a:'104.219.250.37 · 2.59.170.20 · NS lander.d.parity.domains',link:'DomainDetail.dc.html',score:100},{v:'m3zapp.com',st:'demoted',cad:'zombie',cause:'parked',next:'Feb 12 2027',a:'same lander IPs + NS',textonly:true,score:100}],
+   rels:{'Url':['https://panel.m3zapp.com:8443'],'Phone-Number':['5092689159'],'Email-Addr':['pennyboy1200@gmail.com'],'Registrar':['NameCheap, Inc. (written by spoiler-alert Oct 15)']}, gapnote:'Both demoted Oct 15 02:20 by nameserver-based parking detection (ns1/ns2.lander.d.parity.domains). The two lander IPs are labelled infrastructure:domain_parking_infrastructure in OpenCTI — see Cross-links. m3zapp.com (score 100) is still not linked to the Infrastructure object.'},
   {name:'PlugValley', type:'Infrastructure · anonymization', desc:'As of April 1, PlugValley is being sold under the banner ValleyHub — it consolidates all of their historic services into a single pane for customers.', hot:true,
-   doms:[{v:'plugvalley.sh',st:'active',cad:'weekly',next:'Oct 14',a:'172.64.80.1 · Cloudflare'},{v:'plugvalley.ws',st:'demoted',cad:'zombie',cause:'parked',next:'Feb 05 2027',a:'64.70.19.203 · parked',textonly:true},{v:'status.plugvalley.pro',st:'retired',next:'Oct 08 2027',a:'resolves-to 65.87.7.74 (OpenCTI)',textonly:true}],
-   ips:['176.97.113.106 → 162.243.77.115','95.214.235.200 → 162.243.77.115, 64.225.32.104'],
-   rels:{'Infrastructure':['SpooferValley','OTPValleyBOT','ValleyHub AIO','EscrowValleyBot','ValleyAI'],'Channel':['@plugvalley','@OTPValley','@valleyhub','@EscrowValley','+5'],'IPv4-Addr (resolves-to)':['176.97.113.106','172.67.179.26','104.21.35.200'],'X509-Certificate':['b2cdae52…'],'Software':['NextJS'],'Persona':['@DoxieOfficial']}, notes:2, gapnote:'plugvalley.ws and status.plugvalley.pro are not linked to the object.'},
+   doms:[{v:'plugvalley.sh',st:'active',cad:'weekly',next:'Oct 22',a:'<span style="color:#F5A623">176.97.113.106 since Oct 14</span> · was 172.64.80.1 (Cloudflare)'},{v:'plugvalley.ws',st:'demoted',cad:'zombie',cause:'parked',next:'Feb 12 2027',a:'64.70.19.203 · parked · 2 fails',textonly:true},{v:'status.plugvalley.pro',st:'retired',next:'Oct 08 2027',a:'resolves-to 65.87.7.74 (OpenCTI)',textonly:true}],
+   ips:['176.97.113.106 → 162.243.77.115 <span class="sub" style="display:inline">· now plugvalley.sh\'s live A record, and an ssh_admin peer of 162.243.77.115 in netflow</span>','95.214.235.200 → 162.243.77.115, 64.225.32.104 <span class="sub" style="display:inline">· ssh_admin peer of 162.243.77.115 (4.1 MB / 30d), web_admin peer of 64.225.32.104</span>'],
+   rels:{'Infrastructure':['SpooferValley','OTPValleyBOT','ValleyHub AIO','EscrowValleyBot','ValleyAI'],'Channel':['@plugvalley','@OTPValley','@valleyhub','@EscrowValley','+5'],'IPv4-Addr (resolves-to)':['176.97.113.106','172.67.179.26','104.21.35.200'],'X509-Certificate':['b2cdae52…'],'Software':['NextJS'],'Persona':['@DoxieOfficial']}, notes:2, gapnote:'plugvalley.ws and status.plugvalley.pro are not linked to the object. plugvalley.sh dropped its Cloudflare front on Oct 14 — the origin the graph already knew is now the public A record.'},
   {name:'doom voip', type:'Infrastructure · anonymization', desc:'Criminal voip service. Has a telegram channel and an app. doomcall.pro was advertised on @doom on 9/2/26 as the new portal.',
-   doms:[{v:'doomcall.pro',st:'active',cad:'weekly',next:'Oct 15',a:'172.64.80.1 · Cloudflare'},{v:'doomcall.app',st:'gap',a:'not monitored'}],
+   doms:[{v:'doomcall.pro',st:'active',cad:'weekly',next:'Oct 22',a:'172.64.80.1 · Cloudflare · NICENIC'},{v:'doomcall.app',st:'retired',next:'—',a:'lifecycle:nxdomain · monitor:retired (Aug 31) — not in spoiler-alert\'s /retired',bylabel:true}],
    rels:{'Channel':['@DoomPublic','@waitsroom'],'Persona':['@Daunt','Marshall Glover','@moviestar'],'StixFile':['408b1a19…','f88b6709…','982bb665…'],'Url':['https://doomcall.app/docs']}, notes:2},
   {name:'Tox Carding Forum', type:'Infrastructure · anonymization', desc:'Criminal carding forum TOX.',
-   doms:[{v:'tox3in.com',st:'active',cad:'daily',next:'Oct 09 19:01',a:'172.64.80.1 · Cloudflare'},{v:'tox3.in',st:'active',cad:'weekly',next:'Oct 14',a:'— NS only · njalla'},{v:'tox3.xyz',st:'active',cad:'weekly',next:'Oct 14',a:'172.64.80.1 · Cloudflare'},{v:'tox3in.in',st:'gap',a:'not monitored'}],
+   doms:[{v:'tox3in.com',st:'active',cad:'daily',next:'Oct 16 14:01',a:'172.64.80.1 · Cloudflare · Dynadot'},{v:'tox3.in',st:'active',cad:'weekly',next:'Oct 22',a:'— NS only · njalla · Tucows'},{v:'tox3.xyz',st:'active',cad:'weekly',next:'Oct 22',a:'172.64.80.1 · Cloudflare · Dynadot'},{v:'tox3in.in',st:'retired',next:'—',a:'lifecycle:nxdomain · monitor:retired (Aug 31) — not in spoiler-alert\'s /retired',bylabel:true}],
    rels:{'Persona':['losodemon','jwettbuzz35'],'User-Account':['JWETTDEAD111'],'Url':['tox3.in']}},
   {name:'BlueOcean Inc', type:'Organization · infrastructure:threatactor', desc:'Suspected Chinese money-laundering group. Nexigo (Organization) hangs off it with the same two personas.', ta:true,
-   doms:[{v:'blueoceanglobe.com',st:'active',cad:'weekly',next:'Oct 14',a:'100.56.24.49 (was 98.81.239.139 until Sep 23)'},{v:'blueoceanglobe.net',st:'active',cad:'weekly',next:'Oct 14',a:'185.230.63.107/.171/.186 · Wix',nf:true},{v:'blueoceancenter.com',st:'active',cad:'weekly',next:'Oct 14',a:'173.164.100.94'},{v:'nexigo.com',st:'active',cad:'weekly',next:'Oct 14',a:'23.227.38.32 · Shopify',nf:true,owner:'Nexigo'},{v:'nexipc.com',st:'active',cad:'weekly',next:'Oct 14',a:'23.227.38.32 · Shopify',nf:true,owner:'Nexigo (email domain)'}],
+   doms:[{v:'blueoceanglobe.com',st:'active',cad:'weekly',next:'Oct 22',a:'100.56.24.49 (was 98.81.239.139 until Sep 23) · AWS NS · GoDaddy'},{v:'blueoceanglobe.net',st:'active',cad:'weekly',next:'Oct 22',a:'185.230.63.107/.171/.186 · Wix · Bluehost',nf:true},{v:'blueoceancenter.com',st:'active',cad:'weekly',next:'Oct 22',a:'173.164.100.94 · GoDaddy'},{v:'nexigo.com',st:'active',cad:'weekly',next:'Oct 22',a:'23.227.38.32 · Shopify',nf:true,owner:'Nexigo'},{v:'nexipc.com',st:'active',cad:'weekly',next:'Oct 22',a:'23.227.38.32 · Shopify',nf:true,owner:'Nexigo (email domain)'}],
    rels:{'Persona':['Shunqing S Zhang','Lingli Li Tang'],'Organization':['Shenzhen Anxin Dongke LTD','Nexigo'],'Phone-Number':['5033053186','5034063833','4083068258','4582156088'],'Bank-Account':['US0000…BKUS44IMT'],'Administrative-Area':['Londonderry warehouse','New Castle DE warehouse'],'Email-Addr':['x.hei.x@hotmail.com','cs@nexipc.com'],'User-Account':['Blue-Ocean-Inc-1000…','nexipc','letsnexigo'],'Url':['sellercentral.amazon.com/…','amazon.com/stores/NexiGo/…','linkedin.com/company/nexigo']}, notes:2},
   {name:'ZXTech', type:'Organization · infrastructure:threatactor', desc:'A development company who purchased cloud compute and used it to steal money from state unemployment-insurance programs, funnelling it through the financial system. Domains referred by FedLE.', ta:true,
-   doms:[{v:'bigdata.mundossp.com',st:'demoted',cad:'zombie',cause:'parked',next:'Feb 05 2027',a:'54.165.197.107 · parked · AWS'},{v:'pgsql.mundossp.com',st:'demoted',cad:'zombie',cause:'parked',next:'Feb 05 2027',a:'54.165.197.107 · parked · AWS'},{v:'mysql.mundossp.com',st:'retired',next:'Oct 08 2027',a:'tombstone'}],
+   doms:[{v:'bigdata.mundossp.com',st:'demoted',cad:'zombie',cause:'parked',next:'Feb 12 2027',a:'54.165.197.107 · parked · AWS · expires Dec 13 2026'},{v:'pgsql.mundossp.com',st:'demoted',cad:'zombie',cause:'parked',next:'Feb 12 2027',a:'54.165.197.107 · parked · AWS · expires Dec 13 2026'},{v:'mysql.mundossp.com',st:'retired',next:'Oct 08 2027',a:'tombstone'}],
    rels:{'Individual':['17 named individuals'],'Organization':['20 shell / media / digital companies']}},
   {name:'— no owning object —', type:'unaffiliated', desc:'',
-   doms:[{v:'go.elitemetaltools.com',st:'retired',next:'Oct 08 2027',a:'tombstone · "confirmed financially motivated Chinese APT cloud infrastructure is interacting with this domain"'}],
-   rels:{}, notes:1}
+   doms:[{v:'trustsmmzon.com',st:'active',cad:'monthly',next:'Nov 14',a:'172.64.80.1 · Cloudflare · Purple IT Ltd · <span style="color:#F5A623">added Oct 14</span>',lab:'infrastructure:money_laundering'},{v:'go.elitemetaltools.com',st:'retired',next:'Oct 08 2027',a:'tombstone · "confirmed financially motivated Chinese APT cloud infrastructure is interacting with this domain"'}],
+   rels:{'trustsmmzon.com':['description: a Princeton TX address, a phone number, @trustsmmzone — "they do bank open…"; related only to its registrar and Cloudflare NS']}, notes:1, gapnote:'trustsmmzon.com carries infrastructure:money_laundering but no Infrastructure/Organization object owns it — a graph-hygiene item the queue could raise.'},
+  {name:'Spoofbase', type:'Infrastructure · exfiltration · <span class="chip cvs">infrastructure_type:criminal_voip_service</span>', desc:'Not on this page by design until now: a CVS-labelled Infrastructure with 12 domains and an IP, none of them under proof-of-life monitoring.', gap:true,
+   doms:[{v:'spoofbase.sbs',st:'gap',a:'no labels · "Domains identified by Censys"'},{v:'otp.spoofbase.sbs · sms · p1 · www · callcenter',st:'gap',a:'5 more, no labels'},{v:'otp.sbelite.it.com · sms.sbelite.it.com',st:'gap',a:'no labels'},{v:'sb-elite.online · p1 · sip · otp.sb-elite.online',st:'retired',next:'—',a:'lifecycle:nxdomain · monitor:retired (Sep 1) — not in spoiler-alert\'s /retired',bylabel:true}],
+   ips:['142.93.249.153 <span class="sub" style="display:inline">· related-to the sb-elite/spoofbase domains · not on the IP watchlist (no msk:voip_analysis)</span>'],
+   rels:{}, gapnote:'8 unlabelled domains + 1 IP: the largest single gap the graph shows. Proposed: monitor:weekly on the 8, msk:voip_analysis on the IP.'}
 ];
 const stChip = d => d.st === 'gap' ? '<span class="st gap">not monitored</span>' : '<span class="st ' + d.st + '">' + (d.st === 'demoted' ? 'zombie' : d.st) + '</span>';
-const labChips = d => (d.cad ? '<span class="chip ' + (d.cad === 'zombie' ? 'zombie' : '') + '">monitor:' + d.cad + '</span>' : d.st === 'retired' ? '<span class="chip retired">monitor:retired</span>' : d.st === 'gap' ? '<span class="chip gap">no monitor:* label</span>' : '') + (d.cause ? '<span class="chip zombie">lifecycle:' + d.cause + '</span>' : '') + (d.score === 100 ? '<span class="chip cvs">score 100</span>' : '');
+const labChips = d => (d.cad ? '<span class="chip ' + (d.cad === 'zombie' ? 'zombie' : '') + '">monitor:' + d.cad + '</span>' : d.st === 'retired' ? '<span class="chip retired">monitor:retired</span>' + (d.bylabel ? '<span class="chip zombie">lifecycle:nxdomain</span>' : '') : d.st === 'gap' ? '<span class="chip gap">no monitor:* label</span>' : '') + (d.cause ? '<span class="chip zombie">lifecycle:' + d.cause + '</span>' : '') + (d.score === 100 ? '<span class="chip cvs">score 100</span>' : '');
 document.getElementById('view-clusters').innerHTML = CL.map(c => `
-  <div class="card cl" ${c.hot ? 'style="border-color:#5A2327"' : ''}>
+  <div class="card cl" ${c.hot ? 'style="border-color:#5A2327"' : c.gap ? 'style="border-color:#5A2327;border-style:dashed"' : ''}>
     <div class="hd">
       <div style="min-width:0"><div class="ttl">${c.name}</div><div class="typ">${c.type}${c.ta ? ' <span class="chip ta">infrastructure:threatactor</span>' : ''}</div>${c.desc ? '<div class="desc">' + c.desc + '</div>' : ''}</div>
       <div style="text-align:right;flex-shrink:0"><span class="src">${c.doms.filter(d => d.st !== 'gap').length} monitored${c.doms.some(d => d.st === 'gap') ? ' · <span style="color:#E5484D">' + c.doms.filter(d => d.st === 'gap').length + ' gap</span>' : ''}${c.notes ? ' · ' + c.notes + ' notes' : ''}</span></div>
@@ -191,12 +200,12 @@ document.getElementById('view-clusters').innerHTML = CL.map(c => `
     <div class="body">
       <div>
         <div class="k">Domains · proof-of-life</div>
-        ${c.doms.map(d => `<div class="dom"><div style="min-width:0"><a href="${d.link || 'DomainDetail.dc.html'}" class="mono">${d.v}</a>${d.textonly ? '<span class="sub" style="color:#F5A623">description only — not linked to the object</span>' : ''}${d.owner ? '<span class="sub">via ' + d.owner + '</span>' : ''}<br>${labChips(d)}</div><div style="text-align:right;flex:0 1 52%;min-width:0;overflow-wrap:anywhere">${stChip(d)}${d.next ? '<span class="sub">next ' + d.next + '</span>' : ''}<span class="sub mono" style="font-size:10px">${d.a}${d.nf ? ' · <span style="color:#4C8DFF">netflow peer</span>' : ''}</span></div></div>`).join('')}
+        ${c.doms.map(d => `<div class="dom"><div style="min-width:0"><a href="${d.link || 'DomainDetail.dc.html'}" class="mono">${d.v}</a>${d.textonly ? '<span class="sub" style="color:#F5A623">description only — not linked to the object</span>' : ''}${d.lab ? '<span class="sub"><span class="chip" style="border-style:dashed;color:#C6EBE2">TIP · ' + d.lab + '</span></span>' : ''}${d.owner ? '<span class="sub">via ' + d.owner + '</span>' : ''}<br>${labChips(d)}</div><div style="text-align:right;flex:0 1 52%;min-width:0;overflow-wrap:anywhere">${stChip(d)}${d.next ? '<span class="sub">next ' + d.next + '</span>' : ''}<span class="sub mono" style="font-size:10px">${d.a}${d.nf ? ' · <span style="color:#4C8DFF">netflow peer</span>' : ''}</span></div></div>`).join('')}
         ${c.ips ? '<div class="k" style="margin-top:12px">Links to the IP watchlist</div>' + c.ips.map(i => '<div class="rel mono" style="font-size:12px">' + i + '</div>').join('') : ''}
       </div>
       <div>
         <div class="k">Related in OpenCTI</div>
-        ${Object.keys(c.rels).length ? Object.entries(c.rels).map(([t, v]) => '<div class="rel"><b>' + t + '</b> · ' + v.join(', ') + '</div>').join('') : '<div class="rel" style="color:#5D6472">nothing beyond the domain itself</div>'}
+        ${Object.keys(c.rels).length ? Object.entries(c.rels).map(([t, v]) => '<div class="rel"><b>' + t + '</b> · ' + v.join(', ') + '</div>').join('') : '<div class="rel" style="color:#6FA89E">nothing beyond the domain itself</div>'}
         ${c.gapnote ? '<div class="rel" style="margin-top:10px;color:#F5A623;font-size:11px">⚠ ' + c.gapnote + '</div>' : ''}
       </div>
     </div>
@@ -204,22 +213,23 @@ document.getElementById('view-clusters').innerHTML = CL.map(c => `
 
 const NF = '165.227.194.81';
 const DOMS = [
-  {v:'tox3in.com', own:'Tox Carding Forum', cad:'daily', st:'active', last:'Oct 08 19:01', next:'Oct 09 19:01', exp:'2027-02-17', a:['172.64.80.1'], an:'Cloudflare'},
-  {v:'outsiderzvpn.com', own:'OUTSIDERZ — (text only)', cad:'weekly', st:'active', last:'Oct 07 18:59', next:'Oct 14', exp:'2028-03-13', a:[], an:'NS only · Cloudflare'},
-  {v:'blueoceanglobe.com', own:'BlueOcean Inc', cad:'weekly', st:'active', last:'Oct 07 18:59', next:'Oct 14', exp:'2027-10-16', a:['100.56.24.49'], an:'was 98.81.239.139 until Sep 23'},
-  {v:'blueoceancenter.com', own:'BlueOcean Inc', cad:'weekly', st:'active', last:'Oct 07 18:59', next:'Oct 14', exp:'2028-03-05', a:['173.164.100.94']},
-  {v:'nexigo.com', own:'Nexigo (BlueOcean)', cad:'weekly', st:'active', last:'Oct 07 19:00', next:'Oct 14', exp:'2030-06-16', a:['23.227.38.32'], an:'Shopify', nf:'8.9 KB · 20 flows'},
-  {v:'blueoceanglobe.net', own:'BlueOcean Inc', cad:'weekly', st:'active', last:'Oct 07 19:00', next:'Oct 14', exp:'2030-11-13', a:['185.230.63.107','185.230.63.171','185.230.63.186'], an:'Wix', nf:'40 KB · 107 flows'},
-  {v:'nexipc.com', own:'Nexigo — (text only)', cad:'weekly', st:'active', last:'Oct 07 19:00', next:'Oct 14', exp:'2031-02-20', a:['23.227.38.32'], an:'Shopify · same IP as nexigo.com', nf:'8.9 KB · shared'},
-  {v:'plugvalley.sh', own:'PlugValley', cad:'weekly', st:'active', last:'Oct 07 19:00', next:'Oct 14', exp:'2027-04-01', a:['172.64.80.1'], an:'Cloudflare'},
-  {v:'tox3.in', own:'Tox Carding Forum', cad:'weekly', st:'active', last:'Oct 07 19:00', next:'Oct 14', exp:'2027-03-08', a:[], an:'NS only · njalla'},
-  {v:'tox3.xyz', own:'Tox Carding Forum', cad:'weekly', st:'active', last:'Oct 07 19:00', next:'Oct 14', exp:'2027-02-17', a:['172.64.80.1'], an:'Cloudflare'},
-  {v:'doomcall.pro', own:'doom voip', cad:'weekly', st:'active', last:'Oct 08 20:13', next:'Oct 15', exp:'2027-09-02', a:['172.64.80.1'], an:'Cloudflare'},
-  {v:'m3zapp.com', own:'M3 — (text only)', cad:'monthly', st:'active', last:'Oct 08 18:56', next:'Nov 07', exp:'2027-09-14', a:['104.219.250.37','2.59.170.20'], an:'parity.domains lander · no A before Oct 1', nf:'382 B · 4 flows'},
-  {v:'panel.m3zapp.com', own:'M3 VHISHING INFRA', cad:'monthly', st:'active', last:'Oct 08 21:05', next:'Nov 07', exp:'2027-09-14', a:['104.219.250.37','2.59.170.20'], an:'moved off 164.92.90.138 (DigitalOcean) Oct 1', nf:'382 B · shared', link:'DomainDetail.dc.html', hot:true},
-  {v:'plugvalley.ws', own:'PlugValley — (text only)', cad:'zombie', cause:'parked', st:'demoted', last:'Oct 08 18:55', next:'Feb 05 2027', exp:'—', a:['64.70.19.203'], an:'parked · no NS/SOA'},
-  {v:'bigdata.mundossp.com', own:'ZXTech', cad:'zombie', cause:'parked', st:'demoted', last:'Oct 08 18:56', next:'Feb 05 2027', exp:'—', a:['54.165.197.107'], an:'parked · AWS'},
-  {v:'pgsql.mundossp.com', own:'ZXTech', cad:'zombie', cause:'parked', st:'demoted', last:'Oct 08 18:56', next:'Feb 05 2027', exp:'—', a:['54.165.197.107'], an:'parked · AWS'},
+  {v:'tox3in.com', own:'Tox Carding Forum', cad:'daily', st:'active', last:'Oct 15 14:01', next:'Oct 16 14:01', exp:'2027-02-17', a:['172.64.80.1'], an:'Cloudflare · Dynadot'},
+  {v:'outsiderzvpn.com', own:'OUTSIDERZ — (text only)', cad:'weekly', st:'active', last:'Oct 15 14:01', next:'Oct 22', exp:'2028-03-13', a:[], an:'NS only · Cloudflare · Squarespace'},
+  {v:'tox3.in', own:'Tox Carding Forum', cad:'weekly', st:'active', last:'Oct 15 14:01', next:'Oct 22', exp:'2027-03-08', a:[], an:'NS only · njalla · Tucows'},
+  {v:'tox3.xyz', own:'Tox Carding Forum', cad:'weekly', st:'active', last:'Oct 15 14:01', next:'Oct 22', exp:'2027-02-17', a:['172.64.80.1'], an:'Cloudflare · Dynadot'},
+  {v:'blueoceanglobe.com', own:'BlueOcean Inc', cad:'weekly', st:'active', last:'Oct 15 14:01', next:'Oct 22', exp:'2027-10-16', a:['100.56.24.49'], an:'was 98.81.239.139 until Sep 23 · GoDaddy'},
+  {v:'doomcall.pro', own:'doom voip', cad:'weekly', st:'active', last:'Oct 15 14:01', next:'Oct 22', exp:'2027-09-02', a:['172.64.80.1'], an:'Cloudflare · NICENIC'},
+  {v:'nexigo.com', own:'Nexigo (BlueOcean)', cad:'weekly', st:'active', last:'Oct 15 14:01', next:'Oct 22', exp:'2030-06-16', a:['23.227.38.32'], an:'Shopify · GoDaddy', nf:'8.9 KB · 20 flows · to Oct 8'},
+  {v:'plugvalley.sh', own:'PlugValley', cad:'weekly', st:'active', last:'Oct 15 14:01', next:'Oct 22', exp:'2027-04-01', a:['176.97.113.106'], an:'moved off Cloudflare (172.64.80.1) Oct 14 · NameSilo', nf:'ssh_admin peer of 162.243.77.115 · 355 KB · 302 flows', nfip:'162.243.77.115', hot:true},
+  {v:'nexipc.com', own:'Nexigo — (text only)', cad:'weekly', st:'active', last:'Oct 15 14:01', next:'Oct 22', exp:'2031-02-20', a:['23.227.38.32'], an:'Shopify · same IP as nexigo.com', nf:'8.9 KB · shared'},
+  {v:'blueoceanglobe.net', own:'BlueOcean Inc', cad:'weekly', st:'active', last:'Oct 15 14:01', next:'Oct 22', exp:'2030-11-13', a:['185.230.63.107','185.230.63.171','185.230.63.186'], an:'Wix · Bluehost', nf:'39 KB · 107 flows · to Oct 8'},
+  {v:'blueoceancenter.com', own:'BlueOcean Inc', cad:'weekly', st:'active', last:'Oct 15 14:01', next:'Oct 22', exp:'2028-03-05', a:['173.164.100.94'], an:'GoDaddy'},
+  {v:'trustsmmzon.com', own:'— (infrastructure:money_laundering, no object)', cad:'monthly', st:'active', last:'Oct 15 14:01', next:'Nov 14', exp:'2027-08-26', a:['172.64.80.1'], an:'Cloudflare · Purple IT Ltd · added Oct 14', hot:true},
+  {v:'m3zapp.com', own:'M3 — (text only)', cad:'zombie', cause:'parked', st:'demoted', last:'Oct 15 14:01', next:'Feb 12 2027', exp:'2027-09-14', a:['104.219.250.37','2.59.170.20'], an:'parity.domains lander · NS-based parking, Oct 15 02:20 · NameCheap'},
+  {v:'panel.m3zapp.com', own:'M3 VHISHING INFRA', cad:'zombie', cause:'parked', st:'demoted', last:'Oct 15 14:01', next:'Feb 12 2027', exp:'2027-09-14', a:['104.219.250.37','2.59.170.20'], an:'off 164.92.90.138 (DigitalOcean) Oct 1 · parked Oct 15', nf:'382 B · 4 flows · to Oct 8', link:'DomainDetail.dc.html', hot:true},
+  {v:'pgsql.mundossp.com', own:'ZXTech', cad:'zombie', cause:'parked', st:'demoted', last:'Oct 15 14:01', next:'Feb 12 2027', exp:'2026-12-13', a:['54.165.197.107'], an:'parked · AWS · 2 fails · Name.com'},
+  {v:'plugvalley.ws', own:'PlugValley — (text only)', cad:'zombie', cause:'parked', st:'demoted', last:'Oct 15 14:01', next:'Feb 12 2027', exp:'—', a:['64.70.19.203'], an:'parked · no NS/SOA · 2 fails'},
+  {v:'bigdata.mundossp.com', own:'ZXTech', cad:'zombie', cause:'parked', st:'demoted', last:'Oct 15 14:01', next:'Feb 12 2027', exp:'2026-12-13', a:['54.165.197.107'], an:'parked · AWS · 2 fails · Name.com'},
   {v:'mysql.mundossp.com', own:'ZXTech', st:'retired', last:'retired Oct 08', next:'Oct 08 2027', exp:'—', a:[], an:'tombstone'},
   {v:'status.plugvalley.pro', own:'PlugValley — (text only)', st:'retired', last:'retired Oct 08', next:'Oct 08 2027', exp:'—', a:[], an:'tombstone · rechecked ×1'},
   {v:'go.elitemetaltools.com', own:'—', st:'retired', last:'retired Oct 08', next:'Oct 08 2027', exp:'—', a:[], an:'tombstone'}
@@ -227,14 +237,14 @@ const DOMS = [
 document.getElementById('dl').insertAdjacentHTML('beforeend', DOMS.map(d => `
   <tr${d.hot ? ' style="background:#131A26"' : ''}>
     <td><a href="${d.link || 'DomainDetail.dc.html'}" class="mono">${d.v}</a><br>${d.cad ? '<span class="chip ' + (d.cad === 'zombie' ? 'zombie' : '') + '">monitor:' + d.cad + '</span>' : '<span class="chip retired">monitor:retired</span>'}${d.cause ? '<span class="chip zombie">lifecycle:' + d.cause + '</span>' : ''}</td>
-    <td style="font-size:12px;white-space:nowrap;${d.own.includes('text only') ? 'color:#F5A623' : ''}">${d.own}</td>
+    <td style="font-size:12px;white-space:nowrap;${d.own.includes('text only') || d.own.includes('no object') ? 'color:#F5A623' : ''}">${d.own}</td>
     <td><span class="st ${d.st}">${d.st === 'demoted' ? 'zombie' : d.st}</span></td>
-    <td class="mono" style="font-size:12px;color:#9199A8;white-space:nowrap">${d.last}</td>
-    <td class="mono" style="font-size:12px;color:#9199A8;white-space:nowrap">${d.next}</td>
-    <td class="mono" style="font-size:12px;color:${d.exp === '—' ? '#5D6472' : '#9199A8'};white-space:nowrap">${d.exp}</td>
-    <td class="mono" style="font-size:12px;white-space:nowrap">${d.a.length ? d.a.join('<br>') : '<span style="color:#5D6472">—</span>'}${d.an ? '<span class="sub">' + d.an + '</span>' : ''}</td>
-    <td style="white-space:nowrap">${d.nf ? '<a href="EntityDetail.dc.html" class="mono" style="font-size:12px">' + NF + '</a><span class="sub">' + d.nf + ' · web_admin</span>' : '<span style="color:#5D6472">—</span>'}</td>
-    <td style="text-align:right;white-space:nowrap"><a href="https://opencti.trashcollector.dev/dashboard/observations/observables/" style="font-size:11px;color:#5D6472">OpenCTI ↗</a></td>
+    <td class="mono" style="font-size:12px;color:#A6D8CD;white-space:nowrap">${d.last}</td>
+    <td class="mono" style="font-size:12px;color:#A6D8CD;white-space:nowrap">${d.next}</td>
+    <td class="mono" style="font-size:12px;color:${d.exp === '—' ? '#6FA89E' : '#A6D8CD'};white-space:nowrap">${d.exp}</td>
+    <td class="mono" style="font-size:12px;white-space:nowrap">${d.a.length ? d.a.join('<br>') : '<span style="color:#6FA89E">—</span>'}${d.an ? '<span class="sub">' + d.an + '</span>' : ''}</td>
+    <td style="white-space:nowrap">${d.nf ? '<a href="EntityDetail.dc.html" class="mono" style="font-size:12px">' + (d.nfip || NF) + '</a><span class="sub">' + d.nf + (d.nfip ? '' : ' · web_admin') + '</span>' : '<span style="color:#6FA89E">—</span>'}</td>
+    <td style="text-align:right;white-space:nowrap"><a href="https://opencti.trashcollector.dev/dashboard/observations/observables/" style="font-size:11px;color:#6FA89E">OpenCTI ↗</a></td>
   </tr>`).join(''));
 
 function show(v) {

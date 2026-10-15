@@ -1,7 +1,19 @@
 # CVS Analyst Dashboard — mockups
 
-Ten screens, dark SOC-console aesthetic (IBM Plex Sans/Mono, `#0B0D10`
-background): `Main.dc.html` (Overview), `Watchlist.dc.html` (Watchlist —
+**Theme (2026-10-15): "galaxy map".** Modelled on the right-hand UI panels of a
+Stellaris-style galaxy map the analyst shared: dark teal glass panels
+(`backdrop-filter` blur) over a purple/teal nebula with a star field, thin
+bright-teal borders, mint-cyan text, Orbitron for page titles. It lives in
+`theme.css`, linked after each page's own `<style>`, plus an in-place re-map
+of the pages' neutral greys to the same teal palette (`#0B0D10 → #061214`,
+`#1B2029 → #133A3C`, `#262B35 → #2B7266`, `#9199A8 → #A6D8CD`, `#E7E9ED →
+#E8FFF8`, …). Status colours — red bph/alert, orange trunk/warn, green ok,
+blue cloud, purple satellite, teal residential, pink wholesale — are
+unchanged, so a red cell means the same thing it did. To go back to the
+plain SOC console, drop the `<link>` and the body background returns to flat
+teal-black (the grey re-map stays).
+
+Ten screens (IBM Plex Sans/Mono, dark): `Main.dc.html` (Overview), `Watchlist.dc.html` (Watchlist —
 IPs), `Domains.dc.html` (Domains — by owner / all / cross-links & gaps),
 `Geo.dc.html` (Geo — an interactive world map of great-circle arcs from
 each monitored IP to its peer countries, with a SIP-peer-roles mode and a
@@ -29,7 +41,16 @@ shaded, the puller's last 48 h of runs with records pulled per run, the
 heads and watermarks of every stream, and all 21 scheduled flows with
 their last run; built 2026-10-15 from `netflow-rollups`' `ops__*` tables,
 `flow__records` and the Prefect API during a real upstream outage, so
-every number on it is a real one). Open any of
+every number on it is a real one). **Swept 2026-10-15** to netflow-rollups'
+consolidated schema (`<word>__<thing>` names, `peer_categories`, the
+`review__*` role tables) — every source badge names a table that exists
+today — and restyled for who-said-what: a watched IP's reviewed role
+(`review__ip_roles`, netflow-rollups' decision) and its OpenCTI labels
+(`watch__ips.tags`, an analyst's suggestion) are separate chips, never one
+colour; with no role accepted yet, every monitored node is grey. Watchlist
+rows, Overview counts, Geo and the Sankey roles are Oct 15 data; the
+per-day traffic charts keep their Oct 9 pull (the netflow feed has been
+stale since Oct 14 03:57 UTC). Open any of
 them directly in a browser; the nav links between them work as plain
 relative links. Geo data (2026-10-13) comes from netflow-rollups'
 `sip_peer_candidates` / `sip_peer_identities` and a one-off
