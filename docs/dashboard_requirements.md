@@ -540,3 +540,43 @@ on peers come from `sip_peer_candidates`. Data is a single
 11. **Stay on the documented endpoints.** `/dashboard/data` returns
     everything in one call but is `include_in_schema=False` and
     SSO-gated — not a contract.
+
+
+## Pipeline health, 2026-10-15 — a page for the data behind the pages
+
+Added while the netflow feed was in a real outage (cryopod ingested nothing after 03:57 UTC on
+Oct 14; every exporter stopped in the same minute), which is the best possible time to design the
+page that would have explained it. The question the page answers is narrower than "is everything
+ok": *is the data behind every other page still arriving, and if not, whose problem is it?*
+
+What it reads — all of it exists today in `netflow-rollups`:
+
+| source | what the page takes from it |
+|---|---|
+| `ops/freshness.py` `CHECKS` (the same four SQL probes the hourly check runs) | the four tiles: age of the newest netflow record, hourly-rollup lag, honeypot watermark, newest watched-IP scan — each with its limit, so the tile shows a fraction, not just a colour |
+| `ops__freshness_alerts` | the open episode: stale since, last alert; one row per stale stream, deleted on recovery |
+| `flow__records` | records per hour for 7 days; the shaded gap is "no rows after the newest record" |
+| `rollup__flow_hourly`, `rollup__flow_daily` | the heads, to show the rollup trailing the raw data by its designed ~1 h |
+| `ops__watermarks_netflow`, `ops__watermarks_honeypot`, `lookup__host_scans`, `verdict__scanners`, `review__ip_roles`, `ref__providers` | "heads and watermarks": the newest row each stream wrote |
+| Prefect API | deployments tagged `netflow-rollups`, last run per deployment, the puller's run history with "pulled N records" parsed from its log lines, held no-overlap slots |
+
+The one thing it argues for that does not exist yet: an **upstream probe**. "Newest data is 34 h
+old" has two very different owners — the puller stopped asking (ours: an exception, a held slot,
+a dead scheduler) or the upstream stopped having (theirs). The puller's own run log already tells
+them apart (`Failed` with an exception vs `Completed` with 0 records over a normal window vs no
+run at all), and the page shows that split; a match-anything query to cryopod would make it a
+check instead of a reading. Proposed for `ops/freshness.py`, not built.
+
+Gotchas the page makes visible, so the UI should not hide them: watermarks advance through an
+empty window (a quiet window is recorded as pulled, so "watermark is current" never means "data
+is current"); the hourly rollup deliberately trails the raw head by about an hour; the freshness
+flow stays `Failed` in Prefect for as long as anything is stale, so red rows there are the status
+display, not a bug; and after a scheduler restart the stranded run shows as `Crashed`, which is
+the scheduler cleaning up after itself, not a failure to investigate.
+
+Every table name on this page and in the mocks revised on 2026-10-13 should be read against
+`netflow-rollups/docs/data_model.md`: the schema was consolidated on 2026-10-14/15 (35 tables →
+20, every table now `<word>__<thing>`; `sip_peer_candidates`/`sip_peer_identities` became
+`review__ip_roles`/`review__sip_pairs`/`lookup__ip_identities`; the eleven `peer_is_*` rollup
+flags became one `peer_categories` array; `flow_rollup_*` became `rollup__flow_*`). The earlier
+sections of this document still use the old names and are due a pass.

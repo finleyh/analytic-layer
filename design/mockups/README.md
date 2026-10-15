@@ -1,6 +1,6 @@
 # CVS Analyst Dashboard — mockups
 
-Nine screens, dark SOC-console aesthetic (IBM Plex Sans/Mono, `#0B0D10`
+Ten screens, dark SOC-console aesthetic (IBM Plex Sans/Mono, `#0B0D10`
 background): `Main.dc.html` (Overview), `Watchlist.dc.html` (Watchlist —
 IPs), `Domains.dc.html` (Domains — by owner / all / cross-links & gaps),
 `Geo.dc.html` (Geo — an interactive world map of great-circle arcs from
@@ -20,7 +20,16 @@ monitored IP → port family, top 28 peers individual and the other ~5,800
 collapsed per class, with filters, a min-link slider, hover tracing and
 click-to-pin; d3-sankey vendored), `EntityDetail.dc.html` (Entity detail,
 IP), `DomainDetail.dc.html` (Entity detail, domain), `TopTalkers.dc.html`
-(Top talkers), `CandidateReview.dc.html` (Candidate review). Open any of
+(Top talkers), `CandidateReview.dc.html` (Candidate review),
+`PipelineHealth.dc.html` (Pipeline health — is the data behind every other
+page still arriving: the four freshness checks as tiles with their limits,
+the open stale episode split into "what the pipeline did" and "what the
+upstream says", records ingested per hour for 7 days with the current gap
+shaded, the puller's last 48 h of runs with records pulled per run, the
+heads and watermarks of every stream, and all 21 scheduled flows with
+their last run; built 2026-10-15 from `netflow-rollups`' `ops__*` tables,
+`flow__records` and the Prefect API during a real upstream outage, so
+every number on it is a real one). Open any of
 them directly in a browser; the nav links between them work as plain
 relative links. Geo data (2026-10-13) comes from netflow-rollups'
 `sip_peer_candidates` / `sip_peer_identities` and a one-off
