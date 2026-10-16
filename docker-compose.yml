@@ -1,0 +1,19 @@
+services:
+  # Vite dev server for the analyst dashboard. network_mode: host so
+  # vite.config.ts's proxy targets (http://localhost:8010 for
+  # netflow-rollups, etc.) keep working unchanged — no container-network
+  # addressing to juggle, same as running `npm run dev` directly.
+  #
+  # restart: always means this survives independently of whatever process
+  # started it (a terminal, a Claude Code preview session, ...). Run it
+  # detached — `docker compose up -d` — so it doesn't depend on that parent
+  # process staying alive either; `docker compose logs -f app` to follow
+  # output afterward.
+  app:
+    build: .
+    image: analysis-layer:local
+    restart: always
+    network_mode: host
+    volumes:
+      - .:/app
+      - /app/node_modules
