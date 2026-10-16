@@ -13,6 +13,7 @@ import {
 } from "../api/netflow-rollups-client";
 import { formatBytes, isoDate, daysAgo } from "../lib/format";
 import { categoryColors } from "../lib/categories";
+import { ZoomableSvg } from "../components/ZoomableSvg";
 
 type Tab = "graph" | "sankey";
 
@@ -244,45 +245,6 @@ function buildGraph(
   return { nodes: [...nodes.values()], links };
 }
 
-function ZoomableSvg({
-  width,
-  height,
-  children,
-}: {
-  width: number;
-  height: number;
-  children: React.ReactNode;
-}) {
-  const svgRef = useRef<SVGSVGElement>(null);
-  const gRef = useRef<SVGGElement>(null);
-
-  useEffect(() => {
-    if (!svgRef.current || !gRef.current) return;
-    const zoomBehavior = d3
-      .zoom<SVGSVGElement, unknown>()
-      .scaleExtent([0.3, 4])
-      .on("zoom", (event) => {
-        d3.select(gRef.current).attr("transform", event.transform.toString());
-      });
-    d3.select(svgRef.current).call(zoomBehavior);
-    return () => {
-      d3.select(svgRef.current).on(".zoom", null);
-    };
-  }, []);
-
-  return (
-    <svg
-      ref={svgRef}
-      width={width}
-      height={height}
-      viewBox={`0 0 ${width} ${height}`}
-      style={{ position: "absolute", left: 0, top: 0, cursor: "grab" }}
-    >
-      <g ref={gRef}>{children}</g>
-    </svg>
-  );
-}
-
 function NodeGraph() {
   const [data, setData] = useState<{ nodes: GNode[]; links: GLink[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -329,6 +291,11 @@ function NodeGraph() {
           )
           .force("charge", d3.forceManyBody().strength(-180))
           .force("center", d3.forceCenter(W / 2, H / 2))
+          // forceCenter only recenters the overall centroid — a weakly
+          // linked cluster can still drift off-canvas under charge alone,
+          // so pull every node gently toward the middle too.
+          .force("x", d3.forceX(W / 2).strength(0.03))
+          .force("y", d3.forceY(H / 2).strength(0.03))
           .force(
             "collide",
             d3.forceCollide((d) => (d as GNode).r + 6),
