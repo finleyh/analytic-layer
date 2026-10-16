@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   listIpsWatchIpsGet,
   listIpRolesReviewIpRolesGet,
@@ -245,7 +246,9 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
               return (
                 <tr key={ip.ip}>
                   <td>
-                    <span className="mono">{ip.ip}</span>
+                    <Link to={`/entity/${ip.ip}`} className="mono row-link">
+                      {ip.ip}
+                    </Link>
                     <br />
                     {role?.accepted_role ? (
                       <span className="chip rev">{role.accepted_role}</span>

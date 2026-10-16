@@ -1,6 +1,7 @@
 import { BrowserRouter, Link, Route, Routes, useLocation } from "react-router-dom";
 import { Overview } from "./pages/Overview";
 import { Watchlist } from "./pages/Watchlist";
+import { EntityDetail } from "./pages/EntityDetail";
 
 const PAGES: { label: string; path: string }[] = [
   { label: "Overview", path: "/" },
@@ -79,6 +80,7 @@ export function App() {
           <Routes>
             <Route path="/" element={<Overview />} />
             <Route path="/watchlist" element={<Watchlist />} />
+            <Route path="/entity/:ip" element={<EntityDetail />} />
           </Routes>
         </div>
       </div>

@@ -131,6 +131,15 @@ td {
 tr:last-child td {
   border-bottom: none;
 }
+tbody tr:hover td {
+  background: rgba(72, 196, 170, 0.1);
+}
+.row-link {
+  color: inherit;
+}
+.row-link:hover {
+  color: #7fefd6;
+}
 .bar {
   display: flex;
   align-items: center;
