@@ -83,9 +83,8 @@ export function CandidateReview() {
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ margin: "0 0 4px 0", fontSize: 22, fontWeight: 600 }}>Candidate review</h1>
         <div style={{ fontSize: 13, color: "#6FA89E" }}>
-          Three review queues, each backed by its own table and decision endpoint. SIP pairs
-          aren't a fourth queue — they're evidence under each role card below, since nobody
-          decides a pair on its own.
+          Three review queues, each backed by its own table and decision endpoint. SIP pair
+          evidence for a role appears under its card — expand "Relationships" below.
         </div>
       </div>
 
