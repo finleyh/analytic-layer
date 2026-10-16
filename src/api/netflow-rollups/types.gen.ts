@@ -169,6 +169,18 @@ export type DailyConfirmedContact = {
      */
     peer_ip: string;
     /**
+     * Peer Asn
+     *
+     * the peer's ASN as the feed reported it; null when the feed had none
+     */
+    peer_asn: number | null;
+    /**
+     * Peer Country
+     *
+     * the peer's country as the feed reported it
+     */
+    peer_country: string | null;
+    /**
      * Protocol
      */
     protocol: number;
@@ -218,6 +230,18 @@ export type DailyFlow = {
      * Peer Ip
      */
     peer_ip: string;
+    /**
+     * Peer Asn
+     *
+     * the peer's ASN as the feed reported it; null when the feed had none
+     */
+    peer_asn: number | null;
+    /**
+     * Peer Country
+     *
+     * the peer's country as the feed reported it
+     */
+    peer_country: string | null;
     /**
      * Protocol
      */
@@ -320,6 +344,14 @@ export type DailyUnclassifiedContact = {
      * Peer Ip
      */
     peer_ip: string;
+    /**
+     * Peer Asn
+     */
+    peer_asn: number | null;
+    /**
+     * Peer Country
+     */
+    peer_country: string | null;
     /**
      * Bytes Sum
      */
@@ -544,6 +576,18 @@ export type HourlyFlow = {
      * Peer Ip
      */
     peer_ip: string;
+    /**
+     * Peer Asn
+     *
+     * the peer's ASN as the feed reported it; null when the feed had none
+     */
+    peer_asn: number | null;
+    /**
+     * Peer Country
+     *
+     * the peer's country as the feed reported it
+     */
+    peer_country: string | null;
     /**
      * Protocol
      */
@@ -1007,6 +1051,24 @@ export type PageSipPair = {
 };
 
 /**
+ * Page[TopAsn]
+ */
+export type PageTopAsn = {
+    /**
+     * Rows
+     */
+    rows: Array<TopAsn>;
+    /**
+     * Count
+     */
+    count: number;
+    /**
+     * Newest Day
+     */
+    newest_day?: string | null;
+};
+
+/**
  * Page[TopPeer]
  */
 export type PageTopPeer = {
@@ -1140,7 +1202,9 @@ export type ProviderCategory = {
  * ReviewQueue
  *
  * Pending counts by queue: the Overview tile and the Candidate review
- * chips.
+ * chips. Pairs are not a queue: a pair is confirmed as a consequence of
+ * confirming an IP's role, and an unconfirmed pair is evidence under that
+ * role, not a decision of its own (user, 2026-10-16).
  */
 export type ReviewQueue = {
     /**
@@ -1155,10 +1219,6 @@ export type ReviewQueue = {
      * Watched Roles
      */
     watched_roles: number;
-    /**
-     * Unconfirmed Sip Pairs
-     */
-    unconfirmed_sip_pairs: number;
 };
 
 /**
@@ -1425,16 +1485,65 @@ export type StreamHeads = {
 };
 
 /**
+ * TopAsn
+ *
+ * An ASN ranked by bytes over the window, summed across its peers and
+ * the watched IPs. `peer_country` is the country most of its rows carry;
+ * `peer_asn` is null for the peers the feed gave no ASN.
+ */
+export type TopAsn = {
+    /**
+     * Peer Asn
+     */
+    peer_asn: number | null;
+    /**
+     * Peer Country
+     */
+    peer_country: string | null;
+    /**
+     * Peers
+     *
+     * distinct peer IPs in the ASN in the window
+     */
+    peers: number;
+    /**
+     * Bytes Sum
+     */
+    bytes_sum: number;
+    /**
+     * Flow Count
+     */
+    flow_count: number;
+    /**
+     * Days Seen
+     */
+    days_seen: number;
+    /**
+     * Monitored Ips
+     */
+    monitored_ips: number;
+};
+
+/**
  * TopPeer
  *
  * A peer ranked by bytes over the window, summed across watched IPs.
- * `peer_categories` is the value on the newest day in the window.
+ * `peer_categories`, `peer_asn` and `peer_country` are the values on the
+ * newest day in the window.
  */
 export type TopPeer = {
     /**
      * Peer Ip
      */
     peer_ip: string;
+    /**
+     * Peer Asn
+     */
+    peer_asn: number | null;
+    /**
+     * Peer Country
+     */
+    peer_country: string | null;
     /**
      * Peer Categories
      */
@@ -2298,6 +2407,12 @@ export type TopPeersRollupFlowDailyTopPeersGetData = {
          */
         monitored_ip?: string | null;
         /**
+         * Asn
+         *
+         * only peers in this ASN
+         */
+        asn?: number | null;
+        /**
          * Exclude Confirmed
          *
          * drop peers with an accepted role or a confirmed pair
@@ -2348,6 +2463,72 @@ export type TopPeersRollupFlowDailyTopPeersGetResponses = {
 };
 
 export type TopPeersRollupFlowDailyTopPeersGetResponse = TopPeersRollupFlowDailyTopPeersGetResponses[keyof TopPeersRollupFlowDailyTopPeersGetResponses];
+
+export type TopAsnsRollupFlowDailyTopAsnsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Port Family
+         *
+         * one port family, e.g. rtp_media; default: all
+         */
+        port_family?: string | null;
+        /**
+         * Monitored Ip
+         */
+        monitored_ip?: string | null;
+        /**
+         * Exclude Confirmed
+         *
+         * drop peers with an accepted role or a confirmed pair
+         */
+        exclude_confirmed?: boolean;
+        /**
+         * Exclude Watched
+         *
+         * drop peers that are themselves on the watch set
+         */
+        exclude_watched?: boolean;
+        /**
+         * Limit
+         *
+         * rows to return, at most 20000
+         */
+        limit?: number;
+        /**
+         * From
+         *
+         * first day, inclusive; default: six days before `to`
+         */
+        from?: string | null;
+        /**
+         * To
+         *
+         * last day, inclusive; default: today (UTC)
+         */
+        to?: string | null;
+    };
+    url: '/rollup/flow-daily/top-asns';
+};
+
+export type TopAsnsRollupFlowDailyTopAsnsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type TopAsnsRollupFlowDailyTopAsnsGetError = TopAsnsRollupFlowDailyTopAsnsGetErrors[keyof TopAsnsRollupFlowDailyTopAsnsGetErrors];
+
+export type TopAsnsRollupFlowDailyTopAsnsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageTopAsn;
+};
+
+export type TopAsnsRollupFlowDailyTopAsnsGetResponse = TopAsnsRollupFlowDailyTopAsnsGetResponses[keyof TopAsnsRollupFlowDailyTopAsnsGetResponses];
 
 export type FlowDailyRollupFlowDailyGetData = {
     body?: never;
