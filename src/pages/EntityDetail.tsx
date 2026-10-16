@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
   getIpWatchIpsIpGet,
@@ -38,6 +38,78 @@ function factLabel(fact: Record<string, unknown>): string {
   if (software) parts.push(`${software}${version ? " " + version : ""}`);
   return parts.join(" · ");
 }
+
+function factKey(fact: Record<string, unknown>): string {
+  return `${fact.port}/${fact.transport_protocol}`;
+}
+
+function dayOf(iso: string | null): string | null {
+  return iso ? iso.slice(0, 10) : null;
+}
+
+type GridCell = { day: string; status: "first" | "same" | "changed" | "miss"; scan?: HostScan };
+type Transition = { source: string; fromDay: string; toDay: string; fromScan: HostScan; toScan: HostScan };
+
+function buildFingerprintGrid(scans: HostScan[]) {
+  const allDays = [...new Set(scans.map((s) => dayOf(s.scan_time)).filter((d): d is string => d !== null))].sort();
+  const gridDays = allDays.slice(-10);
+
+  const scanByDaySource = new Map<string, Map<string, HostScan>>();
+  for (const s of scans) {
+    const day = dayOf(s.scan_time);
+    if (!day) continue;
+    const bySource = scanByDaySource.get(s.source) ?? new Map<string, HostScan>();
+    const existing = bySource.get(day);
+    if (!existing || (s.scan_time ?? "") > (existing.scan_time ?? "")) bySource.set(day, s);
+    scanByDaySource.set(s.source, bySource);
+  }
+
+  const gridBySource = new Map<string, GridCell[]>();
+  const transitions: Transition[] = [];
+
+  for (const [source, bySource] of scanByDaySource) {
+    let lastHash: string | null = null;
+    let lastDay: string | null = null;
+    let lastScan: HostScan | null = null;
+    const cells: GridCell[] = [];
+    for (const day of gridDays) {
+      const scan = bySource.get(day);
+      if (!scan) {
+        cells.push({ day, status: "miss" });
+        continue;
+      }
+      if (lastHash === null) {
+        cells.push({ day, status: "first", scan });
+      } else if (scan.fingerprint_hash === lastHash) {
+        cells.push({ day, status: "same", scan });
+      } else {
+        cells.push({ day, status: "changed", scan });
+        transitions.push({ source, fromDay: lastDay!, toDay: day, fromScan: lastScan!, toScan: scan });
+      }
+      lastHash = scan.fingerprint_hash;
+      lastDay = day;
+      lastScan = scan;
+    }
+    gridBySource.set(source, cells);
+  }
+
+  return { gridDays, gridBySource, transitions };
+}
+
+function diffFacts(from: HostScan, to: HostScan) {
+  const fromMap = new Map(from.fingerprint_facts.map((f) => [factKey(f as Record<string, unknown>), f]));
+  const toMap = new Map(to.fingerprint_facts.map((f) => [factKey(f as Record<string, unknown>), f]));
+  const removed = [...fromMap.keys()].filter((k) => !toMap.has(k)).map((k) => fromMap.get(k)!);
+  const added = [...toMap.keys()].filter((k) => !fromMap.has(k)).map((k) => toMap.get(k)!);
+  return { added, removed };
+}
+
+const CELL_COLORS: Record<GridCell["status"], { bg: string; border: string; color: string }> = {
+  first: { bg: "#0F3133", border: "#2B7266", color: "#A6D8CD" },
+  same: { bg: "#153226", border: "#1E4D37", color: "#3DD68C" },
+  changed: { bg: "#2A2013", border: "#5A4423", color: "#F5A623" },
+  miss: { bg: "transparent", border: "#3F9C8A", color: "#6FA89E" },
+};
 
 export function EntityDetail() {
   const { ip } = useParams<{ ip: string }>();
@@ -135,6 +207,7 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
     list.sort((a, b) => (b.scan_time ?? "").localeCompare(a.scan_time ?? ""));
   }
   const changesBySource = new Map(changes.map((c) => [c.source, c]));
+  const { gridDays, gridBySource, transitions } = buildFingerprintGrid(scans);
 
   return (
     <>
@@ -267,6 +340,133 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
         )}
       </div>
 
+      {gridDays.length > 0 && (
+        <div className="card" style={{ padding: "22px 24px", marginBottom: 24 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "baseline",
+              marginBottom: 14,
+              gap: 12,
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ fontSize: 13, fontWeight: 600 }}>
+              Fingerprint history — one cell per daily scan
+            </div>
+            <span className="src">
+              lookup__host_scans.fingerprint_hash · {gridDays[0]} → {gridDays[gridDays.length - 1]}
+            </span>
+          </div>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: `64px repeat(${gridDays.length}, 1fr)`,
+              gap: 6,
+              alignItems: "center",
+            }}
+          >
+            <div />
+            {gridDays.map((day) => (
+              <div key={day} className="mono" style={{ fontSize: 10, color: "#6FA89E", textAlign: "center" }}>
+                {day.slice(5)}
+              </div>
+            ))}
+            {[...gridBySource.entries()].map(([source, cells]) => (
+              <Fragment key={source}>
+                <div style={{ fontSize: 12, color: "#A6D8CD" }}>
+                  {source}
+                </div>
+                {cells.map((cell) => {
+                  const colors = CELL_COLORS[cell.status];
+                  const isMiss = cell.status === "miss";
+                  return (
+                    <div
+                      key={`${source}-${cell.day}`}
+                      className="mono"
+                      title={
+                        cell.scan
+                          ? `${cell.day} · ${cell.scan.fingerprint_facts.length} services`
+                          : `${cell.day} · no row`
+                      }
+                      style={{
+                        height: 34,
+                        borderRadius: 5,
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 10,
+                        border: `1px ${isMiss ? "dashed" : "solid"} ${colors.border}`,
+                        background: colors.bg,
+                        color: colors.color,
+                        fontWeight: cell.status === "changed" ? 600 : 400,
+                      }}
+                    >
+                      {cell.scan ? cell.scan.fingerprint_hash.slice(0, 6) : "—"}
+                    </div>
+                  );
+                })}
+              </Fragment>
+            ))}
+          </div>
+          <div className="note">
+            Same hash = identical extracted facts (port, protocol, software name/version — banner
+            text and scan time excluded by design, so a changed hash is a real service change).
+            Orange = differs from the previous scan for that source. Dashed = no row that day.
+          </div>
+        </div>
+      )}
+
+      {transitions.length > 0 && (
+        <div className="card" style={{ padding: "22px 24px", marginBottom: 24 }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "baseline",
+              marginBottom: 6,
+              gap: 12,
+              flexWrap: "wrap",
+            }}
+          >
+            <div style={{ fontSize: 13, fontWeight: 600 }}>What changed</div>
+            <span className="src">diff of consecutive fingerprint_facts</span>
+          </div>
+          {transitions.map((t, i) => {
+            const { added, removed } = diffFacts(t.fromScan, t.toScan);
+            return (
+              <div key={i} style={{ padding: "10px 0", borderBottom: "1px solid #133A3C" }}>
+                <div style={{ fontSize: 12, color: "#A6D8CD", marginBottom: 4 }}>
+                  <span className="mono">{t.source}</span> · {t.fromDay} → {t.toDay}
+                </div>
+                {removed.map((f, j) => (
+                  <div key={`r${j}`} style={{ fontSize: 13, display: "flex", gap: 10 }}>
+                    <span className="mono" style={{ color: "#E5484D", fontWeight: 700 }}>
+                      −
+                    </span>
+                    <span className="mono">{factLabel(f as Record<string, unknown>)}</span>
+                  </div>
+                ))}
+                {added.map((f, j) => (
+                  <div key={`a${j}`} style={{ fontSize: 13, display: "flex", gap: 10 }}>
+                    <span className="mono" style={{ color: "#3DD68C", fontWeight: 700 }}>
+                      +
+                    </span>
+                    <span className="mono">{factLabel(f as Record<string, unknown>)}</span>
+                  </div>
+                ))}
+                {added.length === 0 && removed.length === 0 && (
+                  <div style={{ fontSize: 12, color: "#6FA89E" }}>
+                    Hash changed but facts look identical (likely a field outside the compared set).
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       <div className="card" style={{ padding: "22px 24px", marginBottom: 24 }}>
         <div
           style={{
@@ -356,11 +556,9 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
           </tbody>
         </table>
         <div className="note">
-          Same hash = identical extracted facts (port, protocol, software name/version — banner
-          text and scan time are excluded by design). Not shown yet: a day-by-day fingerprint
-          grid and diffs between consecutive scans, and the Netflow-side daily traffic/peers
-          tabs from the mockup — this page covers the fingerprint drill-down that was missing,
-          not full parity with <span className="mono">EntityDetail.dc.html</span>.
+          Not shown yet: the Netflow-side daily traffic/peers tabs from the mockup (that's a
+          separate, monitored-IP-keyed view) — this page covers the device-fingerprint drill-down
+          in full, not the rest of <span className="mono">EntityDetail.dc.html</span>.
         </div>
       </div>
     </>
