@@ -30,6 +30,32 @@ const STATE_COLORS: Record<string, string> = {
   CANCELLED: "#6FA89E",
 };
 
+// The first word of a deployment name is the package that runs it and the
+// prefix of every table it writes — same eight words as the schema.
+const PACKAGE_ORDER = ["watch", "flow", "ref", "lookup", "verdict", "review", "ops"];
+const PACKAGE_COLORS: Record<string, string> = {
+  watch: "#4C8DFF",
+  flow: "#3DD68C",
+  ref: "#8B5CF6",
+  lookup: "#2DD4BF",
+  verdict: "#F5A623",
+  review: "#EC4899",
+  ops: "#A6D8CD",
+};
+
+function packageOf(deploymentName: string): string {
+  return deploymentName.split("-")[0];
+}
+
+function sortByPackage(deployments: PrefectDeployment[]): PrefectDeployment[] {
+  return [...deployments].sort((a, b) => {
+    const pa = PACKAGE_ORDER.indexOf(packageOf(a.name));
+    const pb = PACKAGE_ORDER.indexOf(packageOf(b.name));
+    if (pa !== pb) return pa - pb;
+    return a.name.localeCompare(b.name);
+  });
+}
+
 function formatDuration(seconds: number): string {
   if (seconds < 60) return `${Math.round(seconds)} s`;
   if (seconds < 3600) return `${Math.round(seconds / 60)} min`;
@@ -314,12 +340,27 @@ function PipelineContent({ data }: { data: PipelineData }) {
             </tr>
           </thead>
           <tbody>
-            {deployments.map((dep) => {
+            {sortByPackage(deployments).map((dep) => {
               const last = latestByDeployment.get(dep.id);
               const counts = runs24hByDeployment.get(dep.id);
+              const pkg = packageOf(dep.name);
               return (
                 <tr key={dep.id}>
                   <td className="mono">
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontWeight: 600,
+                        letterSpacing: "0.05em",
+                        textTransform: "uppercase",
+                        marginRight: 8,
+                        display: "inline-block",
+                        width: 52,
+                        color: PACKAGE_COLORS[pkg] ?? "#A6D8CD",
+                      }}
+                    >
+                      {pkg}
+                    </span>
                     {dep.name}
                     {dep.paused && (
                       <span style={{ color: "#F5A623", fontSize: 10, marginLeft: 6 }}>paused</span>
