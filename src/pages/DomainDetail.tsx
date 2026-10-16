@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import * as d3 from "d3";
 import { Link, useParams } from "react-router-dom";
 import { fetchMonitoredDetail, type MonitoredDomainDetail, type HistoryRun } from "../api/spoilerAlert";
@@ -158,6 +158,96 @@ function RecordGanttChart({
         );
       })}
     </svg>
+  );
+}
+
+function CheckHistoryTable({ history }: { history: HistoryRun[] }) {
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const runs = [...history].sort((a, b) => b.started_at.localeCompare(a.started_at));
+
+  return (
+    <div className="card" style={{ padding: "22px 24px" }}>
+      <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Check history</div>
+      <div style={{ fontSize: 11, color: "#6FA89E", marginBottom: 14 }}>
+        Every captured scan, both modules · click a row to view what it saw
+      </div>
+      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Module</th>
+            <th>Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {runs.map((h) => {
+            const key = `${h.module}:${h.started_at}`;
+            const isOpen = expanded === key;
+            const records = h.observations?.records ?? {};
+            const recordEntries = Object.entries(records);
+            return (
+              <Fragment key={key}>
+                <tr onClick={() => setExpanded(isOpen ? null : key)} style={{ cursor: "pointer" }}>
+                  <td className="mono row-link" style={{ fontSize: 12 }}>
+                    {formatDateTime(h.started_at)}
+                  </td>
+                  <td className="mono row-link" style={{ fontSize: 12 }}>
+                    {h.module}
+                  </td>
+                  <td>
+                    <span
+                      className="st"
+                      style={{
+                        color: h.status === "ok" ? "#3DD68C" : "#E5484D",
+                        fontSize: 11,
+                        fontWeight: 600,
+                        textTransform: "uppercase",
+                      }}
+                    >
+                      {h.status}
+                    </span>
+                  </td>
+                  <td className="row-link" style={{ textAlign: "right", color: "#6FA89E" }}>
+                    {isOpen ? "▾ hide" : "▸ view"}
+                  </td>
+                </tr>
+                {isOpen && (
+                  <tr>
+                    <td colSpan={4} style={{ background: "#0A2224", cursor: "default" }}>
+                      {h.error && <div style={{ color: "#E5484D", fontSize: 12, marginBottom: recordEntries.length ? 10 : 0 }}>{h.error}</div>}
+                      {recordEntries.length > 0 ? (
+                        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))", gap: 10 }}>
+                          {recordEntries.map(([type, values]) => (
+                            <div key={type}>
+                              <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase" }}>{type}</div>
+                              <div className="mono" style={{ fontSize: 12 }}>
+                                {values.map((v) => (
+                                  <div key={v}>{v}</div>
+                                ))}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        !h.error && <div style={{ color: "#6FA89E", fontSize: 12 }}>No observations captured.</div>
+                      )}
+                    </td>
+                  </tr>
+                )}
+              </Fragment>
+            );
+          })}
+          {runs.length === 0 && (
+            <tr>
+              <td colSpan={4} style={{ color: "#6FA89E" }}>
+                No checks captured yet.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    </div>
   );
 }
 
@@ -383,6 +473,8 @@ export function DomainDetail() {
           label for exact values/timestamps.
         </div>
       </div>
+
+      <CheckHistoryTable history={domain.history} />
     </>
   );
 }
