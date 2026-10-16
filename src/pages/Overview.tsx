@@ -320,8 +320,7 @@ function OverviewContent({ data }: { data: OverviewData }) {
           }
         >
           <span>
-            + {queue.peer_roles} peer roles · {queue.watched_roles} watched roles ·{" "}
-            {queue.unconfirmed_sip_pairs} unconfirmed SIP pairs
+            + {queue.peer_roles} peer roles · {queue.watched_roles} watched roles
           </span>
         </Tile>
 

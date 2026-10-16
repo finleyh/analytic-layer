@@ -10,11 +10,13 @@ import {
   type AsnCandidate,
   type IpRole,
   type SipPair,
+  type PairRef,
   type ReviewQueue,
 } from "../api/netflow-rollups-client";
 import { formatBytes, formatShortDate, isoDate, daysAgo } from "../lib/format";
 
-type Queue = "asn" | "peer" | "watched" | "sip";
+type Queue = "asn" | "peer" | "watched";
+type Role = "sip_server" | "sip_trunk" | "sip_client" | "unclear";
 
 const BTN_BASE: React.CSSProperties = {
   all: "unset",
@@ -71,10 +73,9 @@ export function CandidateReview() {
   }, []);
 
   const TABS: { key: Queue; label: string; count: number | null }[] = [
-    { key: "asn", label: "ASN candidates", count: asnPending },
+    { key: "asn", label: "ASN candidates", count: asnPending ?? queue?.asn_candidates ?? null },
     { key: "peer", label: "Peer roles", count: peerPending ?? queue?.peer_roles ?? null },
     { key: "watched", label: "Monitored IP roles", count: watchedPending ?? queue?.watched_roles ?? null },
-    { key: "sip", label: "SIP pairs", count: queue?.unconfirmed_sip_pairs ?? null },
   ];
 
   return (
@@ -82,7 +83,9 @@ export function CandidateReview() {
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ margin: "0 0 4px 0", fontSize: 22, fontWeight: 600 }}>Candidate review</h1>
         <div style={{ fontSize: 13, color: "#6FA89E" }}>
-          Four review queues, each backed by its own table and decision endpoint.
+          Three review queues, each backed by its own table and decision endpoint. SIP pairs
+          aren't a fourth queue — they're evidence under each role card below, since nobody
+          decides a pair on its own.
         </div>
       </div>
 
@@ -109,7 +112,6 @@ export function CandidateReview() {
       {tab === "asn" && <AsnQueue onPendingCount={setAsnPending} />}
       {tab === "peer" && <IpRoleQueue vantage="peer" onPendingCount={setPeerPending} />}
       {tab === "watched" && <IpRoleQueue vantage="watched" onPendingCount={setWatchedPending} />}
-      {tab === "sip" && <SipPairQueue />}
     </>
   );
 }
@@ -380,7 +382,7 @@ function AsnQueue({ onPendingCount }: { onPendingCount: (n: number) => void }) {
   );
 }
 
-// ---------- Peer roles / Watched roles (both review__ip_roles) ----------
+// ---------- Peer roles / Monitored IP roles (both review__ip_roles) ----------
 
 type RoleDecided = { decision: "confirm" | "reject"; role?: string };
 
@@ -418,14 +420,14 @@ function IpRoleQueue({
     };
   }, [vantage, onPendingCount]);
 
-  async function decide(row: IpRole, decision: "confirm" | "reject") {
+  async function decide(row: IpRole, decision: "confirm" | "reject", pairs?: PairRef[]) {
     setActionError(null);
     try {
       await decideIpRoleReviewIpRolesIpDecisionPost({
         path: { ip: row.ip },
         body:
           decision === "confirm"
-            ? { decision: "confirm", role: row.proposed_role as "sip_server" | "sip_trunk" | "sip_client" | "unclear" }
+            ? { decision: "confirm", role: row.proposed_role as Role, pairs: pairs ?? null }
             : { decision: "reject" },
         throwOnError: true,
       });
@@ -452,9 +454,10 @@ function IpRoleQueue({
         <span>
           <b style={{ color: "#4C8DFF" }}>Confirm writes to netflow-rollups.</b> It sets{" "}
           <span className="mono">accepted_role</span> on <span className="mono">review__ip_roles</span>{" "}
-          and confirms the measured pairs whose role matches. Reject clears any prior accept and
-          marks the row rejected — a reviewer may still correct it later (unlike ASN candidates,
-          a role row isn't locked after a decision).
+          and confirms the measured pairs whose role matches — expand "Relationships" to see and
+          veto which ones. Reject clears any prior accept and marks the row rejected — a reviewer
+          may still correct it later (unlike ASN candidates, a role row isn't locked after a
+          decision).
         </span>
       </div>
 
@@ -471,107 +474,9 @@ function IpRoleQueue({
       {!rows && !error && <div style={{ color: "#6FA89E" }}>Loading…</div>}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {rows?.map((row) => {
-          const d = decided.get(row.ip);
-          return (
-            <div className="card" style={{ padding: "22px 24px", opacity: d ? 0.55 : 1 }} key={row.ip}>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  alignItems: "flex-start",
-                  marginBottom: 12,
-                  flexWrap: "wrap",
-                  gap: 12,
-                }}
-              >
-                <div>
-                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
-                    <span className="mono" style={{ fontSize: 15, fontWeight: 600 }}>
-                      {row.ip}
-                    </span>
-                    <span className="chip pend">proposed {row.proposed_role}</span>
-                  </div>
-                  <div style={{ fontSize: 12, color: "#6FA89E" }}>
-                    {vantage === "peer" ? (
-                      <>judged against {row.watched_ips} watched IP{row.watched_ips === 1 ? "" : "s"}</>
-                    ) : (
-                      <>watched IP</>
-                    )}
-                    {row.first_day && row.last_day && (
-                      <>
-                        {" "}
-                        · {row.first_day} → {row.last_day}
-                      </>
-                    )}
-                  </div>
-                </div>
-                <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
-                  {d ? (
-                    <DecidedChip
-                      kind={d.decision === "confirm" ? "approve" : "reject"}
-                      label={d.decision === "confirm" ? `Confirmed · ${d.role}` : "Rejected"}
-                    />
-                  ) : (
-                    <>
-                      <button style={BTN_REJECT} onClick={() => void decide(row, "reject")}>
-                        Reject
-                      </button>
-                      <button style={BTN_APPROVE} onClick={() => void decide(row, "confirm")}>
-                        Confirm {row.proposed_role}
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-              <div
-                style={{
-                  fontSize: 13,
-                  lineHeight: 1.5,
-                  color: "#C6EBE2",
-                  background: "#0A2224",
-                  border: "1px solid #133A3C",
-                  borderRadius: 7,
-                  padding: "12px 14px",
-                }}
-              >
-                {row.reasoning}
-              </div>
-              {Object.keys(row.features).length > 0 && (
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-                    gap: 10,
-                    background: "#0A2224",
-                    border: "1px solid #133A3C",
-                    borderRadius: 7,
-                    padding: "12px 14px",
-                    marginTop: 12,
-                  }}
-                >
-                  <div style={{ gridColumn: "1 / -1", fontSize: 11, fontWeight: 600, color: "#A6D8CD" }}>
-                    Heuristic features
-                  </div>
-                  {Object.entries(row.features).map(([k, v]) => (
-                    <div key={k}>
-                      <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase" }}>
-                        {k.replace(/_/g, " ")}
-                      </div>
-                      <div className="mono" style={{ fontSize: 13 }}>
-                        {v === null || v === undefined
-                          ? "null"
-                          : typeof v === "object"
-                            ? JSON.stringify(v)
-                            : String(v)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          );
-        })}
+        {rows?.map((row) => (
+          <IpRoleCard key={row.ip} row={row} vantage={vantage} decided={decided.get(row.ip)} onDecide={decide} />
+        ))}
         {rows && rows.length === 0 && (
           <div className="card" style={{ padding: 20, color: "#6FA89E" }}>
             No pending {vantage} roles.
@@ -582,128 +487,269 @@ function IpRoleQueue({
   );
 }
 
-// ---------- SIP pairs ----------
-
-type PairDecided = { role: string };
-
-function SipPairQueue() {
+function IpRoleCard({
+  row,
+  vantage,
+  decided,
+  onDecide,
+}: {
+  row: IpRole;
+  vantage: "peer" | "watched";
+  decided: RoleDecided | undefined;
+  onDecide: (row: IpRole, decision: "confirm" | "reject", pairs?: PairRef[]) => Promise<void>;
+}) {
+  const [expanded, setExpanded] = useState(false);
   const [pairs, setPairs] = useState<SipPair[] | null>(null);
-  const [decided, setDecided] = useState<Map<number, PairDecided>>(new Map());
-  const [error, setError] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
+  const [pairsError, setPairsError] = useState<string | null>(null);
+  const [checked, setChecked] = useState<Set<number>>(new Set());
 
-  useEffect(() => {
-    let cancelled = false;
-    listSipPairsReviewSipPairsGet({ query: { confirmed: false, limit: 1000 }, throwOnError: true })
-      .then((r) => {
-        if (!cancelled) setPairs(r.data.rows);
-      })
-      .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, []);
-
-  async function confirm(pair: SipPair) {
-    setActionError(null);
-    try {
-      await decideIpRoleReviewIpRolesIpDecisionPost({
-        path: { ip: pair.peer_ip },
-        body: {
-          decision: "confirm",
-          role: pair.role as "sip_server" | "sip_trunk" | "sip_client" | "unclear",
-          pairs: [{ monitored_ip: pair.monitored_ip, peer_ip: pair.peer_ip }],
-        },
-        throwOnError: true,
-      });
-      setDecided((prev) => new Map(prev).set(pair.id, { role: pair.role }));
-    } catch (err) {
-      setActionError(err instanceof Error ? err.message : String(err));
+  async function toggleExpand() {
+    const next = !expanded;
+    setExpanded(next);
+    if (next && pairs === null) {
+      try {
+        const query = vantage === "peer" ? { peer_ip: row.ip } : { monitored_ip: row.ip };
+        const result = await listSipPairsReviewSipPairsGet({
+          query: { ...query, limit: 1000 },
+          throwOnError: true,
+        });
+        setPairs(result.data.rows);
+        setChecked(new Set(result.data.rows.filter((p) => p.role === row.proposed_role).map((p) => p.id)));
+      } catch (err) {
+        setPairsError(err instanceof Error ? err.message : String(err));
+      }
     }
   }
 
+  function togglePair(id: number) {
+    setChecked((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function handleDecide(decision: "confirm" | "reject") {
+    const pairsPayload =
+      decision === "confirm" && pairs
+        ? pairs.filter((p) => checked.has(p.id)).map((p) => ({ monitored_ip: p.monitored_ip, peer_ip: p.peer_ip }))
+        : undefined;
+    void onDecide(row, decision, pairsPayload);
+  }
+
   return (
-    <>
+    <div className="card" style={{ padding: "22px 24px", opacity: decided ? 0.55 : 1 }}>
       <div
-        className="info"
-        style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 12, lineHeight: 1.5, color: "#C6EBE2", background: "#0F1A2B", border: "1px solid #1E3A5F", borderRadius: 8, padding: "12px 14px", marginBottom: 20 }}
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "flex-start",
+          marginBottom: 12,
+          flexWrap: "wrap",
+          gap: 12,
+        }}
       >
-        <span>ⓘ</span>
-        <span>
-          <b style={{ color: "#4C8DFF" }}>Confirming a pair decides the peer's role</b>, scoped to
-          just this pair (<span className="mono">POST /review/ip-roles/&#123;ip&#125;/decision</span>{" "}
-          with <span className="mono">pairs</span> restricted to this one). There's no separate
-          "reject this pair" action in the API — rejecting would mean rejecting the peer's whole
-          role, which is a bigger decision than one pair, so that action isn't offered here.
-        </span>
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 4 }}>
+            <span className="mono" style={{ fontSize: 15, fontWeight: 600 }}>
+              {row.ip}
+            </span>
+            <span className="chip pend">proposed {row.proposed_role}</span>
+          </div>
+          <div style={{ fontSize: 12, color: "#6FA89E" }}>
+            {vantage === "peer" ? (
+              <>
+                judged against {row.watched_ips} watched IP{row.watched_ips === 1 ? "" : "s"}
+              </>
+            ) : (
+              <>watched IP</>
+            )}
+            {row.first_day && row.last_day && (
+              <>
+                {" "}
+                · {row.first_day} → {row.last_day}
+              </>
+            )}
+          </div>
+        </div>
+        <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+          {decided ? (
+            <DecidedChip
+              kind={decided.decision === "confirm" ? "approve" : "reject"}
+              label={decided.decision === "confirm" ? `Confirmed · ${decided.role}` : "Rejected"}
+            />
+          ) : (
+            <>
+              <button style={BTN_REJECT} onClick={() => handleDecide("reject")}>
+                Reject
+              </button>
+              <button style={BTN_APPROVE} onClick={() => handleDecide("confirm")}>
+                Confirm {row.proposed_role}
+              </button>
+            </>
+          )}
+        </div>
       </div>
-
-      {error && (
-        <div className="card" style={{ padding: 20, borderColor: "#5A2327", marginBottom: 20 }}>
-          Failed to load from netflow-rollups' API: {error}
+      <div
+        style={{
+          fontSize: 13,
+          lineHeight: 1.5,
+          color: "#C6EBE2",
+          background: "#0A2224",
+          border: "1px solid #133A3C",
+          borderRadius: 7,
+          padding: "12px 14px",
+        }}
+      >
+        {row.reasoning}
+      </div>
+      {Object.keys(row.features).length > 0 && (
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+            gap: 10,
+            background: "#0A2224",
+            border: "1px solid #133A3C",
+            borderRadius: 7,
+            padding: "12px 14px",
+            marginTop: 12,
+          }}
+        >
+          <div style={{ gridColumn: "1 / -1", fontSize: 11, fontWeight: 600, color: "#A6D8CD" }}>
+            Heuristic features
+          </div>
+          {Object.entries(row.features).map(([k, v]) => (
+            <div key={k}>
+              <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase" }}>
+                {k.replace(/_/g, " ")}
+              </div>
+              <div className="mono" style={{ fontSize: 13 }}>
+                {v === null || v === undefined ? "null" : typeof v === "object" ? JSON.stringify(v) : String(v)}
+              </div>
+            </div>
+          ))}
         </div>
       )}
-      {actionError && (
-        <div className="card" style={{ padding: 16, borderColor: "#5A2327", marginBottom: 20, fontSize: 13 }}>
-          Decision failed: {actionError}
-        </div>
-      )}
-      {!pairs && !error && <div style={{ color: "#6FA89E" }}>Loading…</div>}
 
-      {pairs && (
-        <div className="card" style={{ overflowX: "auto" }}>
-          <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 700 }}>
-            <thead>
-              <tr>
-                <th>Monitored IP</th>
-                <th>Peer IP</th>
-                <th>Measured role</th>
-                <th style={{ textAlign: "right" }}>Media bytes</th>
-                <th>Window</th>
-                <th></th>
-              </tr>
-            </thead>
-            <tbody>
-              {pairs.map((p) => {
-                const d = decided.get(p.id);
-                return (
-                  <tr key={p.id}>
-                    <td className="mono">{p.monitored_ip}</td>
-                    <td className="mono">{p.peer_ip}</td>
-                    <td>
-                      <span className="chip pend">{p.role}</span>
-                    </td>
-                    <td className="num mono" style={{ textAlign: "right" }}>
-                      {formatBytes(p.media_bytes)}
-                    </td>
-                    <td style={{ color: "#A6D8CD", fontSize: 12 }}>
-                      {p.first_day} → {p.last_day} ({p.window_days}d)
-                    </td>
-                    <td style={{ textAlign: "right" }}>
-                      {d ? (
-                        <DecidedChip kind="approve" label={`Confirmed · ${d.role}`} />
-                      ) : (
-                        <button style={BTN_APPROVE} onClick={() => void confirm(p)}>
-                          Confirm {p.role}
-                        </button>
-                      )}
+      <button
+        onClick={() => void toggleExpand()}
+        style={{
+          all: "unset",
+          cursor: "pointer",
+          fontSize: 13,
+          color: "#7FEFD6",
+          marginTop: 12,
+          display: "inline-block",
+        }}
+      >
+        {expanded ? "▾" : "▸"} Relationships{pairs ? ` (${pairs.length})` : ""}
+      </button>
+
+      {expanded && (
+        <div style={{ marginTop: 10, overflowX: "auto" }}>
+          {pairsError && (
+            <div style={{ color: "#E5484D", fontSize: 13 }}>Failed to load relationships: {pairsError}</div>
+          )}
+          {!pairs && !pairsError && <div style={{ color: "#6FA89E", fontSize: 13 }}>Loading…</div>}
+          {pairs && (
+            <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 900, fontSize: 14 }}>
+              <thead>
+                <tr>
+                  <th></th>
+                  <th>{vantage === "peer" ? "Monitored IP" : "Peer IP"}</th>
+                  <th>Measured role</th>
+                  <th>Confirmed role</th>
+                  <th style={{ textAlign: "right" }}>Sig days</th>
+                  <th style={{ textAlign: "right" }}>RTP days</th>
+                  <th style={{ textAlign: "right" }}>SIP/day</th>
+                  <th style={{ textAlign: "right" }}>Media records</th>
+                  <th style={{ textAlign: "right" }}>Media/SIP</th>
+                  <th style={{ textAlign: "right" }}>Long calls</th>
+                  <th style={{ textAlign: "right" }}>Rec/call (med)</th>
+                  <th style={{ textAlign: "right" }}>P95 concurrency</th>
+                  <th style={{ textAlign: "right" }}>Overnight</th>
+                  <th>Country</th>
+                  <th>Role</th>
+                  <th>Window</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pairs.map((p) => {
+                  const otherIp = vantage === "peer" ? p.monitored_ip : p.peer_ip;
+                  return (
+                    <tr key={p.id} title={p.reasoning}>
+                      <td>
+                        <input
+                          type="checkbox"
+                          checked={checked.has(p.id)}
+                          disabled={!!decided}
+                          onChange={() => togglePair(p.id)}
+                        />
+                      </td>
+                      <td className="mono">{otherIp}</td>
+                      <td>
+                        <span className="chip pend" style={{ fontSize: 11 }}>
+                          {p.role}
+                        </span>
+                      </td>
+                      <td style={{ color: p.confirmed_role ? "#3DD68C" : "#6FA89E", fontSize: 13 }}>
+                        {p.confirmed_role ?? "—"}
+                      </td>
+                      <td className="num mono" style={{ textAlign: "right" }}>
+                        {p.sig_days}
+                      </td>
+                      <td className="num mono" style={{ textAlign: "right" }}>
+                        {p.rtp_days}
+                      </td>
+                      <td className="num mono" style={{ textAlign: "right" }}>
+                        {p.sip_per_day_from_peer.toFixed(1)}
+                      </td>
+                      <td className="num mono" style={{ textAlign: "right" }}>
+                        {p.media_records}
+                      </td>
+                      <td className="num mono" style={{ textAlign: "right" }}>
+                        {p.media_per_sip?.toFixed(1) ?? "—"}
+                      </td>
+                      <td className="num mono" style={{ textAlign: "right" }}>
+                        {p.long_calls ?? "—"}
+                      </td>
+                      <td className="num mono" style={{ textAlign: "right" }}>
+                        {p.rec_per_call_median?.toFixed(0) ?? "—"}
+                      </td>
+                      <td className="num mono" style={{ textAlign: "right" }}>
+                        {p.p95_concurrency ?? "—"}
+                      </td>
+                      <td className="num mono" style={{ textAlign: "right" }}>
+                        {p.overnight_share !== null ? `${Math.round(p.overnight_share * 100)}%` : "—"}
+                      </td>
+                      <td style={{ fontSize: 13, color: "#A6D8CD" }}>{p.peer_country ?? "—"}</td>
+                      <td style={{ fontSize: 12, color: "#6FA89E" }}>
+                        {p.peer_is_consumer ? "consumer" : p.peer_is_hosting ? "hosting" : "—"}
+                      </td>
+                      <td style={{ fontSize: 13, color: "#A6D8CD", whiteSpace: "nowrap" }}>
+                        {p.first_day} → {p.last_day}
+                      </td>
+                    </tr>
+                  );
+                })}
+                {pairs.length === 0 && (
+                  <tr>
+                    <td colSpan={16} style={{ color: "#6FA89E" }}>
+                      No measured pairs for this IP.
                     </td>
                   </tr>
-                );
-              })}
-              {pairs.length === 0 && (
-                <tr>
-                  <td colSpan={6} style={{ color: "#6FA89E" }}>
-                    No unconfirmed SIP pairs.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+            </table>
+          )}
+          <div className="note">
+            Checked rows are sent as this decision's <span className="mono">pairs</span> — unchecked
+            ones are left alone. Hover a row for its measured reasoning.
+          </div>
         </div>
       )}
-    </>
+    </div>
   );
 }
