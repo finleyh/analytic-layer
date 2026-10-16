@@ -7,6 +7,8 @@ import { TopTalkers } from "./pages/TopTalkers";
 import { PipelineHealth } from "./pages/PipelineHealth";
 import { FlowGraph } from "./pages/FlowGraph";
 import { Geo } from "./pages/Geo";
+import { Domains } from "./pages/Domains";
+import { DomainDetail } from "./pages/DomainDetail";
 
 const PAGES: { label: string; path: string }[] = [
   { label: "Overview", path: "/" },
@@ -18,7 +20,7 @@ const PAGES: { label: string; path: string }[] = [
   { label: "Candidates", path: "/candidates" },
   { label: "Pipeline health", path: "/pipeline-health" },
 ];
-const BUILT_PATHS = new Set(["/", "/watchlist", "/candidates", "/top-talkers", "/pipeline-health", "/flow-graph", "/geo"]);
+const BUILT_PATHS = new Set(["/", "/watchlist", "/candidates", "/top-talkers", "/pipeline-health", "/flow-graph", "/geo", "/domains"]);
 
 function Sidebar() {
   const location = useLocation();
@@ -91,6 +93,8 @@ export function App() {
             <Route path="/pipeline-health" element={<PipelineHealth />} />
             <Route path="/flow-graph" element={<FlowGraph />} />
             <Route path="/geo" element={<Geo />} />
+            <Route path="/domains" element={<Domains />} />
+            <Route path="/domains/:id" element={<DomainDetail />} />
           </Routes>
         </div>
       </div>

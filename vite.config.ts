@@ -37,6 +37,19 @@ export default defineConfig(({ mode }) => {
             });
           },
         },
+        "/api/opencti": {
+          target: env.OPENCTI_BASE_URL.replace(/\/$/, ""),
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/opencti/, ""),
+          configure: (proxy) => {
+            proxy.on("proxyReq", (proxyReq) => {
+              proxyReq.setHeader(
+                "Authorization",
+                `Bearer ${env.OPENCTI_API_TOKEN}`,
+              );
+            });
+          },
+        },
       },
     },
   };
