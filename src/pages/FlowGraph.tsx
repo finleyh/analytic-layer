@@ -244,6 +244,45 @@ function buildGraph(
   return { nodes: [...nodes.values()], links };
 }
 
+function ZoomableSvg({
+  width,
+  height,
+  children,
+}: {
+  width: number;
+  height: number;
+  children: React.ReactNode;
+}) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const gRef = useRef<SVGGElement>(null);
+
+  useEffect(() => {
+    if (!svgRef.current || !gRef.current) return;
+    const zoomBehavior = d3
+      .zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.3, 4])
+      .on("zoom", (event) => {
+        d3.select(gRef.current).attr("transform", event.transform.toString());
+      });
+    d3.select(svgRef.current).call(zoomBehavior);
+    return () => {
+      d3.select(svgRef.current).on(".zoom", null);
+    };
+  }, []);
+
+  return (
+    <svg
+      ref={svgRef}
+      width={width}
+      height={height}
+      viewBox={`0 0 ${width} ${height}`}
+      style={{ position: "absolute", left: 0, top: 0, cursor: "grab" }}
+    >
+      <g ref={gRef}>{children}</g>
+    </svg>
+  );
+}
+
 function NodeGraph() {
   const [data, setData] = useState<{ nodes: GNode[]; links: GLink[] } | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -324,7 +363,7 @@ function NodeGraph() {
   return (
     <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
       <div className="card" style={{ width: W, maxWidth: "100%", height: H, position: "relative", overflow: "hidden", flexShrink: 0 }}>
-        <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} style={{ position: "absolute", left: 0, top: 0 }}>
+        <ZoomableSvg width={W} height={H}>
           {data.links.map((l, i) => {
             const a = nodeById.get(l.source as unknown as string) ?? nodeById.get((l.source as unknown as GNode).id);
             const b = nodeById.get(l.target as unknown as string) ?? nodeById.get((l.target as unknown as GNode).id);
@@ -383,7 +422,10 @@ function NodeGraph() {
               </g>
             );
           })}
-        </svg>
+        </ZoomableSvg>
+        <div style={{ position: "absolute", bottom: 10, right: 10, fontSize: 10, color: "#6FA89E", pointerEvents: "none" }}>
+          scroll to zoom · drag to pan
+        </div>
       </div>
 
       <div style={{ width: 284, flexShrink: 0, display: "flex", flexDirection: "column", gap: 16 }}>
