@@ -4,9 +4,11 @@ import {
   fetchStatus,
   fetchMonitored,
   fetchRetired,
+  fetchMonitoredDetail,
   type MonitoredDomain,
   type RetiredDomain,
   type StatusSummary,
+  type HistoryRun,
 } from "../api/spoilerAlert";
 import { fetchOwner, type OpenCtiOwner } from "../api/opencti";
 import { formatShortDate } from "../lib/format";
@@ -18,11 +20,24 @@ type DomainsData = {
   monitored: MonitoredDomain[];
   retired: RetiredDomain[];
   ownerByOpenctiId: Map<string, OpenCtiOwner | null>;
+  expiryByOpenctiId: Map<string, string | null>;
 };
 
 function formatDateTime(iso: string | null): string {
   if (!iso) return "—";
   return new Date(iso).toISOString().slice(0, 16).replace("T", " ");
+}
+
+// spoiler-alert's /monitored(-list) domain_expires_at field has been null
+// for every domain observed so far even when its domain_expiry module has a
+// real WHOIS date — fall back to that module's most recent successful run.
+function latestExpiryFromHistory(history: HistoryRun[]): string | null {
+  return (
+    history
+      .filter((h) => h.module === "domain_expiry" && h.status === "ok")
+      .sort((a, b) => a.started_at.localeCompare(b.started_at))
+      .at(-1)?.observations?.records?.EXPIRATION_DATE?.[0] ?? null
+  );
 }
 
 const STATE_COLOR: Record<string, string> = {
@@ -46,18 +61,36 @@ export function Domains() {
         ]);
         if (cancelled) return;
 
-        const ownerEntries = await Promise.all(
-          monitored.map(async (m) => {
-            try {
-              return [m.opencti_id, await fetchOwner(m.opencti_id)] as const;
-            } catch {
-              return [m.opencti_id, null] as const;
-            }
-          }),
-        );
+        const [ownerEntries, expiryEntries] = await Promise.all([
+          Promise.all(
+            monitored.map(async (m) => {
+              try {
+                return [m.opencti_id, await fetchOwner(m.opencti_id)] as const;
+              } catch {
+                return [m.opencti_id, null] as const;
+              }
+            }),
+          ),
+          Promise.all(
+            monitored.map(async (m) => {
+              try {
+                const detail = await fetchMonitoredDetail(m.opencti_id);
+                return [m.opencti_id, m.domain_expires_at ?? latestExpiryFromHistory(detail.history)] as const;
+              } catch {
+                return [m.opencti_id, m.domain_expires_at] as const;
+              }
+            }),
+          ),
+        ]);
         if (cancelled) return;
 
-        setData({ status, monitored, retired, ownerByOpenctiId: new Map(ownerEntries) });
+        setData({
+          status,
+          monitored,
+          retired,
+          ownerByOpenctiId: new Map(ownerEntries),
+          expiryByOpenctiId: new Map(expiryEntries),
+        });
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : String(err));
       }
@@ -189,7 +222,9 @@ export function Domains() {
         </button>
       </div>
 
-      {view === "all" && <DomainTable domains={monitored} owners={data.ownerByOpenctiId} />}
+      {view === "all" && (
+        <DomainTable domains={monitored} owners={data.ownerByOpenctiId} expiry={data.expiryByOpenctiId} />
+      )}
 
       {view === "owner" && (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -200,7 +235,7 @@ export function Domains() {
                 <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8, color: owner === "unassigned" ? "#6FA89E" : "#E8FFF8" }}>
                   {owner} <span style={{ color: "#6FA89E", fontWeight: 400 }}>({domains.length})</span>
                 </div>
-                <DomainTable domains={domains} owners={data.ownerByOpenctiId} hideOwnerColumn />
+                <DomainTable domains={domains} owners={data.ownerByOpenctiId} expiry={data.expiryByOpenctiId} hideOwnerColumn />
               </div>
             ))}
         </div>
@@ -257,10 +292,12 @@ export function Domains() {
 function DomainTable({
   domains,
   owners,
+  expiry,
   hideOwnerColumn,
 }: {
   domains: MonitoredDomain[];
   owners: Map<string, OpenCtiOwner | null>;
+  expiry: Map<string, string | null>;
   hideOwnerColumn?: boolean;
 }) {
   return (
@@ -302,7 +339,10 @@ function DomainTable({
                 {formatDateTime(d.next_due_at)}
               </td>
               <td className="mono" style={{ fontSize: 12 }}>
-                {d.domain_expires_at ? formatShortDate(d.domain_expires_at) : "—"}
+                {(() => {
+                  const exp = expiry.get(d.opencti_id) ?? d.domain_expires_at;
+                  return exp ? formatShortDate(exp) : "—";
+                })()}
               </td>
               {!hideOwnerColumn && (
                 <td style={{ fontSize: 12 }}>

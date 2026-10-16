@@ -16,53 +16,76 @@ function formatDateTime(iso: string | null): string {
   return new Date(iso).toISOString().slice(0, 16).replace("T", " ");
 }
 
-type ArecordRun = { startedAt: string; a: string[]; status: string };
-type ArSegment = { ip: string; start: string; end: string; ongoing: boolean };
+function daysUntil(iso: string | null): number | null {
+  if (!iso) return null;
+  return Math.round((new Date(iso).getTime() - Date.now()) / 86_400_000);
+}
 
-const AR_PALETTE = ["#4C8DFF", "#8B5CF6", "#2DD4BF", "#F59E0B", "#EC4899", "#3DD68C", "#E5484D", "#A3A3A3"];
+type DnsRun = { startedAt: string; status: string; records: Record<string, string[]> };
+type RecordSegment = { value: string; start: string; end: string; ongoing: boolean };
 
-// Collapses a sequence of point-in-time DNS checks into start/end bars per IP:
-// an IP's segment runs from the check it first appears in to the check it
-// drops out of (or to "now" if it's still in the latest check).
-function buildArSegments(okRuns: ArecordRun[]): { segments: ArSegment[]; order: string[] } {
-  const segments: ArSegment[] = [];
+const RECORD_PALETTE = ["#4C8DFF", "#8B5CF6", "#2DD4BF", "#F59E0B", "#EC4899", "#3DD68C", "#E5484D", "#A3A3A3"];
+
+// Record types that have a meaningful "which value was active when" timeline.
+// SOA is deliberately excluded: its serial number changes on essentially every
+// check, so every run would be its own one-off segment — not a timeline, noise.
+const RECORD_TYPE_ORDER = ["A", "AAAA", "NS", "MX", "TXT", "CNAME"];
+
+function truncateValue(v: string, n = 30): string {
+  return v.length > n ? `${v.slice(0, n - 1)}…` : v;
+}
+
+// Collapses a sequence of point-in-time DNS checks into start/end bars per
+// value: a value's segment runs from the check it first appears in to the
+// check it drops out of (or to "now" if it's still in the latest check).
+function buildRecordSegments(okRuns: { startedAt: string; values: string[] }[]): {
+  segments: RecordSegment[];
+  order: string[];
+} {
+  const segments: RecordSegment[] = [];
   const active = new Map<string, string>();
   const order: string[] = [];
   const now = new Date().toISOString();
 
   okRuns.forEach((run, i) => {
-    const present = new Set(run.a);
-    for (const [ip, start] of active) {
-      if (!present.has(ip)) {
-        segments.push({ ip, start, end: run.startedAt, ongoing: false });
-        active.delete(ip);
+    const present = new Set(run.values);
+    for (const [value, start] of active) {
+      if (!present.has(value)) {
+        segments.push({ value, start, end: run.startedAt, ongoing: false });
+        active.delete(value);
       }
     }
-    for (const ip of present) {
-      if (!active.has(ip)) {
-        active.set(ip, run.startedAt);
-        if (!order.includes(ip)) order.push(ip);
+    for (const value of present) {
+      if (!active.has(value)) {
+        active.set(value, run.startedAt);
+        if (!order.includes(value)) order.push(value);
       }
     }
     if (i === okRuns.length - 1) {
-      for (const [ip, start] of active) segments.push({ ip, start, end: now, ongoing: true });
+      for (const [value, start] of active) segments.push({ value, start, end: now, ongoing: true });
     }
   });
 
   return { segments, order };
 }
 
-function ArGanttChart({ runs, peerHits }: { runs: ArecordRun[]; peerHits: Map<string, number> }) {
-  const okRuns = runs.filter((r) => r.status === "ok");
-  if (okRuns.length === 0) {
-    return <div style={{ color: "#6FA89E", fontSize: 12 }}>No DNS history yet.</div>;
-  }
+function RecordGanttChart({
+  runs,
+  type,
+  peerHits,
+}: {
+  runs: DnsRun[];
+  type: string;
+  peerHits?: Map<string, number>;
+}) {
+  const okRuns = runs.filter((r) => r.status === "ok").map((r) => ({ startedAt: r.startedAt, values: r.records[type] ?? [] }));
+  if (!okRuns.some((r) => r.values.length > 0)) return null;
 
-  const { segments, order } = buildArSegments(okRuns);
+  const { segments, order } = buildRecordSegments(okRuns);
   const now = new Date();
   const minStart = new Date(okRuns[0].startedAt);
   const W = 760;
-  const leftPad = 150;
+  const leftPad = 190;
   const rightPad = 16;
   const rowH = 32;
   const topPad = 26;
@@ -96,14 +119,15 @@ function ArGanttChart({ runs, peerHits }: { runs: ArecordRun[]; peerHits: Map<st
         now
       </text>
 
-      {order.map((ip, row) => {
+      {order.map((value, row) => {
         const y = topPad + row * rowH;
-        const color = AR_PALETTE[row % AR_PALETTE.length];
-        const peerBytes = peerHits.get(ip);
+        const color = RECORD_PALETTE[row % RECORD_PALETTE.length];
+        const peerBytes = peerHits?.get(value);
         return (
-          <g key={ip}>
+          <g key={value}>
+            <title>{value}</title>
             <text x={leftPad - 10} y={y + rowH / 2 - (peerBytes !== undefined ? 3 : -3)} fontSize={11} fill="#A6D8CD" textAnchor="end">
-              {ip}
+              {truncateValue(value)}
             </text>
             {peerBytes !== undefined && (
               <text x={leftPad - 10} y={y + rowH / 2 + 10} fontSize={9} fill="#4C8DFF" textAnchor="end">
@@ -111,7 +135,7 @@ function ArGanttChart({ runs, peerHits }: { runs: ArecordRun[]; peerHits: Map<st
               </text>
             )}
             {segments
-              .filter((s) => s.ip === ip)
+              .filter((s) => s.value === value)
               .map((s, si) => {
                 const sx = leftPad + x(new Date(s.start));
                 const ex = leftPad + x(new Date(s.end));
@@ -128,7 +152,7 @@ function ArGanttChart({ runs, peerHits }: { runs: ArecordRun[]; peerHits: Map<st
                     opacity={s.ongoing ? 1 : 0.6}
                   >
                     <title>
-                      {ip}
+                      {value}
                       {"\n"}
                       {formatDateTime(s.start)} → {s.ongoing ? "present" : formatDateTime(s.end)}
                     </title>
@@ -164,8 +188,8 @@ export function DomainDetail() {
 
         // Cross-reference the current A record(s) against netflow-rollups:
         // does any of them show up as a peer any monitored IP talks to?
-        const dnsRuns = detail.history.filter((h) => h.module === "dns_records" && h.status === "ok");
-        const latest = dnsRuns.sort((a, b) => b.started_at.localeCompare(a.started_at))[0];
+        const okDnsRuns = detail.history.filter((h) => h.module === "dns_records" && h.status === "ok");
+        const latest = okDnsRuns.sort((a, b) => b.started_at.localeCompare(a.started_at))[0];
         const currentA = latest?.observations?.records?.A ?? [];
         const from90 = isoDate(daysAgo(89));
         const to = isoDate(new Date());
@@ -203,16 +227,43 @@ export function DomainDetail() {
   }
   if (!domain) return <div style={{ color: "#6FA89E" }}>Loading…</div>;
 
-  const dnsRuns: ArecordRun[] = domain.history
+  const dnsRuns: DnsRun[] = domain.history
     .filter((h) => h.module === "dns_records")
-    .map((h) => ({ startedAt: h.started_at, a: h.observations?.records?.A ?? [], status: h.status }))
+    .map((h) => ({ startedAt: h.started_at, status: h.status, records: h.observations?.records ?? {} }))
     .sort((a, b) => a.startedAt.localeCompare(b.startedAt));
+
+  const recordTypes = [...new Set(dnsRuns.flatMap((r) => Object.keys(r.records)))]
+    .filter((t) => t !== "SOA")
+    .sort((a, b) => {
+      const ai = RECORD_TYPE_ORDER.indexOf(a);
+      const bi = RECORD_TYPE_ORDER.indexOf(b);
+      if (ai === -1 && bi === -1) return a.localeCompare(b);
+      if (ai === -1) return 1;
+      if (bi === -1) return -1;
+      return ai - bi;
+    });
 
   const modules = new Map<string, HistoryRun>();
   for (const h of domain.history) {
     const existing = modules.get(h.module);
     if (!existing || h.started_at > existing.started_at) modules.set(h.module, h);
   }
+
+  // WHOIS/RDAP fields from the domain_expiry module aren't surfaced on the
+  // top-level domain record the same way dns_records' A values are — pull
+  // registrar/registrant/expiry straight from that module's most recent
+  // successful run instead. domain.domain_expires_at is kept as a fallback,
+  // but in practice spoiler-alert's API returns it null for every domain
+  // observed so far even when the module itself has a real date.
+  const latestWhois = domain.history
+    .filter((h) => h.module === "domain_expiry" && h.status === "ok")
+    .sort((a, b) => a.started_at.localeCompare(b.started_at))
+    .at(-1)?.observations?.records;
+  const registrar = latestWhois?.REGISTRAR?.[0];
+  const registrant = latestWhois?.REGISTRANT?.[0];
+  const registeredAt = latestWhois?.REGISTRATION_DATE?.[0];
+  const expiresAt = domain.domain_expires_at ?? latestWhois?.EXPIRATION_DATE?.[0] ?? null;
+  const expiryDays = daysUntil(expiresAt);
 
   return (
     <>
@@ -268,8 +319,23 @@ export function DomainDetail() {
         <div className="card" style={{ padding: "16px 20px" }}>
           <div style={{ fontSize: 12, color: "#6FA89E", marginBottom: 6 }}>Expires</div>
           <div className="mono" style={{ fontSize: 14, fontWeight: 600 }}>
-            {domain.domain_expires_at ? domain.domain_expires_at.slice(0, 10) : "—"}
+            {expiresAt ? expiresAt.slice(0, 10) : "—"}
           </div>
+          {expiryDays !== null && (
+            <div style={{ fontSize: 11, color: expiryDays < 30 ? "#E5484D" : "#6FA89E", marginTop: 3 }}>
+              {expiryDays >= 0 ? `WHOIS/RDAP · ${expiryDays} days` : `expired ${Math.abs(expiryDays)}d ago`}
+            </div>
+          )}
+        </div>
+        <div className="card" style={{ padding: "16px 20px" }}>
+          <div style={{ fontSize: 12, color: "#6FA89E", marginBottom: 6 }}>Registrar</div>
+          <div className="mono" style={{ fontSize: 14, fontWeight: 600 }}>{registrar ?? "—"}</div>
+          {(registrant || registeredAt) && (
+            <div style={{ fontSize: 11, color: "#6FA89E", marginTop: 3 }}>
+              {registrant && <>{registrant} · </>}
+              {registeredAt && <>registered {registeredAt.slice(0, 10)}</>}
+            </div>
+          )}
         </div>
       </div>
 
@@ -299,17 +365,27 @@ export function DomainDetail() {
       </div>
 
       <div className="card" style={{ padding: "22px 24px", marginBottom: 24 }}>
-        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>A-record timeline</div>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>DNS record timeline</div>
         <div style={{ fontSize: 11, color: "#6FA89E", marginBottom: 14 }}>
-          <span className="mono">dns_records</span> history · one bar per IP, start → end of its run as an A record
+          <span className="mono">dns_records</span> history · one bar per value, start → end of its run as that
+          record
         </div>
-        <ArGanttChart runs={dnsRuns} peerHits={peerHits} />
+        {recordTypes.length === 0 && <div style={{ color: "#6FA89E", fontSize: 12 }}>No DNS history yet.</div>}
+        {recordTypes.map((type, i) => (
+          <div key={type} style={{ marginTop: i === 0 ? 0 : 22, paddingTop: i === 0 ? 0 : 18, borderTop: i === 0 ? undefined : "1px solid #133A3C" }}>
+            <div style={{ fontSize: 11, color: "#A6D8CD", fontWeight: 600, marginBottom: 6 }} className="mono">
+              {type}
+            </div>
+            <RecordGanttChart runs={dnsRuns} type={type} peerHits={type === "A" ? peerHits : undefined} />
+          </div>
+        ))}
         <div className="note">
-          A bar's left edge is the check that first saw that IP; its right edge is the check that
-          first saw it gone, or the dashed "now" line if it's still current. Bytes-labeled blue
-          annotation = that IP also shows up as a peer in{" "}
-          <span className="mono">rollup__flow_daily</span> (90d) — hover a bar for exact
-          timestamps.
+          A bar's left edge is the check that first saw that value; its right edge is the check
+          that first saw it gone, or the dashed "now" line if it's still current. Bytes-labeled
+          blue annotation (A records only) = that IP also shows up as a peer in{" "}
+          <span className="mono">rollup__flow_daily</span> (90d). SOA is excluded — its serial
+          changes on nearly every check, so it has no meaningful timeline. Hover a bar or its
+          label for exact values/timestamps.
         </div>
       </div>
     </>
