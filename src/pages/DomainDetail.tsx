@@ -4,7 +4,7 @@ import { Link, useParams } from "react-router-dom";
 import { fetchMonitoredDetail, type MonitoredDomainDetail, type HistoryRun } from "../api/spoilerAlert";
 import { fetchOwner, type OpenCtiOwner } from "../api/opencti";
 import { flowDailyRollupFlowDailyGet } from "../api/netflow-rollups-client";
-import { formatBytes, daysAgo, isoDate } from "../lib/format";
+import { formatBytes, daysAgo, isoDate, daysUntil, expiryColor } from "../lib/format";
 
 const STATE_COLOR: Record<string, string> = {
   active: "#3DD68C",
@@ -14,11 +14,6 @@ const STATE_COLOR: Record<string, string> = {
 function formatDateTime(iso: string | null): string {
   if (!iso) return "—";
   return new Date(iso).toISOString().slice(0, 16).replace("T", " ");
-}
-
-function daysUntil(iso: string | null): number | null {
-  if (!iso) return null;
-  return Math.round((new Date(iso).getTime() - Date.now()) / 86_400_000);
 }
 
 type DnsRun = { startedAt: string; status: string; records: Record<string, string[]> };
@@ -318,11 +313,11 @@ export function DomainDetail() {
         </div>
         <div className="card" style={{ padding: "16px 20px" }}>
           <div style={{ fontSize: 12, color: "#6FA89E", marginBottom: 6 }}>Expires</div>
-          <div className="mono" style={{ fontSize: 14, fontWeight: 600 }}>
+          <div className="mono" style={{ fontSize: 14, fontWeight: 600, color: expiryColor(expiryDays) }}>
             {expiresAt ? expiresAt.slice(0, 10) : "—"}
           </div>
           {expiryDays !== null && (
-            <div style={{ fontSize: 11, color: expiryDays < 30 ? "#E5484D" : "#6FA89E", marginTop: 3 }}>
+            <div style={{ fontSize: 11, color: expiryColor(expiryDays) ?? "#6FA89E", marginTop: 3 }}>
               {expiryDays >= 0 ? `WHOIS/RDAP · ${expiryDays} days` : `expired ${Math.abs(expiryDays)}d ago`}
             </div>
           )}

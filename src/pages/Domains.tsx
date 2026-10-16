@@ -11,7 +11,7 @@ import {
   type HistoryRun,
 } from "../api/spoilerAlert";
 import { fetchOwner, type OpenCtiOwner } from "../api/opencti";
-import { formatShortDate } from "../lib/format";
+import { formatShortDate, daysUntil, expiryColor, formatDaysUntil } from "../lib/format";
 
 type View = "all" | "owner";
 
@@ -341,7 +341,13 @@ function DomainTable({
               <td className="mono" style={{ fontSize: 12 }}>
                 {(() => {
                   const exp = expiry.get(d.opencti_id) ?? d.domain_expires_at;
-                  return exp ? formatShortDate(exp) : "—";
+                  if (!exp) return "—";
+                  const days = daysUntil(exp);
+                  return (
+                    <span style={{ color: expiryColor(days) }} title={exp.slice(0, 10)}>
+                      {formatDaysUntil(days)}
+                    </span>
+                  );
                 })()}
               </td>
               {!hideOwnerColumn && (

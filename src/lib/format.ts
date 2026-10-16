@@ -22,6 +22,30 @@ export function daysAgo(n: number): Date {
   return d;
 }
 
+export function daysUntil(iso: string | null): number | null {
+  if (!iso) return null;
+  return Math.round((new Date(iso).getTime() - Date.now()) / 86_400_000);
+}
+
+// Warning font color for a days-until-expiry count: default text color
+// beyond 60 days, yellow beyond 30, orange beyond 10, red at 10 days or
+// fewer (including already expired).
+export function expiryColor(days: number | null): string | undefined {
+  if (days === null || days > 60) return undefined;
+  if (days > 30) return "#F2C94C";
+  if (days > 10) return "#F5A623";
+  return "#E5484D";
+}
+
+// A bare month/day (no year) is ambiguous once values span several years, as
+// domain expirations do — a day count reads unambiguously at a glance in a
+// narrow table column; pair it with the full date in a tooltip.
+export function formatDaysUntil(days: number | null): string {
+  if (days === null) return "—";
+  if (days < 0) return `expired ${Math.abs(days)}d ago`;
+  return `${days}d`;
+}
+
 // Interpolates blue (#4C8DFF) at 0% to white at 100%, for a bar fill whose
 // color itself should read as "how close to full" without needing a label.
 export function blueToWhite(pct: number): string {
