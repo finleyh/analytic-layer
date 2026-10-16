@@ -8,13 +8,14 @@ import {
   hostScanChangesLookupHostScansChangesGet,
   bphContactDailyRollupBphContactDailyGet,
   portFamilyMixDailyRollupPortFamilyMixDailyGet,
+  flowHourlyRollupFlowHourlyGet,
   type WatchedIp,
   type IpRole,
   type IpIdentity,
   type HostScan,
   type FingerprintChange,
 } from "../api/netflow-rollups-client";
-import { formatBytes, isoDate, daysAgo } from "../lib/format";
+import { formatBytes, isoDate, daysAgo, darkToGreen } from "../lib/format";
 
 type EntityData = {
   watchedIp: WatchedIp;
@@ -296,6 +297,8 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
         )}
       </div>
 
+      <ActivityHeatmap ip={ip} />
+
       <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 14 }}>Device fingerprint</div>
 
       <div
@@ -562,5 +565,216 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
         </div>
       </div>
     </>
+  );
+}
+
+// ---------- Activity heatmap (7x24, by port family) ----------
+
+const HEATMAP_FAMILIES: { key: string; label: string; dot: string }[] = [
+  { key: "rtp_media", label: "rtp_media", dot: "#4C8DFF" },
+  { key: "voip_signaling", label: "voip_signaling", dot: "#D946EF" },
+  { key: "voip_admin", label: "voip_admin", dot: "#F5A623" },
+];
+const HEATMAP_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+function emptyGrid(): number[][] {
+  return Array.from({ length: 7 }, () => Array(24).fill(0));
+}
+
+function ActivityHeatmap({ ip }: { ip: string }) {
+  const [grids, setGrids] = useState<Record<string, number[][]> | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(
+    () => new Set(HEATMAP_FAMILIES.map((f) => f.key)),
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    setGrids(null);
+    setError(null);
+
+    async function load() {
+      try {
+        const to = new Date();
+        const from = daysAgo(6);
+        from.setUTCHours(0, 0, 0, 0);
+        const result = await flowHourlyRollupFlowHourlyGet({
+          query: { monitored_ip: ip, from: from.toISOString(), to: to.toISOString(), limit: 20000 },
+          throwOnError: true,
+        });
+        if (cancelled) return;
+
+        const next: Record<string, number[][]> = {};
+        for (const f of HEATMAP_FAMILIES) next[f.key] = emptyGrid();
+        for (const r of result.data.rows) {
+          if (!(r.port_family in next)) continue;
+          const t = new Date(r.hour);
+          const dow = (t.getUTCDay() + 6) % 7; // Monday-first
+          next[r.port_family][dow][t.getUTCHours()] += r.bytes_sum;
+        }
+        setGrids(next);
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+      }
+    }
+
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [ip]);
+
+  function toggle(key: string) {
+    setSelected((prev) => {
+      if (prev.has(key) && prev.size === 1) return prev;
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
+
+  const combined = emptyGrid();
+  if (grids) {
+    for (const key of selected) {
+      const g = grids[key];
+      for (let d = 0; d < 7; d++) {
+        for (let h = 0; h < 24; h++) combined[d][h] += g[d][h];
+      }
+    }
+  }
+  const max = Math.max(0, ...combined.flat());
+
+  return (
+    <div className="card" style={{ padding: "22px 24px", marginBottom: 28 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "baseline",
+          marginBottom: 14,
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ fontSize: 15, fontWeight: 600 }}>Call activity by hour — 7d</div>
+        <span className="src">
+          rollup__flow_hourly ·{" "}
+          {selected.size === HEATMAP_FAMILIES.length ? "all 3 port families" : [...selected].join(" + ")}
+        </span>
+      </div>
+
+      {error && (
+        <div style={{ color: "#E5484D", fontSize: 13 }}>Failed to load: {error}</div>
+      )}
+      {!grids && !error && <div style={{ color: "#6FA89E", fontSize: 13 }}>Loading…</div>}
+
+      {grids && (
+        <>
+          <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+            {HEATMAP_FAMILIES.map((f) => {
+              const checked = selected.has(f.key);
+              return (
+                <button
+                  key={f.key}
+                  onClick={() => toggle(f.key)}
+                  style={{
+                    all: "unset",
+                    cursor: "pointer",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 9,
+                    padding: "7px 14px 7px 10px",
+                    borderRadius: 8,
+                    border: `1px solid ${checked ? "#3F9C8A" : "rgba(72,196,170,0.3)"}`,
+                    background: checked ? "rgba(72,196,170,0.12)" : "transparent",
+                  }}
+                >
+                  <span
+                    style={{
+                      width: 16,
+                      height: 16,
+                      borderRadius: 4,
+                      border: `1.5px solid ${checked ? "#5FE3C7" : "rgba(166,216,205,0.5)"}`,
+                      background: checked ? "#5FE3C7" : "transparent",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      flexShrink: 0,
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    {checked && (
+                      <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                        <path
+                          d="M1 4L3.5 6.5L9 1"
+                          stroke="#061214"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                    )}
+                  </span>
+                  <span style={{ width: 8, height: 8, borderRadius: 2, background: f.dot, flexShrink: 0 }} />
+                  <span className="mono" style={{ fontSize: 12, color: checked ? "#E8FFF8" : "#6FA89E" }}>
+                    {f.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+
+          <div style={{ fontSize: 11, color: "#6FA89E", marginBottom: 16 }}>
+            UTC hours · Mon → Sun, oldest to newest
+          </div>
+
+          <div style={{ display: "grid", gridTemplateColumns: "44px repeat(24,1fr)", gap: 3, alignItems: "center" }}>
+            <div />
+            {Array.from({ length: 24 }, (_, h) => (
+              <div key={h} className="mono" style={{ fontSize: 9, color: "#6FA89E", textAlign: "center" }}>
+                {h % 3 === 0 ? String(h).padStart(2, "0") : ""}
+              </div>
+            ))}
+            {combined.map((hours, dayIdx) => (
+              <Fragment key={dayIdx}>
+                <div className="mono" style={{ fontSize: 11, color: "#A6D8CD" }}>
+                  {HEATMAP_DAYS[dayIdx]}
+                </div>
+                {hours.map((bytes, hour) => {
+                  const t = max > 0 ? Math.sqrt(bytes) / Math.sqrt(max) : 0;
+                  return (
+                    <div
+                      key={hour}
+                      title={`${HEATMAP_DAYS[dayIdx]} ${String(hour).padStart(2, "0")}:00 UTC · ${formatBytes(bytes)}`}
+                      style={{
+                        height: 22,
+                        borderRadius: 3,
+                        background: darkToGreen(t),
+                        border: "1px solid rgba(72,196,170,0.18)",
+                      }}
+                    />
+                  );
+                })}
+              </Fragment>
+            ))}
+          </div>
+
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16 }}>
+            <span className="mono" style={{ fontSize: 10, color: "#6FA89E" }}>
+              {formatBytes(0)}/h
+            </span>
+            <div style={{ display: "flex", gap: 2 }}>
+              {Array.from({ length: 8 }, (_, i) => (
+                <div key={i} style={{ width: 18, height: 10, borderRadius: 2, background: darkToGreen(i / 7) }} />
+              ))}
+            </div>
+            <span className="mono" style={{ fontSize: 10, color: "#6FA89E" }}>
+              {formatBytes(max)}/h
+            </span>
+          </div>
+        </>
+      )}
+    </div>
   );
 }

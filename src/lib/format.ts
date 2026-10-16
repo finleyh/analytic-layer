@@ -31,3 +31,15 @@ export function blueToWhite(pct: number): string {
   const b = 255;
   return `rgb(${r}, ${g}, ${b})`;
 }
+
+// Interpolates the card background teal (near-zero activity) up to the
+// theme's bright mint-green #3DD68C (peak activity), for heatmap cells.
+export function darkToGreen(t: number): string {
+  const clamped = Math.max(0, Math.min(1, t));
+  const dark: [number, number, number] = [10, 34, 36];
+  const bright: [number, number, number] = [61, 214, 140];
+  const r = Math.round(dark[0] + (bright[0] - dark[0]) * clamped);
+  const g = Math.round(dark[1] + (bright[1] - dark[1]) * clamped);
+  const b = Math.round(dark[2] + (bright[2] - dark[2]) * clamped);
+  return `rgb(${r}, ${g}, ${b})`;
+}
