@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import * as d3 from "d3";
 import { Link, useParams } from "react-router-dom";
 import { fetchMonitoredDetail, type MonitoredDomainDetail, type HistoryRun } from "../api/spoilerAlert";
 import { fetchOwner, type OpenCtiOwner } from "../api/opencti";
@@ -16,6 +17,130 @@ function formatDateTime(iso: string | null): string {
 }
 
 type ArecordRun = { startedAt: string; a: string[]; status: string };
+type ArSegment = { ip: string; start: string; end: string; ongoing: boolean };
+
+const AR_PALETTE = ["#4C8DFF", "#8B5CF6", "#2DD4BF", "#F59E0B", "#EC4899", "#3DD68C", "#E5484D", "#A3A3A3"];
+
+// Collapses a sequence of point-in-time DNS checks into start/end bars per IP:
+// an IP's segment runs from the check it first appears in to the check it
+// drops out of (or to "now" if it's still in the latest check).
+function buildArSegments(okRuns: ArecordRun[]): { segments: ArSegment[]; order: string[] } {
+  const segments: ArSegment[] = [];
+  const active = new Map<string, string>();
+  const order: string[] = [];
+  const now = new Date().toISOString();
+
+  okRuns.forEach((run, i) => {
+    const present = new Set(run.a);
+    for (const [ip, start] of active) {
+      if (!present.has(ip)) {
+        segments.push({ ip, start, end: run.startedAt, ongoing: false });
+        active.delete(ip);
+      }
+    }
+    for (const ip of present) {
+      if (!active.has(ip)) {
+        active.set(ip, run.startedAt);
+        if (!order.includes(ip)) order.push(ip);
+      }
+    }
+    if (i === okRuns.length - 1) {
+      for (const [ip, start] of active) segments.push({ ip, start, end: now, ongoing: true });
+    }
+  });
+
+  return { segments, order };
+}
+
+function ArGanttChart({ runs, peerHits }: { runs: ArecordRun[]; peerHits: Map<string, number> }) {
+  const okRuns = runs.filter((r) => r.status === "ok");
+  if (okRuns.length === 0) {
+    return <div style={{ color: "#6FA89E", fontSize: 12 }}>No DNS history yet.</div>;
+  }
+
+  const { segments, order } = buildArSegments(okRuns);
+  const now = new Date();
+  const minStart = new Date(okRuns[0].startedAt);
+  const W = 760;
+  const leftPad = 150;
+  const rightPad = 16;
+  const rowH = 32;
+  const topPad = 26;
+  const chartW = W - leftPad - rightPad;
+  const H = topPad + order.length * rowH + 8;
+
+  const x = d3.scaleTime().domain([minStart, now]).range([0, chartW]);
+  const ticks = x.ticks(Math.min(6, okRuns.length));
+  const fmt = d3.timeFormat("%b %d");
+
+  return (
+    <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ overflow: "visible" }} className="mono">
+      {ticks.map((t, i) => (
+        <g key={i}>
+          <line x1={leftPad + x(t)} x2={leftPad + x(t)} y1={topPad - 6} y2={H - 2} stroke="#133A3C" strokeWidth={1} />
+          <text x={leftPad + x(t)} y={topPad - 12} fontSize={10} fill="#6FA89E" textAnchor="middle">
+            {fmt(t)}
+          </text>
+        </g>
+      ))}
+      <line
+        x1={leftPad + chartW}
+        x2={leftPad + chartW}
+        y1={topPad - 6}
+        y2={H - 2}
+        stroke="#3DD68C"
+        strokeDasharray="2,2"
+        strokeWidth={1}
+      />
+      <text x={leftPad + chartW} y={topPad - 12} fontSize={10} fill="#3DD68C" textAnchor="middle">
+        now
+      </text>
+
+      {order.map((ip, row) => {
+        const y = topPad + row * rowH;
+        const color = AR_PALETTE[row % AR_PALETTE.length];
+        const peerBytes = peerHits.get(ip);
+        return (
+          <g key={ip}>
+            <text x={leftPad - 10} y={y + rowH / 2 - (peerBytes !== undefined ? 3 : -3)} fontSize={11} fill="#A6D8CD" textAnchor="end">
+              {ip}
+            </text>
+            {peerBytes !== undefined && (
+              <text x={leftPad - 10} y={y + rowH / 2 + 10} fontSize={9} fill="#4C8DFF" textAnchor="end">
+                {formatBytes(peerBytes)} peer
+              </text>
+            )}
+            {segments
+              .filter((s) => s.ip === ip)
+              .map((s, si) => {
+                const sx = leftPad + x(new Date(s.start));
+                const ex = leftPad + x(new Date(s.end));
+                const w = Math.max(ex - sx, 3);
+                return (
+                  <rect
+                    key={si}
+                    x={sx}
+                    y={y + 7}
+                    width={w}
+                    height={rowH - 16}
+                    rx={3}
+                    fill={color}
+                    opacity={s.ongoing ? 1 : 0.6}
+                  >
+                    <title>
+                      {ip}
+                      {"\n"}
+                      {formatDateTime(s.start)} → {s.ongoing ? "present" : formatDateTime(s.end)}
+                    </title>
+                  </rect>
+                );
+              })}
+          </g>
+        );
+      })}
+    </svg>
+  );
+}
 
 export function DomainDetail() {
   const { id } = useParams<{ id: string }>();
@@ -176,65 +301,15 @@ export function DomainDetail() {
       <div className="card" style={{ padding: "22px 24px", marginBottom: 24 }}>
         <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>A-record timeline</div>
         <div style={{ fontSize: 11, color: "#6FA89E", marginBottom: 14 }}>
-          <span className="mono">dns_records</span> history · one row per run
+          <span className="mono">dns_records</span> history · one bar per IP, start → end of its run as an A record
         </div>
-        <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-          {dnsRuns.map((run, i) => {
-            const prev = dnsRuns[i - 1];
-            const changed = prev && JSON.stringify([...prev.a].sort()) !== JSON.stringify([...run.a].sort());
-            return (
-              <div
-                key={run.startedAt}
-                style={{
-                  display: "flex",
-                  gap: 10,
-                  fontSize: 12,
-                  padding: "6px 0",
-                  borderBottom: "1px solid #133A3C",
-                  alignItems: "baseline",
-                }}
-              >
-                <span className="mono" style={{ color: "#A6D8CD", width: 140, flexShrink: 0 }}>
-                  {formatDateTime(run.startedAt)}
-                </span>
-                {run.status !== "ok" ? (
-                  <span style={{ color: "#E5484D" }}>{run.status}</span>
-                ) : (
-                  <>
-                    <span
-                      style={{
-                        width: 10,
-                        height: 10,
-                        borderRadius: "50%",
-                        background: i === 0 ? "#A6D8CD" : changed ? "#F5A623" : "#153226",
-                        border: i === 0 ? "none" : changed ? "none" : "1px solid #1E4D37",
-                        flexShrink: 0,
-                        marginTop: 2,
-                      }}
-                    />
-                    <span className="mono">
-                      {run.a.map((ip) => (
-                        <span key={ip} style={{ marginRight: 8 }}>
-                          {ip}
-                          {peerHits.has(ip) && (
-                            <span style={{ color: "#4C8DFF", marginLeft: 4 }} title="Also seen as a netflow peer">
-                              · {formatBytes(peerHits.get(ip)!)} netflow peer
-                            </span>
-                          )}
-                        </span>
-                      ))}
-                    </span>
-                  </>
-                )}
-              </div>
-            );
-          })}
-          {dnsRuns.length === 0 && <div style={{ color: "#6FA89E", fontSize: 12 }}>No DNS history yet.</div>}
-        </div>
+        <ArGanttChart runs={dnsRuns} peerHits={peerHits} />
         <div className="note">
-          Orange = A records changed since the previous run. Blue annotation = that IP also shows
-          up as a peer in <span className="mono">rollup__flow_daily</span> (90d) — a cross-source
-          link the mockup called for, computed live here rather than stored.
+          A bar's left edge is the check that first saw that IP; its right edge is the check that
+          first saw it gone, or the dashed "now" line if it's still current. Bytes-labeled blue
+          annotation = that IP also shows up as a peer in{" "}
+          <span className="mono">rollup__flow_daily</span> (90d) — hover a bar for exact
+          timestamps.
         </div>
       </div>
     </>
