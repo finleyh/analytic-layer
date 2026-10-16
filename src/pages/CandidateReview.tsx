@@ -108,9 +108,19 @@ export function CandidateReview() {
         ))}
       </div>
 
-      {tab === "asn" && <AsnQueue onPendingCount={setAsnPending} />}
-      {tab === "peer" && <IpRoleQueue vantage="peer" onPendingCount={setPeerPending} />}
-      {tab === "watched" && <IpRoleQueue vantage="watched" onPendingCount={setWatchedPending} />}
+      {/* All three queues stay mounted so their real, filtered pending counts
+          load immediately — the tab badges would otherwise show the raw
+          /review/queue totals (which include "unclear" rows the lists below
+          filter out) until each tab had actually been clicked once. */}
+      <div style={{ display: tab === "asn" ? undefined : "none" }}>
+        <AsnQueue onPendingCount={setAsnPending} />
+      </div>
+      <div style={{ display: tab === "peer" ? undefined : "none" }}>
+        <IpRoleQueue vantage="peer" onPendingCount={setPeerPending} />
+      </div>
+      <div style={{ display: tab === "watched" ? undefined : "none" }}>
+        <IpRoleQueue vantage="watched" onPendingCount={setWatchedPending} />
+      </div>
     </>
   );
 }
