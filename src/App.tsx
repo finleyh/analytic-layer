@@ -3,6 +3,7 @@ import { Overview } from "./pages/Overview";
 import { Watchlist } from "./pages/Watchlist";
 import { EntityDetail } from "./pages/EntityDetail";
 import { CandidateReview } from "./pages/CandidateReview";
+import { TopTalkers } from "./pages/TopTalkers";
 
 const PAGES: { label: string; path: string }[] = [
   { label: "Overview", path: "/" },
@@ -14,7 +15,7 @@ const PAGES: { label: string; path: string }[] = [
   { label: "Candidates", path: "/candidates" },
   { label: "Pipeline health", path: "/pipeline-health" },
 ];
-const BUILT_PATHS = new Set(["/", "/watchlist", "/candidates"]);
+const BUILT_PATHS = new Set(["/", "/watchlist", "/candidates", "/top-talkers"]);
 
 function Sidebar() {
   const location = useLocation();
@@ -83,6 +84,7 @@ export function App() {
             <Route path="/watchlist" element={<Watchlist />} />
             <Route path="/entity/:ip" element={<EntityDetail />} />
             <Route path="/candidates" element={<CandidateReview />} />
+            <Route path="/top-talkers" element={<TopTalkers />} />
           </Routes>
         </div>
       </div>
