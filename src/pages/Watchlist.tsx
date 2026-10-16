@@ -18,7 +18,7 @@ import {
   type FingerprintChange,
   type Freshness,
 } from "../api/netflow-rollups-client";
-import { formatBytes, formatShortDate, isoDate, daysAgo } from "../lib/format";
+import { formatBytes, formatShortDate, isoDate, daysAgo, blueToWhite } from "../lib/format";
 
 type WatchlistData = {
   watchedIps: WatchedIp[];
@@ -274,7 +274,7 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
                   <td>
                     <span className="rtp" style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
                       <span className="trk" style={{ width: 56, height: 6, background: "#133A3C", borderRadius: 3, overflow: "hidden", display: "inline-block" }}>
-                        <span className="fil" style={{ width: `${rtpPct}%`, height: "100%", background: "#4C8DFF", display: "block" }} />
+                        <span className="fil" style={{ width: `${rtpPct}%`, height: "100%", background: blueToWhite(rtpPct), display: "block" }} />
                       </span>
                       <span className="mono" style={{ fontSize: 12, color: rtpPct < 5 ? "#6FA89E" : undefined }}>
                         {rtpPct}%
