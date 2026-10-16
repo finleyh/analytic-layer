@@ -2,6 +2,7 @@ import { BrowserRouter, Link, Route, Routes, useLocation } from "react-router-do
 import { Overview } from "./pages/Overview";
 import { Watchlist } from "./pages/Watchlist";
 import { EntityDetail } from "./pages/EntityDetail";
+import { CandidateReview } from "./pages/CandidateReview";
 
 const PAGES: { label: string; path: string }[] = [
   { label: "Overview", path: "/" },
@@ -13,7 +14,7 @@ const PAGES: { label: string; path: string }[] = [
   { label: "Candidates", path: "/candidates" },
   { label: "Pipeline health", path: "/pipeline-health" },
 ];
-const BUILT_PATHS = new Set(["/", "/watchlist"]);
+const BUILT_PATHS = new Set(["/", "/watchlist", "/candidates"]);
 
 function Sidebar() {
   const location = useLocation();
@@ -81,6 +82,7 @@ export function App() {
             <Route path="/" element={<Overview />} />
             <Route path="/watchlist" element={<Watchlist />} />
             <Route path="/entity/:ip" element={<EntityDetail />} />
+            <Route path="/candidates" element={<CandidateReview />} />
           </Routes>
         </div>
       </div>
