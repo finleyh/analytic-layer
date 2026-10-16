@@ -219,3 +219,6 @@ CLAUDE.md
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Node / frontend
+node_modules/
