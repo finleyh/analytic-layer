@@ -9,6 +9,8 @@ import {
   unclassifiedContactsDailyRollupUnclassifiedContactsDailyGet,
   hostScanChangesLookupHostScansChangesGet,
   freshnessOpsFreshnessGet,
+  getIpIdentityLookupIpIdentitiesIpGet,
+  hostNameSummaryLookupHostNamesSummaryGet,
   type WatchedIp,
   type IpRole,
   type DailyPortFamilyMix,
@@ -17,9 +19,12 @@ import {
   type DailyUnclassifiedContact,
   type FingerprintChange,
   type Freshness,
+  type IpIdentity,
+  type HostNameSummary,
 } from "../api/netflow-rollups-client";
 import { formatBytes, formatShortDate, isoDate, daysAgo, blueToWhite } from "../lib/format";
 import { categoryColors } from "../lib/categories";
+import { bestScanNames } from "../lib/hostNames";
 
 type WatchlistData = {
   watchedIps: WatchedIp[];
@@ -30,6 +35,8 @@ type WatchlistData = {
   unclassified7d: DailyUnclassifiedContact[];
   fingerprintChanges7d: FingerprintChange[];
   freshness: Freshness;
+  identityByIp: Map<string, IpIdentity>;
+  hostNamesByIp: Map<string, HostNameSummary[]>;
 };
 
 function groupSum<T>(rows: T[], keyFn: (r: T) => string, valFn: (r: T) => number): Map<string, number> {
@@ -127,6 +134,36 @@ export function Watchlist() {
         ]);
 
         if (cancelled) return;
+
+        // One lookup per watched IP for rDNS/ASN identity — no bulk endpoint,
+        // same N+1 pattern already used for per-domain owner lookups.
+        const identityEntries = await Promise.all(
+          watchedIps.data.rows.map(async (w) => {
+            try {
+              const r = await getIpIdentityLookupIpIdentitiesIpGet({ path: { ip: w.ip }, throwOnError: true });
+              return [w.ip, r.data] as const;
+            } catch {
+              return null;
+            }
+          }),
+        );
+
+        // netflow-rollups normalizes Shodan/Censys domain/hostname/certificate
+        // evidence into its own lookup__host_names table — one bulk query
+        // across all watched IPs, same shape as the other rollup endpoints.
+        const hostNameSummary = await hostNameSummaryLookupHostNamesSummaryGet({
+          query: { subject: "watched", limit: 1000 },
+          throwOnError: true,
+        });
+        if (cancelled) return;
+
+        const hostNamesByIp = new Map<string, HostNameSummary[]>();
+        for (const r of hostNameSummary.data.rows) {
+          const list = hostNamesByIp.get(r.ip) ?? [];
+          list.push(r);
+          hostNamesByIp.set(r.ip, list);
+        }
+
         setData({
           watchedIps: watchedIps.data.rows,
           ipRolesWatched: ipRolesWatched.data.rows,
@@ -136,6 +173,8 @@ export function Watchlist() {
           unclassified7d: unclassified7d.data.rows,
           fingerprintChanges7d: fingerprintChanges7d.data.rows,
           freshness: freshness.data,
+          identityByIp: new Map(identityEntries.filter((e): e is readonly [string, IpIdentity] => e !== null)),
+          hostNamesByIp,
         });
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : String(err));
@@ -180,6 +219,8 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
     unclassified7d,
     fingerprintChanges7d,
     freshness,
+    identityByIp,
+    hostNamesByIp,
   } = data;
 
   const staleChecks = freshness.checks.filter((c) => c.stale);
@@ -288,6 +329,37 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
                     </Link>
                     <CopyIpButton ip={ip.ip} />
                     <br />
+                    {identityByIp.get(ip.ip)?.rdns && (
+                      <>
+                        <span
+                          className="mono"
+                          style={{ fontSize: 11, color: "#6FA89E" }}
+                          title="lookup__ip_identities.rdns"
+                        >
+                          {identityByIp.get(ip.ip)!.rdns}
+                        </span>
+                        <br />
+                      </>
+                    )}
+                    {(() => {
+                      const names = bestScanNames(hostNamesByIp.get(ip.ip) ?? [], identityByIp.get(ip.ip)?.rdns);
+                      if (names.length === 0) return null;
+                      const shown = names.slice(0, 3);
+                      const rest = names.slice(3);
+                      return (
+                        <>
+                          <span
+                            className="mono"
+                            style={{ fontSize: 11, color: "#4C8DFF" }}
+                            title={`lookup__host_names (scan-derived)${rest.length ? "\n+ " + rest.join(", ") : ""}`}
+                          >
+                            {shown.join(", ")}
+                            {rest.length > 0 && ` +${rest.length} more`}
+                          </span>
+                          <br />
+                        </>
+                      );
+                    })()}
                     {role?.accepted_role ? (
                       <span className="chip rev">{role.accepted_role}</span>
                     ) : role ? (
@@ -379,7 +451,14 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
         <div className="note">
           Sources, per column: <span className="mono">review__ip_roles</span> (reviewed role) ·{" "}
           <span className="mono">watch__ips.tags</span> (TIP labels, analyst suggestions, read by
-          no logic) · <span className="mono">rollup__port_family_mix_daily</span> (bytes, RTP
+          no logic) · <span className="mono">lookup__ip_identities.rdns</span> (reverse DNS, shown
+          when present) ·{" "}
+          <span className="mono" style={{ color: "#4C8DFF" }}>
+            lookup__host_names
+          </span>{" "}
+          (blue — domain/hostname/certificate evidence from Shodan + Censys scans, preferring the
+          cleanest kind; excludes anything matching rDNS) ·{" "}
+          <span className="mono">rollup__port_family_mix_daily</span> (bytes, RTP
           share) · <span className="mono">rollup__provider_mix_daily</span> (dominant category,
           excluding unclassified) · <span className="mono">rollup__bph_contact_daily</span> (30d) ·{" "}
           <span className="mono">rollup__unclassified_contacts_daily</span> (distinct peers, 7d) ·{" "}

@@ -501,6 +501,112 @@ export type HoneypotWatermark = {
 };
 
 /**
+ * HostName
+ *
+ * One name a source tied to an IP in one scan record. `kind` is the
+ * kind of DNS evidence and is the thing to read before the name: a
+ * `reverse_dns` row is a PTR record (the IP's own reverse lookup), a
+ * `forward_dns` row is a name whose A/AAAA record points at the IP,
+ * `hostname` is a name Shodan ties to the IP without saying how, and
+ * `domain` is the registrable domain behind the names (Shodan only), and
+ * `certificate` is a name on a TLS certificate a service presented, with
+ * `record_type` cn or san (Shodan contributes CNs only). Never merge the
+ * first two into one list.
+ */
+export type HostName = {
+    /**
+     * Scan Id
+     */
+    scan_id: number;
+    /**
+     * Ip
+     */
+    ip: string;
+    /**
+     * Subject
+     *
+     * watched | peer
+     */
+    subject: string;
+    /**
+     * Source
+     */
+    source: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Kind
+     *
+     * reverse_dns | forward_dns | hostname | domain | certificate
+     */
+    kind: string;
+    /**
+     * Record Type
+     *
+     * the source's own record type where it reports one (ptr, a, aaaa); for a certificate name, cn or san
+     */
+    record_type: string | null;
+    /**
+     * Resolved At
+     *
+     * when the source resolved it, where it says
+     */
+    resolved_at: string | null;
+    /**
+     * Fetched At
+     */
+    fetched_at: string;
+};
+
+/**
+ * HostNameSummary
+ *
+ * Per (IP, name, kind, source) over the window: how many scans carried
+ * it and when it was first and last fetched. The Entity detail page's
+ * names list.
+ */
+export type HostNameSummary = {
+    /**
+     * Ip
+     */
+    ip: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Kind
+     */
+    kind: string;
+    /**
+     * Source
+     */
+    source: string;
+    /**
+     * Record Type
+     */
+    record_type: string | null;
+    /**
+     * Scans
+     */
+    scans: number;
+    /**
+     * First Fetched At
+     */
+    first_fetched_at: string;
+    /**
+     * Last Fetched At
+     */
+    last_fetched_at: string;
+    /**
+     * Last Resolved At
+     */
+    last_resolved_at: string | null;
+};
+
+/**
  * HostScan
  *
  * One passive scan record. `raw_response` is the source's full record
@@ -541,10 +647,6 @@ export type HostScan = {
     fingerprint_facts: Array<{
         [key: string]: unknown;
     }>;
-    /**
-     * Hostnames
-     */
-    hostnames: Array<string> | null;
     /**
      * Fetched At
      */
@@ -914,6 +1016,42 @@ export type PageFingerprintChange = {
      * Rows
      */
     rows: Array<FingerprintChange>;
+    /**
+     * Count
+     */
+    count: number;
+    /**
+     * Newest Day
+     */
+    newest_day?: string | null;
+};
+
+/**
+ * Page[HostNameSummary]
+ */
+export type PageHostNameSummary = {
+    /**
+     * Rows
+     */
+    rows: Array<HostNameSummary>;
+    /**
+     * Count
+     */
+    count: number;
+    /**
+     * Newest Day
+     */
+    newest_day?: string | null;
+};
+
+/**
+ * Page[HostName]
+ */
+export type PageHostName = {
+    /**
+     * Rows
+     */
+    rows: Array<HostName>;
     /**
      * Count
      */
@@ -1901,6 +2039,140 @@ export type ListHostScansLookupHostScansGetResponses = {
 };
 
 export type ListHostScansLookupHostScansGetResponse = ListHostScansLookupHostScansGetResponses[keyof ListHostScansLookupHostScansGetResponses];
+
+export type HostNameSummaryLookupHostNamesSummaryGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Ip
+         */
+        ip?: string | null;
+        /**
+         * Subject
+         *
+         * watched | peer; default: both
+         */
+        subject?: string | null;
+        /**
+         * Source
+         */
+        source?: string | null;
+        /**
+         * Kind
+         *
+         * reverse_dns | forward_dns | hostname | domain | certificate
+         */
+        kind?: string | null;
+        /**
+         * Limit
+         *
+         * rows to return, at most 1000
+         */
+        limit?: number;
+        /**
+         * From
+         *
+         * first day, inclusive; default: six days before `to`
+         */
+        from?: string | null;
+        /**
+         * To
+         *
+         * last day, inclusive; default: today (UTC)
+         */
+        to?: string | null;
+    };
+    url: '/lookup/host-names/summary';
+};
+
+export type HostNameSummaryLookupHostNamesSummaryGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type HostNameSummaryLookupHostNamesSummaryGetError = HostNameSummaryLookupHostNamesSummaryGetErrors[keyof HostNameSummaryLookupHostNamesSummaryGetErrors];
+
+export type HostNameSummaryLookupHostNamesSummaryGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageHostNameSummary;
+};
+
+export type HostNameSummaryLookupHostNamesSummaryGetResponse = HostNameSummaryLookupHostNamesSummaryGetResponses[keyof HostNameSummaryLookupHostNamesSummaryGetResponses];
+
+export type ListHostNamesLookupHostNamesGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Ip
+         */
+        ip?: string | null;
+        /**
+         * Subject
+         *
+         * watched | peer; default: both
+         */
+        subject?: string | null;
+        /**
+         * Source
+         */
+        source?: string | null;
+        /**
+         * Kind
+         *
+         * reverse_dns | forward_dns | hostname | domain | certificate
+         */
+        kind?: string | null;
+        /**
+         * Name
+         *
+         * exact name; which IPs a name has pointed at
+         */
+        name?: string | null;
+        /**
+         * Limit
+         *
+         * rows to return, at most 1000
+         */
+        limit?: number;
+        /**
+         * From
+         *
+         * first day, inclusive; default: six days before `to`
+         */
+        from?: string | null;
+        /**
+         * To
+         *
+         * last day, inclusive; default: today (UTC)
+         */
+        to?: string | null;
+    };
+    url: '/lookup/host-names';
+};
+
+export type ListHostNamesLookupHostNamesGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListHostNamesLookupHostNamesGetError = ListHostNamesLookupHostNamesGetErrors[keyof ListHostNamesLookupHostNamesGetErrors];
+
+export type ListHostNamesLookupHostNamesGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageHostName;
+};
+
+export type ListHostNamesLookupHostNamesGetResponse = ListHostNamesLookupHostNamesGetResponses[keyof ListHostNamesLookupHostNamesGetResponses];
 
 export type ListScannersVerdictScannersGetData = {
     body?: never;

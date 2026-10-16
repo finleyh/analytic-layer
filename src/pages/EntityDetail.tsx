@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useState } from "react";
+import * as d3 from "d3";
 import { Link, useParams } from "react-router-dom";
 import {
   getIpWatchIpsIpGet,
@@ -6,6 +7,7 @@ import {
   getIpIdentityLookupIpIdentitiesIpGet,
   listHostScansLookupHostScansGet,
   hostScanChangesLookupHostScansChangesGet,
+  hostNameSummaryLookupHostNamesSummaryGet,
   bphContactDailyRollupBphContactDailyGet,
   portFamilyMixDailyRollupPortFamilyMixDailyGet,
   flowHourlyRollupFlowHourlyGet,
@@ -14,8 +16,10 @@ import {
   type IpIdentity,
   type HostScan,
   type FingerprintChange,
+  type HostNameSummary,
 } from "../api/netflow-rollups-client";
 import { formatBytes, isoDate, daysAgo, darkToGreen } from "../lib/format";
+import { looksLikeHostname } from "../lib/hostNames";
 
 type EntityData = {
   watchedIp: WatchedIp;
@@ -23,6 +27,7 @@ type EntityData = {
   identity: IpIdentity | null;
   scans: HostScan[];
   changes: FingerprintChange[];
+  hostNames: HostNameSummary[];
   bphBytes30d: number;
   bytes7d: number;
   rtpBytes7d: number;
@@ -126,7 +131,7 @@ export function EntityDetail() {
         const to = isoDate(new Date());
         const from30 = isoDate(daysAgo(29));
 
-        const [watchedIp, role, identityResult, scans, changes, bphContact30d, portFamilyMix7d] =
+        const [watchedIp, role, identityResult, scans, changes, hostNames, bphContact30d, portFamilyMix7d] =
           await Promise.all([
             getIpWatchIpsIpGet({ path: { ip: ip! }, throwOnError: true }),
             getIpRoleReviewIpRolesIpGet({ path: { ip: ip! }, throwOnError: true }).catch(() => null),
@@ -137,6 +142,10 @@ export function EntityDetail() {
             }),
             hostScanChangesLookupHostScansChangesGet({
               query: { ip: ip!, from: from30, to },
+              throwOnError: true,
+            }),
+            hostNameSummaryLookupHostNamesSummaryGet({
+              query: { ip: ip!, from: from30, to, limit: 200 },
               throwOnError: true,
             }),
             bphContactDailyRollupBphContactDailyGet({
@@ -161,6 +170,7 @@ export function EntityDetail() {
           identity: identityResult.data ?? null,
           scans: scans.data.rows,
           changes: changes.data.rows,
+          hostNames: hostNames.data.rows,
           bphBytes30d: bphContact30d.data.rows.reduce((s, r) => s + r.bytes_sum, 0),
           bytes7d,
           rtpBytes7d,
@@ -194,7 +204,7 @@ export function EntityDetail() {
 }
 
 function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
-  const { watchedIp, role, identity, scans, changes, bphBytes30d, bytes7d, rtpBytes7d } = data;
+  const { watchedIp, role, identity, scans, changes, hostNames, bphBytes30d, bytes7d, rtpBytes7d } = data;
   const rtpPct = bytes7d > 0 ? Math.round((rtpBytes7d / bytes7d) * 100) : 0;
   const tips = watchedIp.tags.filter((t) => !t.startsWith("msk:"));
 
@@ -293,9 +303,16 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
                 <span style={{ color: "#6FA89E", fontWeight: 500 }}> · {identity.country}</span>
               )}
             </div>
+            {identity.rdns && (
+              <div className="mono" style={{ fontSize: 11, color: "#6FA89E", marginTop: 6 }} title="lookup__ip_identities.rdns">
+                {identity.rdns}
+              </div>
+            )}
           </div>
         )}
       </div>
+
+      <HostNameGantt rows={hostNames} excludeRdns={identity?.rdns} />
 
       <ActivityHeatmap ip={ip} />
 
@@ -569,6 +586,149 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
 }
 
 // ---------- Activity heatmap (7x24, by port family) ----------
+
+type NameLane = {
+  name: string;
+  start: string;
+  end: string;
+  kinds: string[];
+  sources: string[];
+  scans: number;
+};
+
+const NAME_KIND_COLOR: Record<string, string> = {
+  domain: "#4C8DFF",
+  hostname: "#8B5CF6",
+  certificate: "#2DD4BF",
+  forward_dns: "#F5A623",
+  reverse_dns: "#6FA89E",
+};
+
+function buildNameLanes(rows: HostNameSummary[], exclude?: string | null): NameLane[] {
+  const byName = new Map<string, NameLane>();
+  for (const r of rows) {
+    if (r.name === exclude || !looksLikeHostname(r.name)) continue;
+    const existing = byName.get(r.name);
+    if (!existing) {
+      byName.set(r.name, {
+        name: r.name,
+        start: r.first_fetched_at,
+        end: r.last_fetched_at,
+        kinds: [r.kind],
+        sources: [r.source],
+        scans: r.scans,
+      });
+    } else {
+      if (r.first_fetched_at < existing.start) existing.start = r.first_fetched_at;
+      if (r.last_fetched_at > existing.end) existing.end = r.last_fetched_at;
+      if (!existing.kinds.includes(r.kind)) existing.kinds.push(r.kind);
+      if (!existing.sources.includes(r.source)) existing.sources.push(r.source);
+      existing.scans += r.scans;
+    }
+  }
+  return [...byName.values()].sort((a, b) => a.start.localeCompare(b.start));
+}
+
+function truncateName(s: string, n = 32): string {
+  return s.length > n ? `${s.slice(0, n - 1)}…` : s;
+}
+
+function fmtDateTime(iso: string): string {
+  return new Date(iso).toISOString().slice(0, 16).replace("T", " ");
+}
+
+function HostNameGantt({ rows, excludeRdns }: { rows: HostNameSummary[]; excludeRdns?: string | null }) {
+  const lanes = buildNameLanes(rows, excludeRdns);
+
+  if (lanes.length === 0) {
+    return (
+      <div className="card" style={{ padding: "22px 24px", marginBottom: 24 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Host names</div>
+        <div style={{ fontSize: 11, color: "#6FA89E" }}>No domain/hostname evidence from scans (30d).</div>
+      </div>
+    );
+  }
+
+  const now = new Date();
+  const minStart = new Date(lanes[0].start);
+  const W = 760;
+  const leftPad = 230;
+  const rightPad = 16;
+  const rowH = 30;
+  const topPad = 26;
+  const chartW = W - leftPad - rightPad;
+  const H = topPad + lanes.length * rowH + 8;
+
+  const x = d3.scaleTime().domain([minStart, now]).range([0, chartW]);
+  const ticks = x.ticks(Math.min(6, lanes.length));
+  const fmt = d3.timeFormat("%b %d");
+
+  return (
+    <div className="card" style={{ padding: "22px 24px", marginBottom: 24 }}>
+      <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Host names</div>
+      <div style={{ fontSize: 11, color: "#6FA89E", marginBottom: 14 }}>
+        <span className="mono">lookup__host_names</span> (30d) · one bar per name, first → last seen
+        across scans
+      </div>
+      <svg viewBox={`0 0 ${W} ${H}`} width="100%" style={{ overflow: "visible" }} className="mono">
+        {ticks.map((t, i) => (
+          <g key={i}>
+            <line x1={leftPad + x(t)} x2={leftPad + x(t)} y1={topPad - 6} y2={H - 2} stroke="#133A3C" strokeWidth={1} />
+            <text x={leftPad + x(t)} y={topPad - 12} fontSize={10} fill="#6FA89E" textAnchor="middle">
+              {fmt(t)}
+            </text>
+          </g>
+        ))}
+        <line
+          x1={leftPad + chartW}
+          x2={leftPad + chartW}
+          y1={topPad - 6}
+          y2={H - 2}
+          stroke="#3DD68C"
+          strokeDasharray="2,2"
+          strokeWidth={1}
+        />
+        <text x={leftPad + chartW} y={topPad - 12} fontSize={10} fill="#3DD68C" textAnchor="middle">
+          now
+        </text>
+
+        {lanes.map((lane, row) => {
+          const y = topPad + row * rowH;
+          const color = NAME_KIND_COLOR[lane.kinds[0]] ?? "#4C8DFF";
+          const sx = leftPad + x(new Date(lane.start));
+          const ex = leftPad + x(new Date(lane.end));
+          const w = Math.max(ex - sx, 3);
+          return (
+            <g key={lane.name}>
+              <title>{lane.name}</title>
+              <text x={leftPad - 10} y={y + rowH / 2 + 4} fontSize={11} fill="#A6D8CD" textAnchor="end">
+                {truncateName(lane.name)}
+              </text>
+              <rect x={sx} y={y + 7} width={w} height={rowH - 16} rx={3} fill={color} opacity={0.85}>
+                <title>
+                  {lane.name}
+                  {"\n"}
+                  {lane.kinds.join(", ")} · {lane.sources.join(", ")} · {lane.scans} scan
+                  {lane.scans === 1 ? "" : "s"}
+                  {"\n"}
+                  {fmtDateTime(lane.start)} → {fmtDateTime(lane.end)}
+                </title>
+              </rect>
+            </g>
+          );
+        })}
+      </svg>
+      <div className="note">
+        Color: <span style={{ color: NAME_KIND_COLOR.domain }}>■</span> domain{" "}
+        <span style={{ color: NAME_KIND_COLOR.hostname }}>■</span> hostname{" "}
+        <span style={{ color: NAME_KIND_COLOR.certificate }}>■</span> certificate{" "}
+        <span style={{ color: NAME_KIND_COLOR.forward_dns }}>■</span> forward DNS{" "}
+        <span style={{ color: NAME_KIND_COLOR.reverse_dns }}>■</span> reverse DNS (excludes the rDNS
+        already shown above, if any). Hover a bar or its label for exact values/timestamps.
+      </div>
+    </div>
+  );
+}
 
 const HEATMAP_FAMILIES: { key: string; label: string; dot: string }[] = [
   { key: "rtp_media", label: "rtp_media", dot: "#4C8DFF" },
