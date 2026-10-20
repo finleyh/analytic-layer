@@ -19,6 +19,227 @@ type Queue = "asn" | "peer" | "watched";
 
 type RoleSuggestion = { reasoning?: string; features?: Record<string, unknown>; first_day?: string; last_day?: string; alarm?: string | null };
 
+// ---------- Feature glossary ----------
+//
+// Sourced from netflow-rollups' own rule modules (dataclass field comments
+// and function docstrings) as of 2026-10-20, not invented here — see
+// rules/sip/watched.py, rules/sip/pairs.py, rules/web.py, rules/services.py
+// and rules/c2.py. A few fields (the raw counters, the c2 peer features)
+// have no documentation anywhere in that codebase; those entries are a
+// best-effort description from the field name and surrounding context, not
+// a quote. Scoped per rule_name, not per bare feature key, because the same
+// key name (inbound_peers, forward_names, watched_ips) means different
+// things in different rule families.
+type FeatureGlossary = Record<string, string>;
+
+const SIP_WATCHED_FEATURES: FeatureGlossary = {
+  exposed_sip_ports: "SIP ports answering in the latest portscan fingerprint.",
+  sip_in: "SIP packets to our SIP ports from non-scanner peers.",
+  sip_out: "SIP packets we send to peers' SIP ports.",
+  inbound_peers: "Distinct non-scanner peers sending SIP to us.",
+  dialed_peers: "Distinct peers we send SIP to.",
+  symmetric: "Every inbound peer is one we also dial.",
+  src_ports_out: "Distinct source ports we use toward peers' SIP ports.",
+  real_peers: "Distinct non-scanner SIP peers, either direction.",
+  scanner_peers: "SIP peers classified as scanners in this run.",
+  client_peers: "This run's measured pair roles for the IP: peers whose pair role is sip_client.",
+  trunk_peers: "This run's measured pair roles for the IP: peers whose pair role is sip_trunk.",
+  media_records: "RTP media records seen in the window.",
+  max_concurrency: "Peak number of simultaneous calls (overlapping RTP port pairs, 5-minute buckets).",
+  p95_concurrency: "95th-percentile simultaneous calls — less sensitive to one traffic spike than the max.",
+  admin_flows: "web_admin flow records in the window.",
+  https_signaled_peers:
+    "Peers that carry media and HTTPS with this IP but (almost) no SIP-port traffic — the shape of a softphone whose signaling rides inside HTTPS (3CX's web client does this).",
+  exposes_sip: "True if any SIP port answered in the latest fingerprint.",
+  watched_ips: "Alias for real_peers in this rule family: distinct non-scanner SIP peers of this watched IP.",
+};
+
+const SIP_PAIR_FEATURES: FeatureGlossary = {
+  window_days: "How many days of the lookback window this rule had data for.",
+  sig_days: "Distinct days this pair had SIP signaling.",
+  rtp_days: "Distinct days this pair had RTP media.",
+  sip_packets: "SIP packets exchanged with this peer in the window.",
+  media_records: "RTP media records exchanged with this peer.",
+  media_bytes: "RTP media bytes exchanged with this peer.",
+  sip_per_day_from_peer:
+    "SIP packets per day the peer sends to this IP's signaling ports. A registering phone: tens a day from one port. An IP-auth trunk: a few. A gateway registering a rack of SIMs as separate accounts: hundreds or more.",
+  sip_src_ports: "Distinct source ports the peer used toward this IP's signaling ports.",
+  peer_country: "The peer's most common netflow country code.",
+  tz_offset_hours:
+    "The peer country's standard-time UTC offset — used to judge whether its traffic pattern looks like it sleeps at night in its own time zone.",
+  avg_bytes_per_record: "Average bytes per RTP media record for this pair.",
+  long_calls:
+    "RTP port pairs with enough records to look like a call of roughly 10+ minutes — shorter calls are mostly invisible at this sampling rate.",
+  rec_per_call_median: "Median RTP records per call (each call negotiates a fresh port pair).",
+  rec_per_call_p90: "90th-percentile RTP records per call.",
+  max_concurrency: "Peak number of simultaneous calls with this peer.",
+  p95_concurrency: "95th-percentile simultaneous calls with this peer.",
+  overnight_share: "Share of this pair's activity that falls overnight, in the peer's local time zone.",
+  sibling_ips:
+    "Other addresses in the peer's /24 seen with any watched IP in the window — CGNAT churn, a dynamic address, or a fleet of boxes.",
+  peer_is_consumer: "The peer sits on a residential ISP or mobile network.",
+  peer_is_hosting: "The peer sits on cloud, wholesale VoIP, or bulletproof-hosting infrastructure.",
+  media_per_sip:
+    "Media records per SIP packet. A chatty trunk can send 50+ SIP packets a day too, but it carries hundreds of media records per SIP packet where a phone carries a handful.",
+  pair_roles: "This run's measured role(s) for the pair.",
+  serves_watched_phones: "True if this peer is the switch a watched phone registers to.",
+  watched_ips: "Distinct watched IPs this peer touches — a different count than the same-named field on a watched-vantage suggestion.",
+};
+
+const WEB_FEATURES: FeatureGlossary = {
+  exposed_web_ports: "Web ports answering in the latest fingerprint, per source.",
+  titles: "Distinct root-page titles seen across sources.",
+  favicon_hashes: "Distinct favicon hashes seen across sources.",
+  inbound_peers: "Distinct non-scanner peers connecting to its web ports.",
+  inbound_records: "Inbound web-port records in the window.",
+  inbound_bytes: "Inbound web-port bytes in the window.",
+  outbound_peers: "Distinct hosts this IP connects to on web ports.",
+  outbound_records: "Outbound web-port records in the window.",
+  outbound_bytes: "Outbound web-port bytes in the window.",
+  outbound_days: "Distinct days this IP connected out on a web port.",
+  exposes_web: "True if any web port answered in the latest fingerprint.",
+  panel_titles:
+    "Root-page titles that look like a real page (a panel, a login page) rather than noise — an HTTP status, a stock default page, a directory listing, a PHP error.",
+  relay_ratio:
+    "Bytes out on web ports over bytes in. A proxy that fetches what it serves sits near 1; a server phoning home sits near 0.",
+};
+
+const SERVICE_FEATURES: FeatureGlossary = {
+  family: "Which service family this suggestion is for (dns, mail, or vpn).",
+  exposed_ports: "This family's ports answering in the latest fingerprint.",
+  software: "What answers on those ports, as the sources name it.",
+  inbound_peers: "Distinct non-scanner peers with enough inbound records to count as real traffic, not a probe.",
+  inbound_any_peers:
+    "Distinct non-scanner peers with any inbound record at all — looser than inbound_peers, since a query-response service can be real at very low per-peer volume (e.g. DNS sampled at ~1-in-1,500).",
+  inbound_records: "Inbound records on this family's ports.",
+  inbound_max_days: "The most days any single inbound peer was seen on.",
+  outbound_peers: "Distinct hosts this IP connects to on this family's ports.",
+  outbound_records: "Outbound records on this family's ports.",
+  exposes: "True if any of this family's ports answered in the latest fingerprint.",
+};
+
+// Provisional (2026-10-20): describes the shape as it exists today, not as
+// a settled vocabulary. netflow-rollups' own agentic process catalogue and
+// findings vocabulary — both still in planning — will eventually be the
+// canonical source for what `findings` and the agent's `evaluation` actually
+// mean; these two entries should be replaced from there once that lands,
+// not treated as final just because they're reachable today.
+const C2_FEATURES: FeatureGlossary = {
+  families: "Known C2 framework names matched by a fingerprint finding on this IP.",
+  findings: "The verdict__findings rows (signature_known_family) behind this suggestion.",
+  c2: "The confirmed c2_server address this peer relationship is measured against.",
+  beacon_rules: "The verdict__findings beacon_* rules that fired for this peer against a confirmed C2.",
+  days_seen: "Distinct days this peer relationship was seen.",
+  records: "Flow records in this peer relationship.",
+  in_records: "Inbound flow records in this peer relationship.",
+  out_records: "Outbound flow records in this peer relationship.",
+  admin_days: "Days with traffic both ways on admin ports (ssh/web/rdp/vnc/telnet-style admin families).",
+  admin_bytes: "Bytes on admin ports in this peer relationship.",
+  c2s: "Confirmed C2 addresses this peer probes.",
+  peer_days: "Distinct days this peer made a probing flow to a confirmed C2.",
+};
+
+// rule_name -> which glossary above describes its features. Exact match,
+// not a prefix guess, since rule_name values are a small fixed set (per
+// netflow-rollups' review/ip_roles/writer.py) rather than open-ended.
+const RULE_FEATURE_GLOSSARY: Record<string, FeatureGlossary> = {
+  sip_server_has_clients: SIP_WATCHED_FEATURES,
+  sip_server_many_peers: SIP_WATCHED_FEATURES,
+  sip_server_exposed_few_peers: SIP_WATCHED_FEATURES,
+  sip_trunk_gateway: SIP_WATCHED_FEATURES,
+  sip_client_outbound_only: SIP_WATCHED_FEATURES,
+  sip_client_single_handset: SIP_WATCHED_FEATURES,
+  sip_client_many_switches: SIP_WATCHED_FEATURES,
+  sip_client_https_signaled: SIP_WATCHED_FEATURES,
+  sip_peer_serves_watched_phones: SIP_PAIR_FEATURES,
+  sip_peer_client_registering: SIP_PAIR_FEATURES,
+  sip_peer_client_consumer_link: SIP_PAIR_FEATURES,
+  sip_peer_trunk_sized_media: SIP_PAIR_FEATURES,
+  sip_peer_trunk_hosting_steady: SIP_PAIR_FEATURES,
+  web_server_many_clients: WEB_FEATURES,
+  web_server_panel_in_use: WEB_FEATURES,
+  web_server_cert_named: WEB_FEATURES,
+  reverse_proxy_fronting: WEB_FEATURES,
+  dns_server_many_peers: SERVICE_FEATURES,
+  dns_server_named_ns: SERVICE_FEATURES,
+  mail_server_receives: SERVICE_FEATURES,
+  mail_server_mailboxes: SERVICE_FEATURES,
+  vpn_server_clients: SERVICE_FEATURES,
+  c2_server_known_family: C2_FEATURES,
+  c2_victim_beaconing: C2_FEATURES,
+  c2_operator_steady_bidirectional: C2_FEATURES,
+  research_periodic_probe: C2_FEATURES,
+};
+
+function featureDescription(ruleName: string, featureKey: string): string | null {
+  return RULE_FEATURE_GLOSSARY[ruleName]?.[featureKey] ?? null;
+}
+
+// Pulled out from under the generic grid and shown under the IP instead —
+// forward_names/cert_names are domain evidence, not a stat, and as raw
+// JSON they were the one thing actually overlapping neighboring cells
+// (no spaces to wrap at). cert_names_resolving_here is folded into the
+// same certificate-colored bucket as cert_names, deduped.
+const NAME_FEATURE_KEYS = new Set(["forward_names", "cert_names", "cert_names_resolving_here"]);
+
+function extractNames(suggestions: Record<string, RoleSuggestion>): { domains: string[]; certs: string[] } {
+  const domains = new Set<string>();
+  const certs = new Set<string>();
+  for (const s of Object.values(suggestions)) {
+    const forward = s.features?.forward_names;
+    if (Array.isArray(forward)) for (const n of forward) if (typeof n === "string" && n) domains.add(n);
+    for (const key of ["cert_names", "cert_names_resolving_here"]) {
+      const v = s.features?.[key];
+      if (Array.isArray(v)) for (const n of v) if (typeof n === "string" && n) certs.add(n);
+    }
+  }
+  return { domains: [...domains].sort(), certs: [...certs].sort() };
+}
+
+function formatFeatureValue(v: unknown): string {
+  if (v === null || v === undefined) return "—";
+  if (Array.isArray(v)) return v.length === 0 ? "—" : v.map((x) => String(x)).join(", ");
+  if (typeof v === "boolean") return v ? "true" : "false";
+  if (typeof v === "object") return JSON.stringify(v);
+  return String(v);
+}
+
+// `text` is null when the glossary has nothing for this field — render it
+// anyway, visibly marked unknown, rather than omitting the icon. A missing
+// description should look like a gap, not disappear into "no icon here,"
+// which is how a new rule's fields would otherwise go undocumented without
+// anyone noticing (the UI has no drift test to catch it the way the API
+// side will).
+function InfoDot({ label, text }: { label: string; text: string | null }) {
+  return (
+    <button
+      type="button"
+      className={text ? "info-dot" : "info-dot unknown"}
+      aria-label={text ? `What does ${label} mean?` : `No glossary entry yet for ${label}`}
+    >
+      ?<span className="info-tooltip">{text ?? "No description yet — this field isn't in the glossary."}</span>
+    </button>
+  );
+}
+
+function NamesList({ domains, certs }: { domains: string[]; certs: string[] }) {
+  if (domains.length === 0 && certs.length === 0) return null;
+  return (
+    <div style={{ display: "flex", flexDirection: "column", gap: 3, marginBottom: 8 }}>
+      {domains.map((n) => (
+        <div key={`d:${n}`} className="mono" style={{ fontSize: 13, color: "#4C8DFF", wordBreak: "break-all" }}>
+          {n}
+        </div>
+      ))}
+      {certs.map((n) => (
+        <div key={`c:${n}`} className="mono" style={{ fontSize: 13, color: "#2DD4BF", wordBreak: "break-all" }}>
+          {n} <span style={{ fontSize: 10, color: "#6FA89E", fontFamily: "inherit" }}>(certificate)</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 const BTN_BASE: React.CSSProperties = {
   all: "unset",
   cursor: "pointer",
@@ -362,8 +583,8 @@ function AsnQueue({ onPendingCount }: { onPendingCount: (n: number) => void }) {
               <div
                 style={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(auto-fit, minmax(140px, 1fr))",
-                  gap: 10,
+                  gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+                  gap: "14px 18px",
                   background: "#0A2224",
                   border: "1px solid #133A3C",
                   borderRadius: 7,
@@ -407,13 +628,13 @@ function AsnQueue({ onPendingCount }: { onPendingCount: (n: number) => void }) {
                       <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase" }}>
                         Port families
                       </div>
-                      <div style={{ fontSize: 12 }}>{[...ev.portFamilies].join(", ") || "—"}</div>
+                      <div style={{ fontSize: 12, overflowWrap: "anywhere" }}>{[...ev.portFamilies].join(", ") || "—"}</div>
                     </div>
                     <div>
                       <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase" }}>
                         Other IPs in ASN seen
                       </div>
-                      <div style={{ fontSize: 12, color: "#6FA89E" }}>— needs ASN on a rollup</div>
+                      <div style={{ fontSize: 12, color: "#6FA89E", overflowWrap: "anywhere" }}>— needs ASN on a rollup</div>
                     </div>
                   </>
                 ) : (
@@ -619,6 +840,7 @@ function IpRoleCard({
 
   const suggestions = row.suggestions as Record<string, RoleSuggestion>;
   const evaluation = row.evaluation as Evaluation | null;
+  const { domains, certs } = extractNames(suggestions);
 
   async function toggleExpand() {
     const next = !expanded;
@@ -679,6 +901,7 @@ function IpRoleCard({
               </span>
             )}
           </div>
+          <NamesList domains={domains} certs={certs} />
           <div style={{ fontSize: 12, color: "#6FA89E" }}>
             {vantage === "peer" ? "peer" : "watched IP"}
             {row.first_day && row.last_day && (
@@ -738,35 +961,63 @@ function IpRoleCard({
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
-                <span className="mono" style={{ color: "#4C8DFF", fontWeight: 600, fontSize: 12 }}>
-                  {ruleName}
+                <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span className="mono" style={{ color: "#4C8DFF", fontWeight: 600, fontSize: 12 }}>
+                    {ruleName}
+                  </span>
+                  {!RULE_FEATURE_GLOSSARY[ruleName] && (
+                    <span
+                      className="mono"
+                      style={{ fontSize: 10, color: "#6FA89E", border: "1px dashed #3F9C8A", borderRadius: 4, padding: "0 5px" }}
+                      title="This rule isn't in the feature glossary yet — its fields show without tooltips below."
+                    >
+                      no glossary entry
+                    </span>
+                  )}
                 </span>
                 {s.alarm && (
                   <span style={{ color: "#F5A623", fontWeight: 600, fontSize: 11 }}>⚠ {s.alarm}</span>
                 )}
               </div>
               {s.reasoning && <div style={{ marginTop: 4 }}>{s.reasoning}</div>}
-              {s.features && Object.keys(s.features).length > 0 && (
-                <div
-                  style={{
-                    display: "grid",
-                    gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-                    gap: 10,
-                    marginTop: 10,
-                  }}
-                >
-                  {Object.entries(s.features).map(([k, v]) => (
-                    <div key={k}>
-                      <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase" }}>
-                        {k.replace(/_/g, " ")}
-                      </div>
-                      <div className="mono" style={{ fontSize: 13 }}>
-                        {v === null || v === undefined ? "null" : typeof v === "object" ? JSON.stringify(v) : String(v)}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              {s.features &&
+                Object.entries(s.features).filter(([k]) => !NAME_FEATURE_KEYS.has(k)).length > 0 && (
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "repeat(auto-fit, minmax(170px, 1fr))",
+                      gap: "14px 18px",
+                      marginTop: 10,
+                    }}
+                  >
+                    {Object.entries(s.features)
+                      .filter(([k]) => !NAME_FEATURE_KEYS.has(k))
+                      .map(([k, v]) => {
+                        const desc = featureDescription(ruleName, k);
+                        const label = k.replace(/_/g, " ");
+                        return (
+                          <div key={k}>
+                            <div
+                              style={{
+                                display: "flex",
+                                alignItems: "center",
+                                gap: 5,
+                                fontSize: 10,
+                                color: "#6FA89E",
+                                textTransform: "uppercase",
+                              }}
+                            >
+                              {label}
+                              <InfoDot label={label} text={desc} />
+                            </div>
+                            <div className="mono" style={{ fontSize: 13, marginTop: 3, overflowWrap: "anywhere" }}>
+                              {formatFeatureValue(v)}
+                            </div>
+                          </div>
+                        );
+                      })}
+                  </div>
+                )}
             </div>
           ))}
         </div>
