@@ -4,9 +4,13 @@ import {
   listIpsWatchIpsGet,
   flowDailyRollupFlowDailyGet,
   flowHourlyRollupFlowHourlyGet,
+  getIpRolesReviewIpRolesIpGet,
+  getIpIdentityLookupIpIdentitiesIpGet,
   type WatchedIp,
   type DailyFlow,
   type HourlyFlow,
+  type IpRole,
+  type IpIdentity,
 } from "../api/netflow-rollups-client";
 import { formatBytes, isoDate, daysAgo } from "../lib/format";
 import { categoryColors } from "../lib/categories";
@@ -109,6 +113,11 @@ export function Netflow() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [ipRoles, setIpRoles] = useState<IpRole[] | null>(null);
+  const [ipIdentity, setIpIdentity] = useState<IpIdentity | null>(null);
+  const [ipContextLoading, setIpContextLoading] = useState(false);
+  const [ipContextError, setIpContextError] = useState<string | null>(null);
+
   useEffect(() => {
     let cancelled = false;
     listIpsWatchIpsGet({ throwOnError: true })
@@ -122,6 +131,39 @@ export function Netflow() {
       cancelled = true;
     };
   }, []);
+
+  // Context for whichever single monitored IP is filtered on — only fetched
+  // once an analyst actually narrows to one, same "don't fetch until asked"
+  // discipline as everywhere else on this page.
+  useEffect(() => {
+    if (!filters.monitoredIp) {
+      setIpRoles(null);
+      setIpIdentity(null);
+      setIpContextError(null);
+      return;
+    }
+    let cancelled = false;
+    setIpContextLoading(true);
+    setIpContextError(null);
+    Promise.all([
+      getIpRolesReviewIpRolesIpGet({ path: { ip: filters.monitoredIp }, throwOnError: true }).catch(() => null),
+      getIpIdentityLookupIpIdentitiesIpGet({ path: { ip: filters.monitoredIp } }).catch(() => null),
+    ])
+      .then(([rolesResult, identityResult]) => {
+        if (cancelled) return;
+        setIpRoles(rolesResult?.data.rows ?? []);
+        setIpIdentity(identityResult?.data ?? null);
+      })
+      .catch((err) => {
+        if (!cancelled) setIpContextError(err instanceof Error ? err.message : String(err));
+      })
+      .finally(() => {
+        if (!cancelled) setIpContextLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [filters.monitoredIp]);
 
   // Debounce the free-text filters (peerIp, portFamily) so every keystroke
   // doesn't fire a request — monitoredIp/range are selects/buttons, so they
@@ -392,6 +434,17 @@ export function Netflow() {
             </div>
           </div>
 
+          {filters.monitoredIp && (
+            <IpContextTile
+              ip={filters.monitoredIp}
+              watchedIp={watchedIps.find((w) => w.ip === filters.monitoredIp)}
+              roles={ipRoles}
+              identity={ipIdentity}
+              loading={ipContextLoading}
+              error={ipContextError}
+            />
+          )}
+
           {error && (
             <div className="card" style={{ padding: 20, borderColor: "#5A2327", marginBottom: 20 }}>
               Failed to load from netflow-rollups' API: {error}
@@ -505,5 +558,119 @@ export function Netflow() {
         </>
       )}
     </>
+  );
+}
+
+// Roles, TIP labels and ASN identity for whichever monitored IP is
+// currently filtered on — the context an analyst reaching for this filter
+// is almost always also reaching for, so it's surfaced here rather than
+// requiring a trip to the Entity page just to remember what this IP is.
+function IpContextTile({
+  ip,
+  watchedIp,
+  roles,
+  identity,
+  loading,
+  error,
+}: {
+  ip: string;
+  watchedIp: WatchedIp | undefined;
+  roles: IpRole[] | null;
+  identity: IpIdentity | null;
+  loading: boolean;
+  error: string | null;
+}) {
+  const confirmedRoles = (roles ?? []).filter((r) => r.status === "confirmed");
+  const pendingRoles = (roles ?? []).filter((r) => r.status !== "confirmed" && r.status !== "rejected");
+  const tips = (watchedIp?.tags ?? []).filter((t) => !t.startsWith("msk:"));
+
+  return (
+    <div className="card" style={{ padding: "16px 20px", marginBottom: 18 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "baseline",
+          gap: 12,
+          flexWrap: "wrap",
+          marginBottom: 12,
+        }}
+      >
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: "#A6D8CD" }}>Context</span>
+          <Link to={`/entity/${ip}`} className="mono row-link" style={{ fontSize: 14, fontWeight: 600 }}>
+            {ip}
+          </Link>
+        </div>
+        <Link to={`/entity/${ip}`} style={{ fontSize: 11 }}>
+          full entity →
+        </Link>
+      </div>
+
+      {loading && <div style={{ color: "#6FA89E", fontSize: 12 }}>Loading…</div>}
+      {error && <div style={{ color: "#E5484D", fontSize: 12 }}>Failed to load context: {error}</div>}
+
+      {!loading && (
+        <div style={{ display: "flex", gap: 32, flexWrap: "wrap" }}>
+          <div>
+            <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase", marginBottom: 6 }}>
+              Roles · <span className="mono">review__ip_roles</span>
+            </div>
+            {confirmedRoles.length === 0 && pendingRoles.length === 0 ? (
+              <span style={{ color: "#6FA89E", fontSize: 12 }}>none yet</span>
+            ) : (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                {confirmedRoles.map((r) => (
+                  <span className="chip rev" key={r.role}>
+                    {r.role}
+                  </span>
+                ))}
+                {pendingRoles.map((r) => (
+                  <span className="chip pend" key={r.role} title={`${r.status} — not yet confirmed`}>
+                    proposed {r.role}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase", marginBottom: 6 }}>
+              TIP labels · <span className="mono">watch__ips.tags</span>
+            </div>
+            {tips.length === 0 ? (
+              <span style={{ color: "#6FA89E", fontSize: 12 }}>none</span>
+            ) : (
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 5 }}>
+                {tips.map((t) => (
+                  <span className="chip tip" key={t} title="analyst suggestion, never a rule input">
+                    {t}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+
+          <div>
+            <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase", marginBottom: 6 }}>
+              ASN · <span className="mono">lookup__ip_identities</span>
+            </div>
+            {identity ? (
+              <div style={{ fontSize: 13 }}>
+                {identity.asn ? `AS${identity.asn}` : "—"} {identity.asn_holder ?? ""}
+                {identity.country && <span style={{ color: "#6FA89E" }}> · {identity.country}</span>}
+                {identity.rdns && (
+                  <div className="mono" style={{ fontSize: 11, color: "#6FA89E", marginTop: 3 }}>
+                    {identity.rdns}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <span style={{ color: "#6FA89E", fontSize: 12 }}>no identity row yet</span>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
   );
 }
