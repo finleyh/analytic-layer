@@ -6,6 +6,7 @@ import { CandidateReview } from "./pages/CandidateReview";
 import { TopTalkers } from "./pages/TopTalkers";
 import { PipelineHealth } from "./pages/PipelineHealth";
 import { FlowGraph } from "./pages/FlowGraph";
+import { Netflow } from "./pages/Netflow";
 import { Geo } from "./pages/Geo";
 import { Domains } from "./pages/Domains";
 import { DomainDetail } from "./pages/DomainDetail";
@@ -14,13 +15,24 @@ const PAGES: { label: string; path: string }[] = [
   { label: "Overview", path: "/" },
   { label: "Watchlist", path: "/watchlist" },
   { label: "Domains", path: "/domains" },
+  { label: "Netflow", path: "/netflow" },
   { label: "Geo", path: "/geo" },
   { label: "Flow graph", path: "/flow-graph" },
   { label: "Top talkers", path: "/top-talkers" },
   { label: "Candidates", path: "/candidates" },
   { label: "Pipeline health", path: "/pipeline-health" },
 ];
-const BUILT_PATHS = new Set(["/", "/watchlist", "/candidates", "/top-talkers", "/pipeline-health", "/flow-graph", "/geo", "/domains"]);
+const BUILT_PATHS = new Set([
+  "/",
+  "/watchlist",
+  "/candidates",
+  "/top-talkers",
+  "/pipeline-health",
+  "/flow-graph",
+  "/geo",
+  "/domains",
+  "/netflow",
+]);
 
 function Sidebar() {
   const location = useLocation();
@@ -92,6 +104,7 @@ export function App() {
             <Route path="/top-talkers" element={<TopTalkers />} />
             <Route path="/pipeline-health" element={<PipelineHealth />} />
             <Route path="/flow-graph" element={<FlowGraph />} />
+            <Route path="/netflow" element={<Netflow />} />
             <Route path="/geo" element={<Geo />} />
             <Route path="/domains" element={<Domains />} />
             <Route path="/domains/:id" element={<DomainDetail />} />

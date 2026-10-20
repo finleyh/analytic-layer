@@ -183,11 +183,11 @@ function OverviewContent({ data }: { data: OverviewData }) {
   const newestIp = [...watchedIps].sort((a, b) => b.added_at.localeCompare(a.added_at))[0];
 
   // -- reviewed roles (watched) --
-  const acceptedCount = ipRolesWatched.filter((r) => r.accepted_role).length;
+  const acceptedCount = ipRolesWatched.filter((r) => r.status === "confirmed").length;
   const proposedBreakdown = new Map<string, number>();
   for (const r of ipRolesWatched) {
-    if (r.accepted_role) continue;
-    proposedBreakdown.set(r.proposed_role, (proposedBreakdown.get(r.proposed_role) ?? 0) + 1);
+    if (r.status === "confirmed") continue;
+    proposedBreakdown.set(r.role, (proposedBreakdown.get(r.role) ?? 0) + 1);
   }
   const proposedLine = [...proposedBreakdown.entries()]
     .sort((a, b) => b[1] - a[1])

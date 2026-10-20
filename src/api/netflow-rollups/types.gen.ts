@@ -189,13 +189,17 @@ export type DailyConfirmedContact = {
      */
     port_family: string;
     /**
-     * Monitored Ip Role
+     * Monitored Ip Roles
+     *
+     * every role a human had confirmed for the watched IP when the bucket was materialised; [] for none
      */
-    monitored_ip_role: string | null;
+    monitored_ip_roles: Array<string>;
     /**
-     * Peer Role
+     * Peer Roles
+     *
+     * the same for the peer
      */
-    peer_role: string | null;
+    peer_roles: Array<string>;
     /**
      * Pair Confirmed
      */
@@ -215,7 +219,8 @@ export type DailyConfirmedContact = {
  *
  * One row of rollup__flow_daily: a (watched IP, peer, protocol, port
  * family) cell for one day, with the peer's categories and the roles a
- * human had accepted when the bucket was materialised.
+ * human had confirmed when the bucket was materialised (lists since 0089:
+ * an IP can be confirmed as several things).
  */
 export type DailyFlow = {
     /**
@@ -255,13 +260,17 @@ export type DailyFlow = {
      */
     peer_categories: Array<string>;
     /**
-     * Monitored Ip Role
+     * Monitored Ip Roles
+     *
+     * every role a human had confirmed for the watched IP when the bucket was materialised; [] for none
      */
-    monitored_ip_role: string | null;
+    monitored_ip_roles: Array<string>;
     /**
-     * Peer Role
+     * Peer Roles
+     *
+     * the same for the peer
      */
-    peer_role: string | null;
+    peer_roles: Array<string>;
     /**
      * Pair Confirmed
      */
@@ -360,6 +369,41 @@ export type DailyUnclassifiedContact = {
      * Flow Count
      */
     flow_count: number;
+};
+
+/**
+ * Finding
+ *
+ * One row of verdict__findings: a fact a rule established about an IP
+ * on a day, about a subject -- the URL a signature is about (`signature_*`
+ * rules; the domain chain submits it to urlscan), the watched C2 a peer
+ * beacons to (`beacon_*`, phase 2 step C). No effect on the rollups.
+ */
+export type Finding = {
+    /**
+     * Day
+     */
+    day: string;
+    /**
+     * Rule Name
+     */
+    rule_name: string;
+    /**
+     * Ip
+     */
+    ip: string;
+    /**
+     * Subject
+     *
+     * a URL for a signature finding, the C2's address for a beacon finding; '' when the rule has none
+     */
+    subject: string;
+    /**
+     * Evidence
+     */
+    evidence: {
+        [key: string]: unknown;
+    };
 };
 
 /**
@@ -703,13 +747,17 @@ export type HourlyFlow = {
      */
     peer_categories: Array<string>;
     /**
-     * Monitored Ip Role
+     * Monitored Ip Roles
+     *
+     * every role a human had confirmed for the watched IP when the bucket was materialised; [] for none
      */
-    monitored_ip_role: string | null;
+    monitored_ip_roles: Array<string>;
     /**
-     * Peer Role
+     * Peer Roles
+     *
+     * the same for the peer
      */
-    peer_role: string | null;
+    peer_roles: Array<string>;
     /**
      * Pair Confirmed
      */
@@ -789,9 +837,14 @@ export type IpIdentity = {
 /**
  * IpRole
  *
- * One row of review__ip_roles: the heuristic's half (proposed_role,
- * reasoning, features, refreshed nightly) beside the human's
- * (accepted_*, written only by a decision).
+ * One row of review__ip_roles: one (ip, role). `suggestions` is the
+ * evidence, one entry per rule that currently sees this role for this IP
+ * (`{rule_name: {reasoning, features, first_day, last_day, alarm}}`);
+ * an IP can carry several roles, each its own row. `status` moves from
+ * `suggested` (a rule's input) through an optional `agentic_evaluation`
+ * to the analyst's `confirmed` or `rejected`, and a confirmed role
+ * `expired` lapses. A confirmed row with an empty `suggestions` map is a
+ * role the analyst asserted with no rule behind it (since 0089).
  */
 export type IpRole = {
     /**
@@ -799,31 +852,29 @@ export type IpRole = {
      */
     ip: string;
     /**
+     * Role
+     */
+    role: string;
+    /**
      * Vantage
      *
      * watched | peer
      */
     vantage: string;
     /**
-     * Proposed Role
+     * Status
+     *
+     * suggested | agentic_evaluation | confirmed | rejected | expired
      */
-    proposed_role: string;
+    status: string;
     /**
-     * Reasoning
+     * Suggestions
+     *
+     * rule_name -> {reasoning, features, first_day, last_day, alarm}; {} for an asserted role
      */
-    reasoning: string;
-    /**
-     * Features
-     */
-    features: {
+    suggestions: {
         [key: string]: unknown;
     };
-    /**
-     * Watched Ips
-     *
-     * for a peer: how many watched IPs it was judged against
-     */
-    watched_ips: number;
     /**
      * First Day
      */
@@ -833,23 +884,29 @@ export type IpRole = {
      */
     last_day: string | null;
     /**
-     * Status
+     * Decided By
      *
-     * pending | confirmed | rejected | expired
+     * the path that decided (api, skill, ...); null until decided
      */
-    status: string;
+    decided_by: string | null;
     /**
-     * Accepted Role
+     * Decided At
      */
-    accepted_role: string | null;
+    decided_at: string | null;
     /**
-     * Accepted Source
+     * Note
+     *
+     * the analyst's note on the decision, or the expiry reason
      */
-    accepted_source: string | null;
+    note: string;
     /**
-     * Accepted At
+     * Evaluation
+     *
+     * the agent's pass (since 0091): {verdict agree|disagree|unsure, alternative, reasoning, model, evaluated_at}; null until it has read the row
      */
-    accepted_at: string | null;
+    evaluation: {
+        [key: string]: unknown;
+    } | null;
     /**
      * Discovered At
      */
@@ -858,10 +915,6 @@ export type IpRole = {
      * Updated At
      */
     updated_at: string;
-    /**
-     * Reviewed At
-     */
-    reviewed_at: string | null;
 };
 
 /**
@@ -998,6 +1051,24 @@ export type PageDailyUnclassifiedContact = {
      * Rows
      */
     rows: Array<DailyUnclassifiedContact>;
+    /**
+     * Count
+     */
+    count: number;
+    /**
+     * Newest Day
+     */
+    newest_day?: string | null;
+};
+
+/**
+ * Page[Finding]
+ */
+export type PageFinding = {
+    /**
+     * Rows
+     */
+    rows: Array<Finding>;
     /**
      * Count
      */
@@ -1339,10 +1410,11 @@ export type ProviderCategory = {
 /**
  * ReviewQueue
  *
- * Pending counts by queue: the Overview tile and the Candidate review
+ * Suggested counts by queue: the Overview tile and the Candidate review
  * chips. Pairs are not a queue: a pair is confirmed as a consequence of
  * confirming an IP's role, and an unconfirmed pair is evidence under that
- * role, not a decision of its own (user, 2026-10-16).
+ * role, not a decision of its own (user, 2026-10-16). Since 0089 a row is
+ * an (ip, role), so these count suggested roles, not IPs.
  */
 export type ReviewQueue = {
     /**
@@ -1362,9 +1434,10 @@ export type ReviewQueue = {
 /**
  * RoleDecision
  *
- * confirm: `role` as proposed or corrected, and optionally the exact
- * `pairs` to confirm (default: every measured pair whose measured role
- * matches). reject: nothing else.
+ * The role is in the path (`/review/ip-roles/{ip}/{role}/decision`).
+ * confirm: optionally the exact `pairs` to confirm for a SIP role
+ * (default: every measured pair whose measured role matches); a role no
+ * rule suggested may be confirmed too (asserted). reject: nothing else.
  */
 export type RoleDecision = {
     /**
@@ -1372,17 +1445,13 @@ export type RoleDecision = {
      */
     decision: 'confirm' | 'reject';
     /**
-     * Role
-     */
-    role?: 'sip_server' | 'sip_trunk' | 'sip_client' | 'unclear' | null;
-    /**
      * Pairs
      */
     pairs?: Array<PairRef> | null;
     /**
      * Note
      *
-     * the reviewer's reasoning; goes into the source stamp
+     * the reviewer's reasoning; kept on the row and in the pairs' source stamp
      */
     note?: string;
 };
@@ -1396,6 +1465,10 @@ export type RoleDecisionResult = {
      */
     ip: string;
     /**
+     * Role
+     */
+    role: string;
+    /**
      * Vantage
      */
     vantage: string;
@@ -1404,9 +1477,11 @@ export type RoleDecisionResult = {
      */
     decision: string;
     /**
-     * Accepted Role
+     * Asserted
+     *
+     * confirm: true when no rule had suggested this role, so the row was created by the decision
      */
-    accepted_role: string | null;
+    asserted?: boolean;
     /**
      * Pairs
      *
@@ -2228,6 +2303,66 @@ export type ListScannersVerdictScannersGetResponses = {
 
 export type ListScannersVerdictScannersGetResponse = ListScannersVerdictScannersGetResponses[keyof ListScannersVerdictScannersGetResponses];
 
+export type ListFindingsVerdictFindingsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Ip
+         */
+        ip?: string | null;
+        /**
+         * Rule Name
+         *
+         * the rule that wrote the finding, e.g. signature_open_directory
+         */
+        rule_name?: string | null;
+        /**
+         * Subject
+         *
+         * exact subject: a URL for a signature, a C2 address for a beacon
+         */
+        subject?: string | null;
+        /**
+         * Limit
+         *
+         * rows to return, at most 1000
+         */
+        limit?: number;
+        /**
+         * From
+         *
+         * first day, inclusive; default: six days before `to`
+         */
+        from?: string | null;
+        /**
+         * To
+         *
+         * last day, inclusive; default: today (UTC)
+         */
+        to?: string | null;
+    };
+    url: '/verdict/findings';
+};
+
+export type ListFindingsVerdictFindingsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListFindingsVerdictFindingsGetError = ListFindingsVerdictFindingsGetErrors[keyof ListFindingsVerdictFindingsGetErrors];
+
+export type ListFindingsVerdictFindingsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageFinding;
+};
+
+export type ListFindingsVerdictFindingsGetResponse = ListFindingsVerdictFindingsGetResponses[keyof ListFindingsVerdictFindingsGetResponses];
+
 export type ListIpRolesReviewIpRolesGetData = {
     body?: never;
     path?: never;
@@ -2235,7 +2370,7 @@ export type ListIpRolesReviewIpRolesGetData = {
         /**
          * Status
          *
-         * pending | confirmed | rejected | expired
+         * suggested | agentic_evaluation | confirmed | rejected | expired
          */
         status?: string | null;
         /**
@@ -2245,9 +2380,19 @@ export type ListIpRolesReviewIpRolesGetData = {
          */
         vantage?: string | null;
         /**
+         * Role
+         */
+        role?: string | null;
+        /**
          * Ip
          */
         ip?: string | null;
+        /**
+         * Alarmed
+         *
+         * true: only rows where a rule raised an alarm (evidence changed on a reviewed row)
+         */
+        alarmed?: boolean | null;
         /**
          * Limit
          *
@@ -2276,7 +2421,7 @@ export type ListIpRolesReviewIpRolesGetResponses = {
 
 export type ListIpRolesReviewIpRolesGetResponse = ListIpRolesReviewIpRolesGetResponses[keyof ListIpRolesReviewIpRolesGetResponses];
 
-export type GetIpRoleReviewIpRolesIpGetData = {
+export type GetIpRolesReviewIpRolesIpGetData = {
     body?: never;
     path: {
         /**
@@ -2288,23 +2433,23 @@ export type GetIpRoleReviewIpRolesIpGetData = {
     url: '/review/ip-roles/{ip}';
 };
 
-export type GetIpRoleReviewIpRolesIpGetErrors = {
+export type GetIpRolesReviewIpRolesIpGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type GetIpRoleReviewIpRolesIpGetError = GetIpRoleReviewIpRolesIpGetErrors[keyof GetIpRoleReviewIpRolesIpGetErrors];
+export type GetIpRolesReviewIpRolesIpGetError = GetIpRolesReviewIpRolesIpGetErrors[keyof GetIpRolesReviewIpRolesIpGetErrors];
 
-export type GetIpRoleReviewIpRolesIpGetResponses = {
+export type GetIpRolesReviewIpRolesIpGetResponses = {
     /**
      * Successful Response
      */
-    200: IpRole;
+    200: PageIpRole;
 };
 
-export type GetIpRoleReviewIpRolesIpGetResponse = GetIpRoleReviewIpRolesIpGetResponses[keyof GetIpRoleReviewIpRolesIpGetResponses];
+export type GetIpRolesReviewIpRolesIpGetResponse = GetIpRolesReviewIpRolesIpGetResponses[keyof GetIpRolesReviewIpRolesIpGetResponses];
 
 export type QueueReviewQueueGetData = {
     body?: never;
@@ -2412,35 +2557,39 @@ export type ListAsnCandidatesReviewAsnCandidatesGetResponses = {
 
 export type ListAsnCandidatesReviewAsnCandidatesGetResponse = ListAsnCandidatesReviewAsnCandidatesGetResponses[keyof ListAsnCandidatesReviewAsnCandidatesGetResponses];
 
-export type DecideIpRoleReviewIpRolesIpDecisionPostData = {
+export type DecideIpRoleReviewIpRolesIpRoleDecisionPostData = {
     body: RoleDecision;
     path: {
         /**
          * Ip
          */
         ip: string;
+        /**
+         * Role
+         */
+        role: string;
     };
     query?: never;
-    url: '/review/ip-roles/{ip}/decision';
+    url: '/review/ip-roles/{ip}/{role}/decision';
 };
 
-export type DecideIpRoleReviewIpRolesIpDecisionPostErrors = {
+export type DecideIpRoleReviewIpRolesIpRoleDecisionPostErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type DecideIpRoleReviewIpRolesIpDecisionPostError = DecideIpRoleReviewIpRolesIpDecisionPostErrors[keyof DecideIpRoleReviewIpRolesIpDecisionPostErrors];
+export type DecideIpRoleReviewIpRolesIpRoleDecisionPostError = DecideIpRoleReviewIpRolesIpRoleDecisionPostErrors[keyof DecideIpRoleReviewIpRolesIpRoleDecisionPostErrors];
 
-export type DecideIpRoleReviewIpRolesIpDecisionPostResponses = {
+export type DecideIpRoleReviewIpRolesIpRoleDecisionPostResponses = {
     /**
      * Successful Response
      */
     200: RoleDecisionResult;
 };
 
-export type DecideIpRoleReviewIpRolesIpDecisionPostResponse = DecideIpRoleReviewIpRolesIpDecisionPostResponses[keyof DecideIpRoleReviewIpRolesIpDecisionPostResponses];
+export type DecideIpRoleReviewIpRolesIpRoleDecisionPostResponse = DecideIpRoleReviewIpRolesIpRoleDecisionPostResponses[keyof DecideIpRoleReviewIpRolesIpRoleDecisionPostResponses];
 
 export type DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostData = {
     body: AsnDecision;
@@ -2687,7 +2836,7 @@ export type TopPeersRollupFlowDailyTopPeersGetData = {
         /**
          * Exclude Confirmed
          *
-         * drop peers with an accepted role or a confirmed pair
+         * drop peers with a confirmed role or a confirmed pair
          */
         exclude_confirmed?: boolean;
         /**
@@ -2696,6 +2845,12 @@ export type TopPeersRollupFlowDailyTopPeersGetData = {
          * drop peers that are themselves on the watch set
          */
         exclude_watched?: boolean;
+        /**
+         * Role
+         *
+         * only traffic of watched IPs carrying this confirmed role
+         */
+        role?: string | null;
         /**
          * Limit
          *
@@ -2753,7 +2908,7 @@ export type TopAsnsRollupFlowDailyTopAsnsGetData = {
         /**
          * Exclude Confirmed
          *
-         * drop peers with an accepted role or a confirmed pair
+         * drop peers with a confirmed role or a confirmed pair
          */
         exclude_confirmed?: boolean;
         /**
@@ -2762,6 +2917,12 @@ export type TopAsnsRollupFlowDailyTopAsnsGetData = {
          * drop peers that are themselves on the watch set
          */
         exclude_watched?: boolean;
+        /**
+         * Role
+         *
+         * only traffic of watched IPs carrying this confirmed role
+         */
+        role?: string | null;
         /**
          * Limit
          *
@@ -2818,6 +2979,12 @@ export type FlowDailyRollupFlowDailyGetData = {
          * Port Family
          */
         port_family?: string | null;
+        /**
+         * Role
+         *
+         * only cells whose watched IP carries this confirmed role
+         */
+        role?: string | null;
         /**
          * Limit
          *

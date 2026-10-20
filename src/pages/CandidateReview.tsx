@@ -1,9 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   listAsnCandidatesReviewAsnCandidatesGet,
   decideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPost,
   listIpRolesReviewIpRolesGet,
-  decideIpRoleReviewIpRolesIpDecisionPost,
+  decideIpRoleReviewIpRolesIpRoleDecisionPost,
   listSipPairsReviewSipPairsGet,
   flowDailyRollupFlowDailyGet,
   queueReviewQueueGet,
@@ -16,7 +16,8 @@ import {
 import { formatBytes, formatShortDate, isoDate, daysAgo } from "../lib/format";
 
 type Queue = "asn" | "peer" | "watched";
-type Role = "sip_server" | "sip_trunk" | "sip_client" | "unclear";
+
+type RoleSuggestion = { reasoning?: string; features?: Record<string, unknown>; first_day?: string; last_day?: string; alarm?: string | null };
 
 const BTN_BASE: React.CSSProperties = {
   all: "unset",
@@ -110,8 +111,7 @@ export function CandidateReview() {
 
       {/* All three queues stay mounted so their real, filtered pending counts
           load immediately — the tab badges would otherwise show the raw
-          /review/queue totals (which include "unclear" rows the lists below
-          filter out) until each tab had actually been clicked once. */}
+          /review/queue totals until each tab had actually been clicked once. */}
       <div style={{ display: tab === "asn" ? undefined : "none" }}>
         <AsnQueue onPendingCount={setAsnPending} />
       </div>
@@ -142,6 +142,16 @@ function AsnQueue({ onPendingCount }: { onPendingCount: (n: number) => void }) {
   const [decided, setDecided] = useState<Map<number, AsnDecided>>(new Map());
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [asnFilter, setAsnFilter] = useState<string>("");
+
+  const asnOptions = useMemo(
+    () => [...new Set((candidates ?? []).map((c) => c.asn))].sort((a, b) => a - b),
+    [candidates],
+  );
+  const visibleCandidates = useMemo(
+    () => (asnFilter ? (candidates ?? []).filter((c) => String(c.asn) === asnFilter) : (candidates ?? [])),
+    [candidates, asnFilter],
+  );
 
   useEffect(() => {
     let cancelled = false;
@@ -248,8 +258,42 @@ function AsnQueue({ onPendingCount }: { onPendingCount: (n: number) => void }) {
       )}
       {!candidates && !error && <div style={{ color: "#6FA89E" }}>Loading…</div>}
 
+      {candidates && candidates.length > 0 && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+          <label style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase" }}>Filter by ASN</label>
+          <select
+            value={asnFilter}
+            onChange={(e) => setAsnFilter(e.target.value)}
+            className="mono"
+            style={{
+              background: "#0A2224",
+              color: "#E8FFF8",
+              border: "1px solid #2B7266",
+              borderRadius: 6,
+              padding: "6px 8px",
+              fontSize: 12,
+            }}
+          >
+            <option value="">all {candidates.length}</option>
+            {asnOptions.map((asn) => (
+              <option key={asn} value={asn}>
+                AS{asn}
+              </option>
+            ))}
+          </select>
+          {asnFilter && (
+            <button
+              onClick={() => setAsnFilter("")}
+              style={{ all: "unset", cursor: "pointer", fontSize: 11, color: "#7FEFD6" }}
+            >
+              clear
+            </button>
+          )}
+        </div>
+      )}
+
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {candidates?.map((c) => {
+        {visibleCandidates.map((c) => {
           const ev = evidence.get(c.id);
           const d = decided.get(c.id);
           return (
@@ -386,6 +430,11 @@ function AsnQueue({ onPendingCount }: { onPendingCount: (n: number) => void }) {
             No pending ASN candidates.
           </div>
         )}
+        {candidates && candidates.length > 0 && visibleCandidates.length === 0 && (
+          <div className="card" style={{ padding: 20, color: "#6FA89E" }}>
+            No pending candidates for AS{asnFilter}.
+          </div>
+        )}
       </div>
     </>
   );
@@ -393,7 +442,11 @@ function AsnQueue({ onPendingCount }: { onPendingCount: (n: number) => void }) {
 
 // ---------- Peer roles / Monitored IP roles (both review__ip_roles) ----------
 
-type RoleDecided = { decision: "confirm" | "reject"; role?: string };
+type RoleDecided = { decision: "confirm" | "reject" };
+
+function rowKey(row: IpRole): string {
+  return `${row.ip}:${row.role}`;
+}
 
 function IpRoleQueue({
   vantage,
@@ -406,18 +459,28 @@ function IpRoleQueue({
   const [decided, setDecided] = useState<Map<string, RoleDecided>>(new Map());
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [ipFilter, setIpFilter] = useState<string>("");
+
+  const ipOptions = useMemo(() => [...new Set((rows ?? []).map((r) => r.ip))].sort(), [rows]);
+  const visibleRows = useMemo(
+    () => (ipFilter ? (rows ?? []).filter((r) => r.ip === ipFilter) : (rows ?? [])),
+    [rows, ipFilter],
+  );
 
   useEffect(() => {
     let cancelled = false;
     setRows(null);
     setDecided(new Map());
-    listIpRolesReviewIpRolesGet({ query: { vantage, status: "pending", limit: 1000 }, throwOnError: true })
+    setIpFilter("");
+    listIpRolesReviewIpRolesGet({ query: { vantage, limit: 1000 }, throwOnError: true })
       .then((r) => {
         if (cancelled) return;
-        // "unclear" is the heuristic's catch-all, not a finding — nothing
-        // for an analyst to confirm or reject, so it's filtered out rather
-        // than shown as a no-op row.
-        const actionable = r.data.rows.filter((row) => row.proposed_role !== "unclear");
+        // Awaiting review: suggested (a rule's input, not yet read by the
+        // agent) or agentic_evaluation (the agent has read it — those come
+        // first since they're ready for a human to act on).
+        const actionable = r.data.rows
+          .filter((row) => row.status === "suggested" || row.status === "agentic_evaluation")
+          .sort((a, b) => (a.status === b.status ? 0 : a.status === "agentic_evaluation" ? -1 : 1));
         setRows(actionable);
         onPendingCount(actionable.length);
       })
@@ -432,20 +495,14 @@ function IpRoleQueue({
   async function decide(row: IpRole, decision: "confirm" | "reject", pairs?: PairRef[]) {
     setActionError(null);
     try {
-      await decideIpRoleReviewIpRolesIpDecisionPost({
-        path: { ip: row.ip },
-        body:
-          decision === "confirm"
-            ? { decision: "confirm", role: row.proposed_role as Role, pairs: pairs ?? null }
-            : { decision: "reject" },
+      await decideIpRoleReviewIpRolesIpRoleDecisionPost({
+        path: { ip: row.ip, role: row.role },
+        body: decision === "confirm" ? { decision: "confirm", pairs: pairs ?? null } : { decision: "reject" },
         throwOnError: true,
       });
       setDecided((prev) => {
-        const next = new Map(prev).set(row.ip, {
-          decision,
-          role: decision === "confirm" ? row.proposed_role : undefined,
-        });
-        onPendingCount((rows ?? []).filter((r) => !next.has(r.ip)).length);
+        const next = new Map(prev).set(rowKey(row), { decision });
+        onPendingCount((rows ?? []).filter((r) => !next.has(rowKey(r))).length);
         return next;
       });
     } catch (err) {
@@ -461,12 +518,13 @@ function IpRoleQueue({
       >
         <span>ⓘ</span>
         <span>
-          <b style={{ color: "#4C8DFF" }}>Confirm writes to netflow-rollups.</b> It sets{" "}
-          <span className="mono">accepted_role</span> on <span className="mono">review__ip_roles</span>{" "}
-          and confirms the measured pairs whose role matches — expand "Relationships" to see and
-          veto which ones. Reject clears any prior accept and marks the row rejected — a reviewer
-          may still correct it later (unlike ASN candidates, a role row isn't locked after a
-          decision).
+          <b style={{ color: "#4C8DFF" }}>Confirm writes to netflow-rollups.</b> It moves this
+          (ip, role) row in <span className="mono">review__ip_roles</span> to{" "}
+          <span className="mono">confirmed</span> and confirms the measured pairs whose role
+          matches — expand "Relationships" to see and veto which ones. Reject marks the row{" "}
+          <span className="mono">rejected</span> — a reviewer may still correct it later (unlike
+          ASN candidates, a role row isn't locked after a decision). Confirming or rejecting one
+          role leaves this IP's other roles untouched.
         </span>
       </div>
 
@@ -482,19 +540,66 @@ function IpRoleQueue({
       )}
       {!rows && !error && <div style={{ color: "#6FA89E" }}>Loading…</div>}
 
+      {rows && rows.length > 0 && (
+        <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16 }}>
+          <label style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase" }}>Filter by IP</label>
+          <select
+            value={ipFilter}
+            onChange={(e) => setIpFilter(e.target.value)}
+            className="mono"
+            style={{
+              background: "#0A2224",
+              color: "#E8FFF8",
+              border: "1px solid #2B7266",
+              borderRadius: 6,
+              padding: "6px 8px",
+              fontSize: 12,
+            }}
+          >
+            <option value="">all {ipOptions.length}</option>
+            {ipOptions.map((ip) => (
+              <option key={ip} value={ip}>
+                {ip}
+              </option>
+            ))}
+          </select>
+          {ipFilter && (
+            <button
+              onClick={() => setIpFilter("")}
+              style={{ all: "unset", cursor: "pointer", fontSize: 11, color: "#7FEFD6" }}
+            >
+              clear
+            </button>
+          )}
+        </div>
+      )}
+
       <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {rows?.map((row) => (
-          <IpRoleCard key={row.ip} row={row} vantage={vantage} decided={decided.get(row.ip)} onDecide={decide} />
+        {visibleRows.map((row) => (
+          <IpRoleCard
+            key={rowKey(row)}
+            row={row}
+            vantage={vantage}
+            decided={decided.get(rowKey(row))}
+            onDecide={decide}
+          />
         ))}
         {rows && rows.length === 0 && (
           <div className="card" style={{ padding: 20, color: "#6FA89E" }}>
-            No pending {vantage} roles.
+            No {vantage} roles awaiting review.
+          </div>
+        )}
+        {rows && rows.length > 0 && visibleRows.length === 0 && (
+          <div className="card" style={{ padding: 20, color: "#6FA89E" }}>
+            No {vantage} roles awaiting review for {ipFilter}.
           </div>
         )}
       </div>
     </>
   );
 }
+
+type Evaluation = { verdict?: string; alternative?: string | null; reasoning?: string; model?: string; evaluated_at?: string };
 
 function IpRoleCard({
   row,
@@ -512,6 +617,9 @@ function IpRoleCard({
   const [pairsError, setPairsError] = useState<string | null>(null);
   const [checked, setChecked] = useState<Set<number>>(new Set());
 
+  const suggestions = row.suggestions as Record<string, RoleSuggestion>;
+  const evaluation = row.evaluation as Evaluation | null;
+
   async function toggleExpand() {
     const next = !expanded;
     setExpanded(next);
@@ -523,7 +631,7 @@ function IpRoleCard({
           throwOnError: true,
         });
         setPairs(result.data.rows);
-        setChecked(new Set(result.data.rows.filter((p) => p.role === row.proposed_role).map((p) => p.id)));
+        setChecked(new Set(result.data.rows.filter((p) => p.role === row.role).map((p) => p.id)));
       } catch (err) {
         setPairsError(err instanceof Error ? err.message : String(err));
       }
@@ -564,16 +672,15 @@ function IpRoleCard({
             <span className="mono" style={{ fontSize: 15, fontWeight: 600 }}>
               {row.ip}
             </span>
-            <span className="chip pend">proposed {row.proposed_role}</span>
+            <span className="chip pend">suggested {row.role}</span>
+            {row.status === "agentic_evaluation" && (
+              <span className="chip" style={{ color: "#4C8DFF", borderColor: "#1E3A5F" }}>
+                agent-reviewed
+              </span>
+            )}
           </div>
           <div style={{ fontSize: 12, color: "#6FA89E" }}>
-            {vantage === "peer" ? (
-              <>
-                judged against {row.watched_ips} watched IP{row.watched_ips === 1 ? "" : "s"}
-              </>
-            ) : (
-              <>watched IP</>
-            )}
+            {vantage === "peer" ? "peer" : "watched IP"}
             {row.first_day && row.last_day && (
               <>
                 {" "}
@@ -586,7 +693,7 @@ function IpRoleCard({
           {decided ? (
             <DecidedChip
               kind={decided.decision === "confirm" ? "approve" : "reject"}
-              label={decided.decision === "confirm" ? `Confirmed · ${decided.role}` : "Rejected"}
+              label={decided.decision === "confirm" ? `Confirmed · ${row.role}` : "Rejected"}
             />
           ) : (
             <>
@@ -594,51 +701,107 @@ function IpRoleCard({
                 Reject
               </button>
               <button style={BTN_APPROVE} onClick={() => handleDecide("confirm")}>
-                Confirm {row.proposed_role}
+                Confirm {row.role}
               </button>
             </>
           )}
         </div>
       </div>
-      <div
-        style={{
-          fontSize: 13,
-          lineHeight: 1.5,
-          color: "#C6EBE2",
-          background: "#0A2224",
-          border: "1px solid #133A3C",
-          borderRadius: 7,
-          padding: "12px 14px",
-        }}
-      >
-        {row.reasoning}
-      </div>
-      {Object.keys(row.features).length > 0 && (
+
+      {Object.keys(suggestions).length === 0 ? (
         <div
           style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
-            gap: 10,
+            fontSize: 13,
+            lineHeight: 1.5,
+            color: "#6FA89E",
             background: "#0A2224",
             border: "1px solid #133A3C",
             borderRadius: 7,
             padding: "12px 14px",
-            marginTop: 12,
           }}
         >
-          <div style={{ gridColumn: "1 / -1", fontSize: 11, fontWeight: 600, color: "#A6D8CD" }}>
-            Heuristic features
-          </div>
-          {Object.entries(row.features).map(([k, v]) => (
-            <div key={k}>
-              <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase" }}>
-                {k.replace(/_/g, " ")}
+          No rule currently sees this role — it would be asserted by hand.
+        </div>
+      ) : (
+        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+          {Object.entries(suggestions).map(([ruleName, s]) => (
+            <div
+              key={ruleName}
+              style={{
+                fontSize: 13,
+                lineHeight: 1.5,
+                color: "#C6EBE2",
+                background: "#0A2224",
+                border: `1px solid ${s.alarm ? "#5A4423" : "#133A3C"}`,
+                borderRadius: 7,
+                padding: "12px 14px",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
+                <span className="mono" style={{ color: "#4C8DFF", fontWeight: 600, fontSize: 12 }}>
+                  {ruleName}
+                </span>
+                {s.alarm && (
+                  <span style={{ color: "#F5A623", fontWeight: 600, fontSize: 11 }}>⚠ {s.alarm}</span>
+                )}
               </div>
-              <div className="mono" style={{ fontSize: 13 }}>
-                {v === null || v === undefined ? "null" : typeof v === "object" ? JSON.stringify(v) : String(v)}
-              </div>
+              {s.reasoning && <div style={{ marginTop: 4 }}>{s.reasoning}</div>}
+              {s.features && Object.keys(s.features).length > 0 && (
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "repeat(auto-fit, minmax(120px, 1fr))",
+                    gap: 10,
+                    marginTop: 10,
+                  }}
+                >
+                  {Object.entries(s.features).map(([k, v]) => (
+                    <div key={k}>
+                      <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase" }}>
+                        {k.replace(/_/g, " ")}
+                      </div>
+                      <div className="mono" style={{ fontSize: 13 }}>
+                        {v === null || v === undefined ? "null" : typeof v === "object" ? JSON.stringify(v) : String(v)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           ))}
+        </div>
+      )}
+
+      {evaluation && (
+        <div
+          style={{
+            fontSize: 13,
+            lineHeight: 1.5,
+            color: "#C6EBE2",
+            background: "#0F1A2B",
+            border: "1px solid #1E3A5F",
+            borderRadius: 7,
+            padding: "12px 14px",
+            marginTop: 10,
+          }}
+        >
+          <div style={{ fontSize: 11, fontWeight: 600, color: "#A6D8CD", marginBottom: 4 }}>
+            Agent assessment — one more opinion, not a decision
+          </div>
+          <div>
+            <span
+              className="mono"
+              style={{
+                fontWeight: 600,
+                color: evaluation.verdict === "agree" ? "#3DD68C" : evaluation.verdict === "disagree" ? "#E5484D" : "#F5A623",
+              }}
+            >
+              {evaluation.verdict}
+            </span>
+            {evaluation.alternative && <> — alternative: {evaluation.alternative}</>}
+            {evaluation.model && <span style={{ color: "#6FA89E", fontSize: 11 }}> · {evaluation.model}</span>}
+          </div>
+          {evaluation.reasoning && <div style={{ marginTop: 4 }}>{evaluation.reasoning}</div>}
         </div>
       )}
 

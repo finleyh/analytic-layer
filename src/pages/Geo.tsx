@@ -128,8 +128,10 @@ export function Geo() {
       };
       a.bytes += r.bytes_sum;
       a.peers.add(r.peer_ip);
-      const role = r.peer_role ?? "unclear";
-      a.roleCounts[role] = (a.roleCounts[role] ?? 0) + 1;
+      const roles = r.peer_roles.length > 0 ? r.peer_roles : ["unclear"];
+      for (const role of roles) {
+        a.roleCounts[role] = (a.roleCounts[role] ?? 0) + 1;
+      }
       byKey.set(key, a);
     }
     return [...byKey.values()];

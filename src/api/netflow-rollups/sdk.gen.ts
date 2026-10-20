@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { BphContactDailyRollupBphContactDailyGetData, BphContactDailyRollupBphContactDailyGetErrors, BphContactDailyRollupBphContactDailyGetResponses, ConfirmedContactsDailyRollupConfirmedContactsDailyGetData, ConfirmedContactsDailyRollupConfirmedContactsDailyGetErrors, ConfirmedContactsDailyRollupConfirmedContactsDailyGetResponses, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostData, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostErrors, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostResponses, DecideIpRoleReviewIpRolesIpDecisionPostData, DecideIpRoleReviewIpRolesIpDecisionPostErrors, DecideIpRoleReviewIpRolesIpDecisionPostResponses, FlowDailyRollupFlowDailyGetData, FlowDailyRollupFlowDailyGetErrors, FlowDailyRollupFlowDailyGetResponses, FlowHourlyRollupFlowHourlyGetData, FlowHourlyRollupFlowHourlyGetErrors, FlowHourlyRollupFlowHourlyGetResponses, FreshnessOpsFreshnessGetData, FreshnessOpsFreshnessGetResponses, GetIpIdentityLookupIpIdentitiesIpGetData, GetIpIdentityLookupIpIdentitiesIpGetErrors, GetIpIdentityLookupIpIdentitiesIpGetResponses, GetIpRoleReviewIpRolesIpGetData, GetIpRoleReviewIpRolesIpGetErrors, GetIpRoleReviewIpRolesIpGetResponses, GetIpWatchIpsIpGetData, GetIpWatchIpsIpGetErrors, GetIpWatchIpsIpGetResponses, HealthHealthGetData, HealthHealthGetResponses, HostNameSummaryLookupHostNamesSummaryGetData, HostNameSummaryLookupHostNamesSummaryGetErrors, HostNameSummaryLookupHostNamesSummaryGetResponses, HostScanChangesLookupHostScansChangesGetData, HostScanChangesLookupHostScansChangesGetErrors, HostScanChangesLookupHostScansChangesGetResponses, ListAsnCandidatesReviewAsnCandidatesGetData, ListAsnCandidatesReviewAsnCandidatesGetErrors, ListAsnCandidatesReviewAsnCandidatesGetResponses, ListHostNamesLookupHostNamesGetData, ListHostNamesLookupHostNamesGetErrors, ListHostNamesLookupHostNamesGetResponses, ListHostScansLookupHostScansGetData, ListHostScansLookupHostScansGetErrors, ListHostScansLookupHostScansGetResponses, ListIpRolesReviewIpRolesGetData, ListIpRolesReviewIpRolesGetErrors, ListIpRolesReviewIpRolesGetResponses, ListIpsWatchIpsGetData, ListIpsWatchIpsGetErrors, ListIpsWatchIpsGetResponses, ListProviderCategoriesRefProviderCategoriesGetData, ListProviderCategoriesRefProviderCategoriesGetResponses, ListProvidersRefProvidersGetData, ListProvidersRefProvidersGetErrors, ListProvidersRefProvidersGetResponses, ListScannersVerdictScannersGetData, ListScannersVerdictScannersGetErrors, ListScannersVerdictScannersGetResponses, ListSipPairsReviewSipPairsGetData, ListSipPairsReviewSipPairsGetErrors, ListSipPairsReviewSipPairsGetResponses, PortFamilyMixDailyRollupPortFamilyMixDailyGetData, PortFamilyMixDailyRollupPortFamilyMixDailyGetErrors, PortFamilyMixDailyRollupPortFamilyMixDailyGetResponses, ProviderMixDailyRollupProviderMixDailyGetData, ProviderMixDailyRollupProviderMixDailyGetErrors, ProviderMixDailyRollupProviderMixDailyGetResponses, QueueReviewQueueGetData, QueueReviewQueueGetResponses, TopAsnsRollupFlowDailyTopAsnsGetData, TopAsnsRollupFlowDailyTopAsnsGetErrors, TopAsnsRollupFlowDailyTopAsnsGetResponses, TopPeersRollupFlowDailyTopPeersGetData, TopPeersRollupFlowDailyTopPeersGetErrors, TopPeersRollupFlowDailyTopPeersGetResponses, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetData, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetErrors, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetResponses } from './types.gen';
+import type { BphContactDailyRollupBphContactDailyGetData, BphContactDailyRollupBphContactDailyGetErrors, BphContactDailyRollupBphContactDailyGetResponses, ConfirmedContactsDailyRollupConfirmedContactsDailyGetData, ConfirmedContactsDailyRollupConfirmedContactsDailyGetErrors, ConfirmedContactsDailyRollupConfirmedContactsDailyGetResponses, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostData, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostErrors, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostResponses, DecideIpRoleReviewIpRolesIpRoleDecisionPostData, DecideIpRoleReviewIpRolesIpRoleDecisionPostErrors, DecideIpRoleReviewIpRolesIpRoleDecisionPostResponses, FlowDailyRollupFlowDailyGetData, FlowDailyRollupFlowDailyGetErrors, FlowDailyRollupFlowDailyGetResponses, FlowHourlyRollupFlowHourlyGetData, FlowHourlyRollupFlowHourlyGetErrors, FlowHourlyRollupFlowHourlyGetResponses, FreshnessOpsFreshnessGetData, FreshnessOpsFreshnessGetResponses, GetIpIdentityLookupIpIdentitiesIpGetData, GetIpIdentityLookupIpIdentitiesIpGetErrors, GetIpIdentityLookupIpIdentitiesIpGetResponses, GetIpRolesReviewIpRolesIpGetData, GetIpRolesReviewIpRolesIpGetErrors, GetIpRolesReviewIpRolesIpGetResponses, GetIpWatchIpsIpGetData, GetIpWatchIpsIpGetErrors, GetIpWatchIpsIpGetResponses, HealthHealthGetData, HealthHealthGetResponses, HostNameSummaryLookupHostNamesSummaryGetData, HostNameSummaryLookupHostNamesSummaryGetErrors, HostNameSummaryLookupHostNamesSummaryGetResponses, HostScanChangesLookupHostScansChangesGetData, HostScanChangesLookupHostScansChangesGetErrors, HostScanChangesLookupHostScansChangesGetResponses, ListAsnCandidatesReviewAsnCandidatesGetData, ListAsnCandidatesReviewAsnCandidatesGetErrors, ListAsnCandidatesReviewAsnCandidatesGetResponses, ListFindingsVerdictFindingsGetData, ListFindingsVerdictFindingsGetErrors, ListFindingsVerdictFindingsGetResponses, ListHostNamesLookupHostNamesGetData, ListHostNamesLookupHostNamesGetErrors, ListHostNamesLookupHostNamesGetResponses, ListHostScansLookupHostScansGetData, ListHostScansLookupHostScansGetErrors, ListHostScansLookupHostScansGetResponses, ListIpRolesReviewIpRolesGetData, ListIpRolesReviewIpRolesGetErrors, ListIpRolesReviewIpRolesGetResponses, ListIpsWatchIpsGetData, ListIpsWatchIpsGetErrors, ListIpsWatchIpsGetResponses, ListProviderCategoriesRefProviderCategoriesGetData, ListProviderCategoriesRefProviderCategoriesGetResponses, ListProvidersRefProvidersGetData, ListProvidersRefProvidersGetErrors, ListProvidersRefProvidersGetResponses, ListScannersVerdictScannersGetData, ListScannersVerdictScannersGetErrors, ListScannersVerdictScannersGetResponses, ListSipPairsReviewSipPairsGetData, ListSipPairsReviewSipPairsGetErrors, ListSipPairsReviewSipPairsGetResponses, PortFamilyMixDailyRollupPortFamilyMixDailyGetData, PortFamilyMixDailyRollupPortFamilyMixDailyGetErrors, PortFamilyMixDailyRollupPortFamilyMixDailyGetResponses, ProviderMixDailyRollupProviderMixDailyGetData, ProviderMixDailyRollupProviderMixDailyGetErrors, ProviderMixDailyRollupProviderMixDailyGetResponses, QueueReviewQueueGetData, QueueReviewQueueGetResponses, TopAsnsRollupFlowDailyTopAsnsGetData, TopAsnsRollupFlowDailyTopAsnsGetErrors, TopAsnsRollupFlowDailyTopAsnsGetResponses, TopPeersRollupFlowDailyTopPeersGetData, TopPeersRollupFlowDailyTopPeersGetErrors, TopPeersRollupFlowDailyTopPeersGetResponses, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetData, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetErrors, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -136,9 +136,23 @@ export const listScannersVerdictScannersGet = <ThrowOnError extends boolean = fa
 });
 
 /**
+ * List Findings
+ *
+ * Findings written in the window, newest first: what a rule established
+ * about an IP (a listing exposed, a known framework's fingerprint, a model
+ * provider in a banner, a panel's login page). The table keeps 90 days.
+ */
+export const listFindingsVerdictFindingsGet = <ThrowOnError extends boolean = false>(options?: Options<ListFindingsVerdictFindingsGetData, ThrowOnError>): RequestResult<ListFindingsVerdictFindingsGetResponses, ListFindingsVerdictFindingsGetErrors, ThrowOnError> => (options?.client ?? client).get<ListFindingsVerdictFindingsGetResponses, ListFindingsVerdictFindingsGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/verdict/findings',
+    ...options
+});
+
+/**
  * List Ip Roles
  *
- * The role queue, oldest first, the order the review skill works it in.
+ * The role rows, one per (ip, role), oldest first, the order the
+ * review skill works the suggested ones in.
  */
 export const listIpRolesReviewIpRolesGet = <ThrowOnError extends boolean = false>(options?: Options<ListIpRolesReviewIpRolesGetData, ThrowOnError>): RequestResult<ListIpRolesReviewIpRolesGetResponses, ListIpRolesReviewIpRolesGetErrors, ThrowOnError> => (options?.client ?? client).get<ListIpRolesReviewIpRolesGetResponses, ListIpRolesReviewIpRolesGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -147,9 +161,11 @@ export const listIpRolesReviewIpRolesGet = <ThrowOnError extends boolean = false
 });
 
 /**
- * Get Ip Role
+ * Get Ip Roles
+ *
+ * Every role row of one IP (an IP can be several things); 404 when it has none.
  */
-export const getIpRoleReviewIpRolesIpGet = <ThrowOnError extends boolean = false>(options: Options<GetIpRoleReviewIpRolesIpGetData, ThrowOnError>): RequestResult<GetIpRoleReviewIpRolesIpGetResponses, GetIpRoleReviewIpRolesIpGetErrors, ThrowOnError> => (options.client ?? client).get<GetIpRoleReviewIpRolesIpGetResponses, GetIpRoleReviewIpRolesIpGetErrors, ThrowOnError>({
+export const getIpRolesReviewIpRolesIpGet = <ThrowOnError extends boolean = false>(options: Options<GetIpRolesReviewIpRolesIpGetData, ThrowOnError>): RequestResult<GetIpRolesReviewIpRolesIpGetResponses, GetIpRolesReviewIpRolesIpGetErrors, ThrowOnError> => (options.client ?? client).get<GetIpRolesReviewIpRolesIpGetResponses, GetIpRolesReviewIpRolesIpGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/review/ip-roles/{ip}',
     ...options
@@ -158,7 +174,7 @@ export const getIpRoleReviewIpRolesIpGet = <ThrowOnError extends boolean = false
 /**
  * Queue
  *
- * What is waiting for a human, by queue.
+ * What is waiting for a human, by queue (suggested roles, not IPs).
  */
 export const queueReviewQueueGet = <ThrowOnError extends boolean = false>(options?: Options<QueueReviewQueueGetData, ThrowOnError>): RequestResult<QueueReviewQueueGetResponses, unknown, ThrowOnError> => (options?.client ?? client).get<QueueReviewQueueGetResponses, unknown, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -192,12 +208,13 @@ export const listAsnCandidatesReviewAsnCandidatesGet = <ThrowOnError extends boo
 /**
  * Decide Ip Role
  *
- * Confirm or reject the proposed role for one IP: what the
- * review-ip-roles skill does by hand, through the same writer.
+ * Confirm or reject one role of one IP: what the review-ip-roles skill
+ * does by hand, through the same writer. Confirming a role no rule
+ * suggested asserts it (the row is created by the decision).
  */
-export const decideIpRoleReviewIpRolesIpDecisionPost = <ThrowOnError extends boolean = false>(options: Options<DecideIpRoleReviewIpRolesIpDecisionPostData, ThrowOnError>): RequestResult<DecideIpRoleReviewIpRolesIpDecisionPostResponses, DecideIpRoleReviewIpRolesIpDecisionPostErrors, ThrowOnError> => (options.client ?? client).post<DecideIpRoleReviewIpRolesIpDecisionPostResponses, DecideIpRoleReviewIpRolesIpDecisionPostErrors, ThrowOnError>({
+export const decideIpRoleReviewIpRolesIpRoleDecisionPost = <ThrowOnError extends boolean = false>(options: Options<DecideIpRoleReviewIpRolesIpRoleDecisionPostData, ThrowOnError>): RequestResult<DecideIpRoleReviewIpRolesIpRoleDecisionPostResponses, DecideIpRoleReviewIpRolesIpRoleDecisionPostErrors, ThrowOnError> => (options.client ?? client).post<DecideIpRoleReviewIpRolesIpRoleDecisionPostResponses, DecideIpRoleReviewIpRolesIpRoleDecisionPostErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/review/ip-roles/{ip}/decision',
+    url: '/review/ip-roles/{ip}/{role}/decision',
     ...options,
     headers: {
         'Content-Type': 'application/json',

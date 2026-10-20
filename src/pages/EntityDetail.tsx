@@ -3,7 +3,7 @@ import * as d3 from "d3";
 import { Link, useParams } from "react-router-dom";
 import {
   getIpWatchIpsIpGet,
-  getIpRoleReviewIpRolesIpGet,
+  getIpRolesReviewIpRolesIpGet,
   getIpIdentityLookupIpIdentitiesIpGet,
   listHostScansLookupHostScansGet,
   hostScanChangesLookupHostScansChangesGet,
@@ -11,23 +11,26 @@ import {
   bphContactDailyRollupBphContactDailyGet,
   portFamilyMixDailyRollupPortFamilyMixDailyGet,
   flowHourlyRollupFlowHourlyGet,
+  listFindingsVerdictFindingsGet,
   type WatchedIp,
   type IpRole,
   type IpIdentity,
   type HostScan,
   type FingerprintChange,
   type HostNameSummary,
+  type Finding,
 } from "../api/netflow-rollups-client";
 import { formatBytes, isoDate, daysAgo, darkToGreen } from "../lib/format";
 import { looksLikeHostname } from "../lib/hostNames";
 
 type EntityData = {
   watchedIp: WatchedIp;
-  role: IpRole | null;
+  roles: IpRole[];
   identity: IpIdentity | null;
   scans: HostScan[];
   changes: FingerprintChange[];
   hostNames: HostNameSummary[];
+  findings: Finding[];
   bphBytes30d: number;
   bytes7d: number;
   rtpBytes7d: number;
@@ -131,10 +134,10 @@ export function EntityDetail() {
         const to = isoDate(new Date());
         const from30 = isoDate(daysAgo(29));
 
-        const [watchedIp, role, identityResult, scans, changes, hostNames, bphContact30d, portFamilyMix7d] =
+        const [watchedIp, roles, identityResult, scans, changes, hostNames, findings, bphContact30d, portFamilyMix7d] =
           await Promise.all([
             getIpWatchIpsIpGet({ path: { ip: ip! }, throwOnError: true }),
-            getIpRoleReviewIpRolesIpGet({ path: { ip: ip! }, throwOnError: true }).catch(() => null),
+            getIpRolesReviewIpRolesIpGet({ path: { ip: ip! }, throwOnError: true }).catch(() => null),
             getIpIdentityLookupIpIdentitiesIpGet({ path: { ip: ip! } }),
             listHostScansLookupHostScansGet({
               query: { ip: ip!, from: from30, to, limit: 200 },
@@ -145,6 +148,10 @@ export function EntityDetail() {
               throwOnError: true,
             }),
             hostNameSummaryLookupHostNamesSummaryGet({
+              query: { ip: ip!, from: from30, to, limit: 200 },
+              throwOnError: true,
+            }),
+            listFindingsVerdictFindingsGet({
               query: { ip: ip!, from: from30, to, limit: 200 },
               throwOnError: true,
             }),
@@ -166,11 +173,12 @@ export function EntityDetail() {
 
         setData({
           watchedIp: watchedIp.data,
-          role: role?.data ?? null,
+          roles: roles?.data.rows ?? [],
           identity: identityResult.data ?? null,
           scans: scans.data.rows,
           changes: changes.data.rows,
           hostNames: hostNames.data.rows,
+          findings: findings.data.rows,
           bphBytes30d: bphContact30d.data.rows.reduce((s, r) => s + r.bytes_sum, 0),
           bytes7d,
           rtpBytes7d,
@@ -204,9 +212,11 @@ export function EntityDetail() {
 }
 
 function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
-  const { watchedIp, role, identity, scans, changes, hostNames, bphBytes30d, bytes7d, rtpBytes7d } = data;
+  const { watchedIp, roles, identity, scans, changes, hostNames, findings, bphBytes30d, bytes7d, rtpBytes7d } = data;
   const rtpPct = bytes7d > 0 ? Math.round((rtpBytes7d / bytes7d) * 100) : 0;
   const tips = watchedIp.tags.filter((t) => !t.startsWith("msk:"));
+  const confirmedRoles = roles.filter((r) => r.status === "confirmed");
+  const pendingRoles = roles.filter((r) => r.status !== "confirmed" && r.status !== "rejected");
 
   const scansBySource = new Map<string, HostScan[]>();
   for (const s of scans) {
@@ -226,16 +236,21 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
         <h1 className="mono" style={{ margin: 0, fontSize: 24, fontWeight: 600 }}>
           {ip}
         </h1>
-        {role?.accepted_role ? (
-          <span className="chip rev">{role.accepted_role}</span>
-        ) : role ? (
+        {confirmedRoles.map((r) => (
+          <span className="chip rev" key={r.role}>
+            {r.role}
+          </span>
+        ))}
+        {pendingRoles.map((r) => (
           <span
             className="chip pend"
-            title="review__ip_roles.proposed_role — heuristic only, not yet accepted by a human"
+            key={r.role}
+            title="review__ip_roles.status — heuristic or agent suggested, not yet confirmed by a human"
           >
-            proposed {role.proposed_role} · pending
+            proposed {r.role} · {r.status}
           </span>
-        ) : (
+        ))}
+        {confirmedRoles.length === 0 && pendingRoles.length === 0 && (
           <span className="chip" style={{ color: "#6FA89E" }}>
             no role yet
           </span>
@@ -313,6 +328,8 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
       </div>
 
       <HostNameGantt rows={hostNames} excludeRdns={identity?.rdns} />
+
+      <FindingsList findings={findings} />
 
       <ActivityHeatmap ip={ip} />
 
@@ -725,6 +742,61 @@ function HostNameGantt({ rows, excludeRdns }: { rows: HostNameSummary[]; exclude
         <span style={{ color: NAME_KIND_COLOR.forward_dns }}>■</span> forward DNS{" "}
         <span style={{ color: NAME_KIND_COLOR.reverse_dns }}>■</span> reverse DNS (excludes the rDNS
         already shown above, if any). Hover a bar or its label for exact values/timestamps.
+      </div>
+    </div>
+  );
+}
+
+// ---------- Findings (verdict__findings) ----------
+
+function FindingsList({ findings }: { findings: Finding[] }) {
+  if (findings.length === 0) return null;
+
+  const sorted = [...findings].sort((a, b) => b.day.localeCompare(a.day));
+
+  return (
+    <div className="card" style={{ padding: "22px 24px", marginBottom: 24 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "baseline",
+          marginBottom: 14,
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ fontSize: 13, fontWeight: 600 }}>Findings (90d)</div>
+        <span className="src">verdict__findings — no effect on the rollups</span>
+      </div>
+      <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+        {sorted.map((f, i) => (
+          <div
+            key={i}
+            style={{
+              fontSize: 13,
+              color: "#C6EBE2",
+              background: "#0A2224",
+              border: "1px solid #133A3C",
+              borderRadius: 7,
+              padding: "10px 14px",
+            }}
+          >
+            <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+              <span className="mono" style={{ color: "#F5A623", fontWeight: 600 }}>
+                {f.rule_name}
+              </span>
+              <span className="mono" style={{ fontSize: 11, color: "#6FA89E" }}>
+                {f.day}
+              </span>
+            </div>
+            {f.subject && (
+              <div className="mono" style={{ fontSize: 12, color: "#A6D8CD", marginTop: 4, wordBreak: "break-all" }}>
+                {f.subject}
+              </div>
+            )}
+          </div>
+        ))}
       </div>
     </div>
   );

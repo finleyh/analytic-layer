@@ -21,7 +21,6 @@ const ROLE_COLORS: Record<string, { bg: string; border: string }> = {
   sip_trunk: { bg: "#2A2013", border: "#F5A623" },
   sip_server: { bg: "#2A1216", border: "#E5484D" },
   sip_client: { bg: "#0F2A27", border: "#2DD4BF" },
-  unclear: { bg: "#0F3133", border: "#A6D8CD" },
 };
 const PENDING_ROLE = { bg: "#0F3133", border: "#A6D8CD" };
 
@@ -35,7 +34,7 @@ export function FlowGraph() {
         <div style={{ fontSize: 13, color: "#6FA89E" }}>
           Edges from <span className="mono">rollup__confirmed_contacts_daily</span> · peer color
           from <span className="mono">rollup__flow_daily</span>.peer_categories · monitored-node
-          color from <span className="mono">review__ip_roles</span>.accepted_role
+          color from <span className="mono">review__ip_roles</span>'s confirmed role(s)
         </div>
       </div>
 
@@ -84,8 +83,8 @@ type GNode = {
   label: string;
   bytes: number;
   category?: string;
-  accepted_role?: string | null;
-  proposed_role?: string | null;
+  confirmedRoles?: string[];
+  pendingRoles?: string[];
   asn?: number | null;
   country?: string | null;
   clusterCount?: number;
@@ -99,7 +98,7 @@ type GLink = { source: string; target: string; bytes: number; kind: "mm" | "mp" 
 function buildGraph(
   confirmed: DailyConfirmedContact[],
   flow: DailyFlow[],
-  roles: Map<string, IpRole>,
+  roles: Map<string, IpRole[]>,
   watched: Map<string, WatchedIp>,
 ): { nodes: GNode[]; links: GLink[] } {
   const watchedIps = new Set(watched.keys());
@@ -172,15 +171,15 @@ function buildGraph(
   function monitoredNode(ip: string): GNode {
     const existing = nodes.get(ip);
     if (existing) return existing;
-    const role = roles.get(ip);
+    const roleRows = roles.get(ip) ?? [];
     const w = watched.get(ip);
     const n: GNode = {
       id: ip,
       kind: "monitored",
       label: ip,
       bytes: monitoredBytes.get(ip) ?? 0,
-      accepted_role: role?.accepted_role ?? null,
-      proposed_role: role?.proposed_role ?? null,
+      confirmedRoles: roleRows.filter((r) => r.status === "confirmed").map((r) => r.role),
+      pendingRoles: roleRows.filter((r) => r.status !== "confirmed" && r.status !== "rejected").map((r) => r.role),
       tags: w?.tags.filter((t) => !t.startsWith("msk:")) ?? [],
       x: 0,
       y: 0,
@@ -246,28 +245,79 @@ function buildGraph(
 }
 
 function NodeGraph() {
+  const [watchedIps, setWatchedIps] = useState<WatchedIp[] | null>(null);
+  const [watchError, setWatchError] = useState<string | null>(null);
+  const [selectedIps, setSelectedIps] = useState<Set<string>>(new Set());
   const [data, setData] = useState<{ nodes: GNode[]; links: GLink[] } | null>(null);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<GNode | null>(null);
   const W = 800;
   const H = 620;
 
+  // The picker only needs the (cheap) watch set — the expensive rollup
+  // fetches and the d3-force layout below stay deferred until the analyst
+  // actually picks which monitored IPs to graph.
   useEffect(() => {
     let cancelled = false;
+    listIpsWatchIpsGet({ throwOnError: true })
+      .then((r) => {
+        if (!cancelled) setWatchedIps(r.data.rows);
+      })
+      .catch((err) => {
+        if (!cancelled) setWatchError(err instanceof Error ? err.message : String(err));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const selectedKey = [...selectedIps].sort().join(",");
+
+  useEffect(() => {
+    if (selectedIps.size === 0) {
+      setData(null);
+      setSelected(null);
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
 
     async function load() {
       try {
-        const [confirmedResult, flowResult, rolesResult, watchResult] = await Promise.all([
-          confirmedContactsDailyRollupConfirmedContactsDailyGet({ query: { limit: 20000 }, throwOnError: true }),
-          flowDailyRollupFlowDailyGet({ query: { limit: 20000 }, throwOnError: true }),
+        const ips = [...selectedIps];
+        const [confirmedPerIp, flowPerIp, rolesResult, watchResult] = await Promise.all([
+          Promise.all(
+            ips.map((ip) =>
+              confirmedContactsDailyRollupConfirmedContactsDailyGet({
+                query: { monitored_ip: ip, limit: 20000 },
+                throwOnError: true,
+              }),
+            ),
+          ),
+          Promise.all(
+            ips.map((ip) =>
+              flowDailyRollupFlowDailyGet({ query: { monitored_ip: ip, limit: 20000 }, throwOnError: true }),
+            ),
+          ),
           listIpRolesReviewIpRolesGet({ query: { vantage: "watched", limit: 1000 }, throwOnError: true }),
           listIpsWatchIpsGet({ throwOnError: true }),
         ]);
         if (cancelled) return;
 
-        const roles = new Map(rolesResult.data.rows.map((r) => [r.ip, r]));
+        const confirmed = confirmedPerIp.flatMap((r) => r.data.rows);
+        const flow = flowPerIp.flatMap((r) => r.data.rows);
+
+        const roles = new Map<string, IpRole[]>();
+        for (const r of rolesResult.data.rows) {
+          const list = roles.get(r.ip) ?? [];
+          list.push(r);
+          roles.set(r.ip, list);
+        }
         const watched = new Map(watchResult.data.rows.map((w) => [w.ip, w]));
-        const graph = buildGraph(confirmedResult.data.rows, flowResult.data.rows, roles, watched);
+        const graph = buildGraph(confirmed, flow, roles, watched);
 
         // d3-force layout, run synchronously then freeze.
         // Every node starts at (0,0) from buildGraph — give d3-force a
@@ -307,6 +357,8 @@ function NodeGraph() {
         setData({ nodes: simNodes as GNode[], links: graph.links });
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     }
 
@@ -314,21 +366,117 @@ function NodeGraph() {
     return () => {
       cancelled = true;
     };
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedKey]);
+
+  function toggleIp(ip: string) {
+    setSelectedIps((prev) => {
+      const next = new Set(prev);
+      if (next.has(ip)) next.delete(ip);
+      else next.add(ip);
+      return next;
+    });
+  }
+
+  const picker = (
+    <div className="card" style={{ padding: "16px 18px", marginBottom: 20 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: 10,
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ fontSize: 12, fontWeight: 600, color: "#A6D8CD" }}>
+          Monitored IPs — pick which ones to graph
+        </div>
+        <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <span style={{ fontSize: 11, color: "#6FA89E" }}>{selectedIps.size} selected</span>
+          <button
+            onClick={() => setSelectedIps(new Set(watchedIps?.map((w) => w.ip) ?? []))}
+            style={{ all: "unset", cursor: "pointer", fontSize: 11, color: "#7FEFD6" }}
+          >
+            select all
+          </button>
+          <button
+            onClick={() => setSelectedIps(new Set())}
+            style={{ all: "unset", cursor: "pointer", fontSize: 11, color: "#7FEFD6" }}
+          >
+            clear
+          </button>
+        </div>
+      </div>
+      {watchError && <div style={{ color: "#E5484D", fontSize: 12 }}>Failed to load watch set: {watchError}</div>}
+      {!watchedIps && !watchError && <div style={{ color: "#6FA89E", fontSize: 12 }}>Loading watch set…</div>}
+      {watchedIps && (
+        <div style={{ display: "flex", flexWrap: "wrap", gap: 7 }}>
+          {watchedIps.map((w) => {
+            const checked = selectedIps.has(w.ip);
+            return (
+              <button
+                key={w.ip}
+                onClick={() => toggleIp(w.ip)}
+                className="mono"
+                style={{
+                  all: "unset",
+                  cursor: "pointer",
+                  fontSize: 12,
+                  padding: "5px 10px",
+                  borderRadius: 999,
+                  border: `1px solid ${checked ? "#3F9C8A" : "#2B7266"}`,
+                  background: checked ? "rgba(72,196,170,0.14)" : "transparent",
+                  color: checked ? "#E8FFF8" : "#A6D8CD",
+                }}
+              >
+                {w.ip}
+              </button>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+
+  if (selectedIps.size === 0) {
+    return (
+      <>
+        {picker}
+        <div className="card" style={{ padding: 40, textAlign: "center", color: "#6FA89E" }}>
+          Select one or more monitored IPs above to build the graph — nothing is fetched or
+          computed until then.
+        </div>
+      </>
+    );
+  }
 
   if (error) {
     return (
-      <div className="card" style={{ padding: 20, borderColor: "#5A2327" }}>
-        Failed to load from netflow-rollups' API: {error}
-      </div>
+      <>
+        {picker}
+        <div className="card" style={{ padding: 20, borderColor: "#5A2327" }}>
+          Failed to load from netflow-rollups' API: {error}
+        </div>
+      </>
     );
   }
-  if (!data) return <div style={{ color: "#6FA89E" }}>Loading…</div>;
+  if (loading || !data) {
+    return (
+      <>
+        {picker}
+        <div style={{ color: "#6FA89E" }}>Loading…</div>
+      </>
+    );
+  }
 
   const nodeById = new Map(data.nodes.map((n) => [n.id, n]));
 
   return (
-    <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
+    <>
+      {picker}
+      <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
       <div className="card" style={{ width: W, maxWidth: "100%", height: H, position: "relative", overflow: "hidden", flexShrink: 0 }}>
         <ZoomableSvg width={W} height={H}>
           {data.links.map((l, i) => {
@@ -353,8 +501,8 @@ function NodeGraph() {
           {data.nodes.map((n) => {
             const isMonitored = n.kind === "monitored";
             const roleColors = isMonitored
-              ? n.accepted_role
-                ? (ROLE_COLORS[n.accepted_role] ?? PENDING_ROLE)
+              ? n.confirmedRoles && n.confirmedRoles.length > 0
+                ? (ROLE_COLORS[n.confirmedRoles[0]] ?? PENDING_ROLE)
                 : PENDING_ROLE
               : null;
             const [catBg, catFg] = !isMonitored ? categoryColors(n.category ?? "unclassified") : ["", ""];
@@ -446,9 +594,11 @@ function NodeGraph() {
               </div>
               <div style={{ fontSize: 12, color: "#A6D8CD", marginBottom: 10 }}>
                 {selected.kind === "monitored"
-                  ? selected.accepted_role
-                    ? `reviewed role: ${selected.accepted_role}`
-                    : `pending — heuristic proposes ${selected.proposed_role ?? "unclear"}`
+                  ? selected.confirmedRoles && selected.confirmedRoles.length > 0
+                    ? `reviewed role${selected.confirmedRoles.length > 1 ? "s" : ""}: ${selected.confirmedRoles.join(", ")}`
+                    : selected.pendingRoles && selected.pendingRoles.length > 0
+                      ? `pending — proposed ${selected.pendingRoles.join(", ")}`
+                      : "no role yet"
                   : selected.kind === "cluster"
                     ? `${selected.clusterCount} peers · AS${selected.asn} · ${selected.country ?? "—"}`
                     : `${selected.category} ${selected.asn ? `· AS${selected.asn}` : ""} ${selected.country ? `· ${selected.country}` : ""}`}
@@ -477,7 +627,8 @@ function NodeGraph() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }
 

@@ -210,6 +210,7 @@ export function Watchlist() {
 }
 
 function WatchlistTable({ data }: { data: WatchlistData }) {
+  const [search, setSearch] = useState("");
   const {
     watchedIps,
     ipRolesWatched,
@@ -225,7 +226,12 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
 
   const staleChecks = freshness.checks.filter((c) => c.stale);
 
-  const roleByIp = new Map(ipRolesWatched.map((r) => [r.ip, r]));
+  const rolesByIp = new Map<string, IpRole[]>();
+  for (const r of ipRolesWatched) {
+    const list = rolesByIp.get(r.ip) ?? [];
+    list.push(r);
+    rolesByIp.set(r.ip, list);
+  }
 
   const bytesByIp = groupSum(portFamilyMix7d, (r) => r.monitored_ip, (r) => r.bytes_sum);
   const rtpByIp = groupSum(
@@ -271,10 +277,32 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
     fpByIp.set(r.ip, list);
   }
 
-  const sortedIps = [...watchedIps].sort((a, b) => (bytesByIp.get(b.ip) ?? 0) - (bytesByIp.get(a.ip) ?? 0));
+  const sortedIps = [...watchedIps]
+    .sort((a, b) => (bytesByIp.get(b.ip) ?? 0) - (bytesByIp.get(a.ip) ?? 0))
+    .filter((ip) => ip.ip.includes(search.trim()));
 
   return (
     <>
+      <div style={{ marginBottom: 16 }}>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Filter by IP (e.g. 143.198 or a full address)…"
+          className="mono"
+          style={{
+            width: "100%",
+            maxWidth: 360,
+            background: "#0A2224",
+            color: "#E8FFF8",
+            border: "1px solid #2B7266",
+            borderRadius: 6,
+            padding: "8px 12px",
+            fontSize: 13,
+          }}
+        />
+      </div>
+
       {freshness.checks.length > 0 && (
         <div className={`banner ${staleChecks.length > 0 ? "stale" : "ok"}`} style={{ marginBottom: 16 }}>
           <span className="dot" style={{ background: staleChecks.length > 0 ? "#E5484D" : "#3DD68C" }} />
@@ -308,7 +336,9 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
           </thead>
           <tbody>
             {sortedIps.map((ip) => {
-              const role = roleByIp.get(ip.ip);
+              const roles = rolesByIp.get(ip.ip) ?? [];
+              const confirmedRoles = roles.filter((r) => r.status === "confirmed");
+              const pendingRoles = roles.filter((r) => r.status !== "confirmed" && r.status !== "rejected");
               const bytes = bytesByIp.get(ip.ip) ?? 0;
               const rtpBytes = rtpByIp.get(ip.ip) ?? 0;
               const rtpPct = bytes > 0 ? Math.round((rtpBytes / bytes) * 100) : 0;
@@ -360,16 +390,20 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
                         </>
                       );
                     })()}
-                    {role?.accepted_role ? (
-                      <span className="chip rev">{role.accepted_role}</span>
-                    ) : role ? (
+                    {confirmedRoles.map((r) => (
+                      <span className="chip rev" key={r.role}>
+                        {r.role}
+                      </span>
+                    ))}
+                    {pendingRoles.map((r) => (
                       <span
                         className="chip pend"
-                        title="review__ip_roles.proposed_role — heuristic only, not yet accepted by a human"
+                        key={r.role}
+                        title="review__ip_roles.status — heuristic or agent suggested, not yet confirmed by a human"
                       >
-                        proposed {role.proposed_role} · pending
+                        proposed {r.role} · {r.status}
                       </span>
-                    ) : null}
+                    ))}
                     <br />
                     <span className="chip">msk:voip_analysis</span>
                     {tips.map((t) => (
@@ -446,6 +480,13 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
                 </tr>
               );
             })}
+            {sortedIps.length === 0 && (
+              <tr>
+                <td colSpan={7} style={{ color: "#6FA89E" }}>
+                  No monitored IPs match "{search}".
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
         <div className="note">
