@@ -14,6 +14,7 @@ import {
   listFindingsVerdictFindingsGet,
   listDomainScansLookupDomainScansGet,
   requestDomainScanLookupDomainScansPost,
+  listDomainPivotsVerdictDomainPivotsGet,
   type WatchedIp,
   type IpRole,
   type IpIdentity,
@@ -22,9 +23,12 @@ import {
   type HostNameSummary,
   type Finding,
   type DomainScan,
+  type DomainPivot,
 } from "../api/netflow-rollups-client";
+import { fetchMonitored } from "../api/spoilerAlert";
 import { formatBytes, isoDate, daysAgo, darkToGreen } from "../lib/format";
 import { looksLikeHostname } from "../lib/hostNames";
+import { CopyButton } from "../components/CopyButton";
 
 type EntityData = {
   watchedIp: WatchedIp;
@@ -35,6 +39,7 @@ type EntityData = {
   hostNames: HostNameSummary[];
   findings: Finding[];
   domainScans: DomainScan[];
+  domainPivots: DomainPivot[];
   bphBytes30d: number;
   bytes7d: number;
   rtpBytes7d: number;
@@ -147,6 +152,7 @@ export function EntityDetail() {
           hostNames,
           findings,
           domainScans,
+          domainPivots,
           bphContact30d,
           portFamilyMix7d,
         ] = await Promise.all([
@@ -170,6 +176,10 @@ export function EntityDetail() {
             throwOnError: true,
           }),
           listDomainScansLookupDomainScansGet({
+            query: { monitored_ip: ip!, from: from30, to, limit: 200 },
+            throwOnError: true,
+          }),
+          listDomainPivotsVerdictDomainPivotsGet({
             query: { monitored_ip: ip!, from: from30, to, limit: 200 },
             throwOnError: true,
           }),
@@ -198,6 +208,7 @@ export function EntityDetail() {
           hostNames: hostNames.data.rows,
           findings: findings.data.rows,
           domainScans: domainScans.data.rows,
+          domainPivots: domainPivots.data.rows,
           bphBytes30d: bphContact30d.data.rows.reduce((s, r) => s + r.bytes_sum, 0),
           bytes7d,
           rtpBytes7d,
@@ -231,8 +242,20 @@ export function EntityDetail() {
 }
 
 function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
-  const { watchedIp, roles, identity, scans, changes, hostNames, findings, domainScans, bphBytes30d, bytes7d, rtpBytes7d } =
-    data;
+  const {
+    watchedIp,
+    roles,
+    identity,
+    scans,
+    changes,
+    hostNames,
+    findings,
+    domainScans,
+    domainPivots,
+    bphBytes30d,
+    bytes7d,
+    rtpBytes7d,
+  } = data;
   const [scanRows, setScanRows] = useState<DomainScan[]>(domainScans);
   const [scanning, setScanning] = useState<Set<string>>(new Set());
   const [scanError, setScanError] = useState<string | null>(null);
@@ -377,6 +400,8 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
       <FindingsList findings={findings} onScan={requestScan} scanning={scanning} />
 
       <DomainScansSection ip={ip} scans={scanRows} onScan={requestScan} scanning={scanning} error={scanError} />
+
+      <SharesContentWith pivots={domainPivots} />
 
       <ActivityHeatmap ip={ip} />
 
@@ -868,7 +893,7 @@ function FindingsList({
               </div>
               {f.subject && (
                 <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginTop: 4, flexWrap: "wrap" }}>
-                  <div className="mono" style={{ fontSize: 12, color: "#A6D8CD", wordBreak: "break-all" }}>
+                  <div className="mono" style={{ fontSize: 12, color: "#A6D8CD", overflowWrap: "anywhere" }}>
                     {f.subject}
                   </div>
                   {subjectIsUrl && (
@@ -1002,7 +1027,7 @@ function DomainScansSection({
               <td className="mono" style={{ fontSize: 12, whiteSpace: "nowrap" }}>
                 {s.checked_at.slice(0, 16).replace("T", " ")}
               </td>
-              <td className="mono" style={{ fontSize: 12, wordBreak: "break-all" }}>
+              <td className="mono" style={{ fontSize: 12, overflowWrap: "anywhere" }}>
                 {s.target}
               </td>
               <td>
@@ -1035,6 +1060,142 @@ function DomainScansSection({
               </td>
             </tr>
           )}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function urlscanResultLink(uuid: string | null): string | null {
+  return uuid ? `https://urlscan.io/result/${uuid}/` : null;
+}
+
+// verdict__domain_pivots — new 2026-10-23: a resource on this IP's page
+// (urlscan-fetched) shares a content hash with one served by another
+// domain, and only a small number of domains do (the rule's own filter —
+// a hash common to hundreds of sites, a shared CDN library, wouldn't
+// qualify). Not proof of a relationship by itself, just a fingerprint
+// worth an analyst's eye — framed that way below rather than as a verdict.
+function SharesContentWith({ pivots }: { pivots: DomainPivot[] }) {
+  const [trackedDomains, setTrackedDomains] = useState<Map<string, string>>(new Map());
+
+  useEffect(() => {
+    if (pivots.length === 0) return;
+    let cancelled = false;
+    fetchMonitored()
+      .then((domains) => {
+        if (!cancelled) setTrackedDomains(new Map(domains.map((d) => [d.value, d.opencti_id])));
+      })
+      .catch(() => {
+        // Cross-reference is a nice-to-have, not load-bearing — the pivot
+        // list below still renders fine without it.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pivots.length]);
+
+  if (pivots.length === 0) return null;
+
+  const sorted = [...pivots].sort((a, b) => b.detected_at.localeCompare(a.detected_at));
+
+  return (
+    <div className="card" style={{ padding: "22px 24px", marginBottom: 24 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "baseline",
+          marginBottom: 4,
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ fontSize: 13, fontWeight: 600 }}>Shares content with</div>
+        <span className="src">verdict__domain_pivots</span>
+      </div>
+      <div style={{ fontSize: 11, color: "#6FA89E", marginBottom: 14, lineHeight: 1.5 }}>
+        A resource urlscan fetched from this IP's page has the same content hash as one served by
+        another domain — a shared kit, template, or hosting fingerprint, not proof of a
+        relationship by itself. A lower domain count is a tighter, more unusual match.{" "}
+        <span className="chip" style={{ fontSize: 9 }}>
+          tracked
+        </span>{" "}
+        flags a domain already on this project's own Domains list.
+      </div>
+
+      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <thead>
+          <tr>
+            <th>Detected</th>
+            <th>Source</th>
+            <th>Hash</th>
+            <th style={{ textAlign: "right" }}># domains</th>
+            <th>Shares with</th>
+            <th>Scans</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.map((p) => {
+            const trackedId = trackedDomains.get(p.matched_domain);
+            const rare = p.distinct_domain_count_at_detection <= 2;
+            const sourceLink = urlscanResultLink(p.source_scan_uuid);
+            const matchedLink = urlscanResultLink(p.matched_scan_uuid);
+            return (
+              <tr key={p.id}>
+                <td className="mono" style={{ fontSize: 12, whiteSpace: "nowrap" }}>
+                  {p.detected_at.slice(0, 10)}
+                </td>
+                <td className="mono" style={{ fontSize: 12, overflowWrap: "anywhere" }}>
+                  {p.source_target}
+                </td>
+                <td style={{ whiteSpace: "nowrap" }}>
+                  <span className="mono" style={{ fontSize: 11, color: "#A6D8CD" }}>
+                    {p.hash.slice(0, 12)}…
+                  </span>
+                  <CopyButton text={p.hash} label="Copy hash" />
+                </td>
+                <td
+                  className="num mono"
+                  style={{
+                    textAlign: "right",
+                    color: rare ? "#F5A623" : undefined,
+                    fontWeight: rare ? 600 : undefined,
+                  }}
+                  title={rare ? "A tight match — few other domains serve this exact resource" : undefined}
+                >
+                  {p.distinct_domain_count_at_detection}
+                </td>
+                <td>
+                  {trackedId ? (
+                    <Link to={`/domains/${trackedId}`} className="mono row-link">
+                      {p.matched_domain}
+                    </Link>
+                  ) : (
+                    <span className="mono">{p.matched_domain}</span>
+                  )}
+                  {trackedId && (
+                    <span className="chip" style={{ fontSize: 9, marginLeft: 6 }}>
+                      tracked
+                    </span>
+                  )}
+                </td>
+                <td style={{ fontSize: 11, whiteSpace: "nowrap" }}>
+                  {sourceLink && (
+                    <a href={sourceLink} target="_blank" rel="noreferrer">
+                      source ↗
+                    </a>
+                  )}
+                  {sourceLink && matchedLink && " · "}
+                  {matchedLink && (
+                    <a href={matchedLink} target="_blank" rel="noreferrer">
+                      match ↗
+                    </a>
+                  )}
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </div>

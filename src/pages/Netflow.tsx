@@ -14,7 +14,7 @@ import {
 } from "../api/netflow-rollups-client";
 import { formatBytes, isoDate, daysAgo } from "../lib/format";
 import { categoryColors } from "../lib/categories";
-import { CopyIpButton } from "../components/CopyIpButton";
+import { CopyButton } from "../components/CopyButton";
 
 type Tab = "daily" | "hourly" | "raw";
 
@@ -497,13 +497,13 @@ export function Netflow() {
                       <Link to={`/entity/${r.monitoredIp}`} className="mono row-link">
                         {r.monitoredIp}
                       </Link>
-                      <CopyIpButton ip={r.monitoredIp} />
+                      <CopyButton text={r.monitoredIp} label="Copy IP address" />
                     </td>
                     <td style={{ whiteSpace: "nowrap" }}>
                       <Link to={`/entity/${r.peerIp}`} className="mono row-link">
                         {r.peerIp}
                       </Link>
-                      <CopyIpButton ip={r.peerIp} />
+                      <CopyButton text={r.peerIp} label="Copy IP address" />
                     </td>
                     <td style={{ fontSize: 12, color: "#A6D8CD" }}>
                       {r.peerAsn ? `AS${r.peerAsn}` : "—"} {r.peerCountry ? `· ${r.peerCountry}` : ""}

@@ -1,13 +1,16 @@
 import { useState, type MouseEvent } from "react";
 
-export function CopyIpButton({ ip }: { ip: string }) {
+// Generalized from CopyIpButton once a second kind of value (a content
+// hash, not just an IP) needed the same affordance — same shape, applied
+// twice because it's genuinely the same problem twice.
+export function CopyButton({ text, label = "Copy" }: { text: string; label?: string }) {
   const [copied, setCopied] = useState(false);
 
   async function handleCopy(e: MouseEvent) {
     e.preventDefault();
     e.stopPropagation();
     try {
-      await navigator.clipboard.writeText(ip);
+      await navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 1200);
     } catch {
@@ -18,7 +21,7 @@ export function CopyIpButton({ ip }: { ip: string }) {
   return (
     <button
       onClick={handleCopy}
-      title={copied ? "Copied" : "Copy IP address"}
+      title={copied ? "Copied" : label}
       style={{
         all: "unset",
         cursor: "pointer",

@@ -372,6 +372,57 @@ export type DailyUnclassifiedContact = {
 };
 
 /**
+ * DomainPivot
+ *
+ * One row of verdict__domain_pivots joined to its source scan: a resource
+ * on a watched IP's page (the source target, found through urlscan) whose
+ * hash a small number of other domains also serve -- the matched domain is
+ * one of them. A pivot back to the source itself is not written (0097).
+ */
+export type DomainPivot = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Detected At
+     */
+    detected_at: string;
+    /**
+     * Monitored Ip
+     */
+    monitored_ip: string;
+    /**
+     * Source Target
+     */
+    source_target: string;
+    /**
+     * Source Scan Uuid
+     */
+    source_scan_uuid: string | null;
+    /**
+     * Hash
+     */
+    hash: string;
+    /**
+     * Matched Domain
+     */
+    matched_domain: string;
+    /**
+     * Matched Scan Uuid
+     */
+    matched_scan_uuid: string | null;
+    /**
+     * Distinct Domain Count At Detection
+     */
+    distinct_domain_count_at_detection: number;
+    /**
+     * Heuristic Version
+     */
+    heuristic_version: string;
+};
+
+/**
  * DomainScan
  *
  * One ask of urlscan about a target: a name from the sweep, a URL a finding named, or the analyst's request (`discovered_from`). `urlscan_result_url` is the link to show; `result_fetched_at` is set once the result is in Mongo.
@@ -1208,6 +1259,24 @@ export type PageDailyUnclassifiedContact = {
      * Rows
      */
     rows: Array<DailyUnclassifiedContact>;
+    /**
+     * Count
+     */
+    count: number;
+    /**
+     * Newest Day
+     */
+    newest_day?: string | null;
+};
+
+/**
+ * Page[DomainPivot]
+ */
+export type PageDomainPivot = {
+    /**
+     * Rows
+     */
+    rows: Array<DomainPivot>;
     /**
      * Count
      */
@@ -2905,6 +2974,66 @@ export type ListFindingsVerdictFindingsGetResponses = {
 };
 
 export type ListFindingsVerdictFindingsGetResponse = ListFindingsVerdictFindingsGetResponses[keyof ListFindingsVerdictFindingsGetResponses];
+
+export type ListDomainPivotsVerdictDomainPivotsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Monitored Ip
+         */
+        monitored_ip?: string | null;
+        /**
+         * Matched Domain
+         *
+         * exact matched domain (the apex urlscan reported)
+         */
+        matched_domain?: string | null;
+        /**
+         * Hash
+         *
+         * the shared resource's hash
+         */
+        hash?: string | null;
+        /**
+         * Limit
+         *
+         * rows to return, at most 1000
+         */
+        limit?: number;
+        /**
+         * From
+         *
+         * first day, inclusive; default: six days before `to`
+         */
+        from?: string | null;
+        /**
+         * To
+         *
+         * last day, inclusive; default: today (UTC)
+         */
+        to?: string | null;
+    };
+    url: '/verdict/domain-pivots';
+};
+
+export type ListDomainPivotsVerdictDomainPivotsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListDomainPivotsVerdictDomainPivotsGetError = ListDomainPivotsVerdictDomainPivotsGetErrors[keyof ListDomainPivotsVerdictDomainPivotsGetErrors];
+
+export type ListDomainPivotsVerdictDomainPivotsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageDomainPivot;
+};
+
+export type ListDomainPivotsVerdictDomainPivotsGetResponse = ListDomainPivotsVerdictDomainPivotsGetResponses[keyof ListDomainPivotsVerdictDomainPivotsGetResponses];
 
 export type ListIpRolesReviewIpRolesGetData = {
     body?: never;

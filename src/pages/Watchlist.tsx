@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { CopyIpButton } from "../components/CopyIpButton";
+import { CopyButton } from "../components/CopyButton";
 import {
   listIpsWatchIpsGet,
   listIpRolesReviewIpRolesGet,
@@ -12,6 +12,7 @@ import {
   freshnessOpsFreshnessGet,
   getIpIdentityLookupIpIdentitiesIpGet,
   hostNameSummaryLookupHostNamesSummaryGet,
+  listDomainPivotsVerdictDomainPivotsGet,
   type WatchedIp,
   type IpRole,
   type DailyPortFamilyMix,
@@ -22,6 +23,7 @@ import {
   type Freshness,
   type IpIdentity,
   type HostNameSummary,
+  type DomainPivot,
 } from "../api/netflow-rollups-client";
 import { formatBytes, formatShortDate, isoDate, daysAgo, blueToWhite } from "../lib/format";
 import { categoryColors } from "../lib/categories";
@@ -38,6 +40,7 @@ type WatchlistData = {
   freshness: Freshness;
   identityByIp: Map<string, IpIdentity>;
   hostNamesByIp: Map<string, HostNameSummary[]>;
+  domainPivots: DomainPivot[];
 };
 
 function groupSum<T>(rows: T[], keyFn: (r: T) => string, valFn: (r: T) => number): Map<string, number> {
@@ -70,6 +73,7 @@ export function Watchlist() {
           unclassified7d,
           fingerprintChanges7d,
           freshness,
+          domainPivots,
         ] = await Promise.all([
           listIpsWatchIpsGet({ throwOnError: true }),
           listIpRolesReviewIpRolesGet({ query: { vantage: "watched" }, throwOnError: true }),
@@ -85,6 +89,13 @@ export function Watchlist() {
             throwOnError: true,
           }),
           freshnessOpsFreshnessGet({ throwOnError: true }),
+          // Unfiltered, not per-IP — the volume (a couple hundred rows at
+          // most) is cheap enough as one bulk call, same reasoning as the
+          // host-names summary just below.
+          listDomainPivotsVerdictDomainPivotsGet({
+            query: { from: from30, to, limit: 1000 },
+            throwOnError: true,
+          }),
         ]);
 
         if (cancelled) return;
@@ -129,6 +140,7 @@ export function Watchlist() {
           freshness: freshness.data,
           identityByIp: new Map(identityEntries.filter((e): e is readonly [string, IpIdentity] => e !== null)),
           hostNamesByIp,
+          domainPivots: domainPivots.data.rows,
         });
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : String(err));
@@ -176,6 +188,7 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
     freshness,
     identityByIp,
     hostNamesByIp,
+    domainPivots,
   } = data;
 
   const staleChecks = freshness.checks.filter((c) => c.stale);
@@ -185,6 +198,11 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
     const list = rolesByIp.get(r.ip) ?? [];
     list.push(r);
     rolesByIp.set(r.ip, list);
+  }
+
+  const pivotsByIp = new Map<string, number>();
+  for (const p of domainPivots) {
+    pivotsByIp.set(p.monitored_ip, (pivotsByIp.get(p.monitored_ip) ?? 0) + 1);
   }
 
   const bytesByIp = groupSum(portFamilyMix7d, (r) => r.monitored_ip, (r) => r.bytes_sum);
@@ -304,6 +322,7 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
               const fpHashes = fpRows.reduce((s, r) => s + r.distinct_fingerprints, 0);
               const fpLast = fpRows.reduce((max, r) => (r.last_fetched_at > max ? r.last_fetched_at : max), "");
               const tips = ip.tags.filter((t) => !t.startsWith("msk:"));
+              const pivotCount = pivotsByIp.get(ip.ip) ?? 0;
 
               return (
                 <tr key={ip.ip}>
@@ -311,7 +330,32 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
                     <Link to={`/entity/${ip.ip}`} className="mono row-link">
                       {ip.ip}
                     </Link>
-                    <CopyIpButton ip={ip.ip} />
+                    <CopyButton text={ip.ip} label="Copy IP address" />
+                    {pivotCount > 0 && (
+                      <span
+                        style={{
+                          display: "inline-flex",
+                          alignItems: "center",
+                          gap: 2,
+                          marginLeft: 6,
+                          fontSize: 10,
+                          color: "#4C8DFF",
+                          verticalAlign: "middle",
+                        }}
+                        title={`Shares content with another domain on ${pivotCount} resource${pivotCount === 1 ? "" : "s"} — verdict__domain_pivots, see the Entity page`}
+                      >
+                        <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
+                          <path
+                            d="M6 8L8 6M5.5 9.5L3.8 11.2a2 2 0 01-2.8-2.8L2.7 6.7a2 2 0 012.8 0M8.5 4.5l1.7-1.7a2 2 0 012.8 2.8L11.3 7.3a2 2 0 01-2.8 0"
+                            stroke="currentColor"
+                            strokeWidth="1.3"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        {pivotCount > 1 ? pivotCount : ""}
+                      </span>
+                    )}
                     <br />
                     {identityByIp.get(ip.ip)?.rdns && (
                       <>
