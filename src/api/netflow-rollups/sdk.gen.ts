@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { BphContactDailyRollupBphContactDailyGetData, BphContactDailyRollupBphContactDailyGetErrors, BphContactDailyRollupBphContactDailyGetResponses, ConfirmedContactsDailyRollupConfirmedContactsDailyGetData, ConfirmedContactsDailyRollupConfirmedContactsDailyGetErrors, ConfirmedContactsDailyRollupConfirmedContactsDailyGetResponses, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostData, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostErrors, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostResponses, DecideIpRoleReviewIpRolesIpRoleDecisionPostData, DecideIpRoleReviewIpRolesIpRoleDecisionPostErrors, DecideIpRoleReviewIpRolesIpRoleDecisionPostResponses, FlowDailyRollupFlowDailyGetData, FlowDailyRollupFlowDailyGetErrors, FlowDailyRollupFlowDailyGetResponses, FlowHourlyRollupFlowHourlyGetData, FlowHourlyRollupFlowHourlyGetErrors, FlowHourlyRollupFlowHourlyGetResponses, FreshnessOpsFreshnessGetData, FreshnessOpsFreshnessGetResponses, GetIpIdentityLookupIpIdentitiesIpGetData, GetIpIdentityLookupIpIdentitiesIpGetErrors, GetIpIdentityLookupIpIdentitiesIpGetResponses, GetIpRolesReviewIpRolesIpGetData, GetIpRolesReviewIpRolesIpGetErrors, GetIpRolesReviewIpRolesIpGetResponses, GetIpWatchIpsIpGetData, GetIpWatchIpsIpGetErrors, GetIpWatchIpsIpGetResponses, HealthHealthGetData, HealthHealthGetResponses, HostNameSummaryLookupHostNamesSummaryGetData, HostNameSummaryLookupHostNamesSummaryGetErrors, HostNameSummaryLookupHostNamesSummaryGetResponses, HostScanChangesLookupHostScansChangesGetData, HostScanChangesLookupHostScansChangesGetErrors, HostScanChangesLookupHostScansChangesGetResponses, ListAsnCandidatesReviewAsnCandidatesGetData, ListAsnCandidatesReviewAsnCandidatesGetErrors, ListAsnCandidatesReviewAsnCandidatesGetResponses, ListFindingsVerdictFindingsGetData, ListFindingsVerdictFindingsGetErrors, ListFindingsVerdictFindingsGetResponses, ListHostNamesLookupHostNamesGetData, ListHostNamesLookupHostNamesGetErrors, ListHostNamesLookupHostNamesGetResponses, ListHostScansLookupHostScansGetData, ListHostScansLookupHostScansGetErrors, ListHostScansLookupHostScansGetResponses, ListIpRolesReviewIpRolesGetData, ListIpRolesReviewIpRolesGetErrors, ListIpRolesReviewIpRolesGetResponses, ListIpsWatchIpsGetData, ListIpsWatchIpsGetErrors, ListIpsWatchIpsGetResponses, ListProviderCategoriesRefProviderCategoriesGetData, ListProviderCategoriesRefProviderCategoriesGetResponses, ListProvidersRefProvidersGetData, ListProvidersRefProvidersGetErrors, ListProvidersRefProvidersGetResponses, ListScannersVerdictScannersGetData, ListScannersVerdictScannersGetErrors, ListScannersVerdictScannersGetResponses, ListSipPairsReviewSipPairsGetData, ListSipPairsReviewSipPairsGetErrors, ListSipPairsReviewSipPairsGetResponses, PortFamilyMixDailyRollupPortFamilyMixDailyGetData, PortFamilyMixDailyRollupPortFamilyMixDailyGetErrors, PortFamilyMixDailyRollupPortFamilyMixDailyGetResponses, ProviderMixDailyRollupProviderMixDailyGetData, ProviderMixDailyRollupProviderMixDailyGetErrors, ProviderMixDailyRollupProviderMixDailyGetResponses, QueueReviewQueueGetData, QueueReviewQueueGetResponses, TopAsnsRollupFlowDailyTopAsnsGetData, TopAsnsRollupFlowDailyTopAsnsGetErrors, TopAsnsRollupFlowDailyTopAsnsGetResponses, TopPeersRollupFlowDailyTopPeersGetData, TopPeersRollupFlowDailyTopPeersGetErrors, TopPeersRollupFlowDailyTopPeersGetResponses, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetData, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetErrors, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetResponses } from './types.gen';
+import type { BphContactDailyRollupBphContactDailyGetData, BphContactDailyRollupBphContactDailyGetErrors, BphContactDailyRollupBphContactDailyGetResponses, ConfirmedContactsDailyRollupConfirmedContactsDailyGetData, ConfirmedContactsDailyRollupConfirmedContactsDailyGetErrors, ConfirmedContactsDailyRollupConfirmedContactsDailyGetResponses, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostData, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostErrors, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostResponses, DecideIpRoleReviewIpRolesIpRoleDecisionPostData, DecideIpRoleReviewIpRolesIpRoleDecisionPostErrors, DecideIpRoleReviewIpRolesIpRoleDecisionPostResponses, FlowDailyRollupFlowDailyGetData, FlowDailyRollupFlowDailyGetErrors, FlowDailyRollupFlowDailyGetResponses, FlowHourlyRollupFlowHourlyGetData, FlowHourlyRollupFlowHourlyGetErrors, FlowHourlyRollupFlowHourlyGetResponses, FreshnessOpsFreshnessGetData, FreshnessOpsFreshnessGetResponses, GetIpIdentityLookupIpIdentitiesIpGetData, GetIpIdentityLookupIpIdentitiesIpGetErrors, GetIpIdentityLookupIpIdentitiesIpGetResponses, GetIpRolesReviewIpRolesIpGetData, GetIpRolesReviewIpRolesIpGetErrors, GetIpRolesReviewIpRolesIpGetResponses, GetIpWatchIpsIpGetData, GetIpWatchIpsIpGetErrors, GetIpWatchIpsIpGetResponses, HealthHealthGetData, HealthHealthGetResponses, HostNameSummaryLookupHostNamesSummaryGetData, HostNameSummaryLookupHostNamesSummaryGetErrors, HostNameSummaryLookupHostNamesSummaryGetResponses, HostScanChangesLookupHostScansChangesGetData, HostScanChangesLookupHostScansChangesGetErrors, HostScanChangesLookupHostScansChangesGetResponses, ListAsnCandidatesReviewAsnCandidatesGetData, ListAsnCandidatesReviewAsnCandidatesGetErrors, ListAsnCandidatesReviewAsnCandidatesGetResponses, ListDomainScansLookupDomainScansGetData, ListDomainScansLookupDomainScansGetErrors, ListDomainScansLookupDomainScansGetResponses, ListFindingsVerdictFindingsGetData, ListFindingsVerdictFindingsGetErrors, ListFindingsVerdictFindingsGetResponses, ListHostNamesLookupHostNamesGetData, ListHostNamesLookupHostNamesGetErrors, ListHostNamesLookupHostNamesGetResponses, ListHostScansLookupHostScansGetData, ListHostScansLookupHostScansGetErrors, ListHostScansLookupHostScansGetResponses, ListIpRolesReviewIpRolesGetData, ListIpRolesReviewIpRolesGetErrors, ListIpRolesReviewIpRolesGetResponses, ListIpsWatchIpsGetData, ListIpsWatchIpsGetErrors, ListIpsWatchIpsGetResponses, ListProviderCategoriesRefProviderCategoriesGetData, ListProviderCategoriesRefProviderCategoriesGetResponses, ListProvidersRefProvidersGetData, ListProvidersRefProvidersGetErrors, ListProvidersRefProvidersGetResponses, ListScannersVerdictScannersGetData, ListScannersVerdictScannersGetErrors, ListScannersVerdictScannersGetResponses, ListSipPairsReviewSipPairsGetData, ListSipPairsReviewSipPairsGetErrors, ListSipPairsReviewSipPairsGetResponses, PeerReviewSummaryReviewIpRolesPeerReviewGetData, PeerReviewSummaryReviewIpRolesPeerReviewGetErrors, PeerReviewSummaryReviewIpRolesPeerReviewGetResponses, PortFamilyMixDailyRollupPortFamilyMixDailyGetData, PortFamilyMixDailyRollupPortFamilyMixDailyGetErrors, PortFamilyMixDailyRollupPortFamilyMixDailyGetResponses, ProviderMixDailyRollupProviderMixDailyGetData, ProviderMixDailyRollupProviderMixDailyGetErrors, ProviderMixDailyRollupProviderMixDailyGetResponses, QueueReviewQueueGetData, QueueReviewQueueGetResponses, RequestDomainScanLookupDomainScansPostData, RequestDomainScanLookupDomainScansPostErrors, RequestDomainScanLookupDomainScansPostResponses, TopAsnsRollupFlowDailyTopAsnsGetData, TopAsnsRollupFlowDailyTopAsnsGetErrors, TopAsnsRollupFlowDailyTopAsnsGetResponses, TopPeersRollupFlowDailyTopPeersGetData, TopPeersRollupFlowDailyTopPeersGetErrors, TopPeersRollupFlowDailyTopPeersGetResponses, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetData, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetErrors, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetResponses, VocabularyRulesVocabularyGetData, VocabularyRulesVocabularyGetResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -124,6 +124,38 @@ export const listHostNamesLookupHostNamesGet = <ThrowOnError extends boolean = f
 });
 
 /**
+ * List Domain Scans
+ *
+ * Every ask of urlscan in the window (on `checked_at`), newest first:
+ * the Entity page's scan list with its result links.
+ */
+export const listDomainScansLookupDomainScansGet = <ThrowOnError extends boolean = false>(options?: Options<ListDomainScansLookupDomainScansGetData, ThrowOnError>): RequestResult<ListDomainScansLookupDomainScansGetResponses, ListDomainScansLookupDomainScansGetErrors, ThrowOnError> => (options?.client ?? client).get<ListDomainScansLookupDomainScansGetResponses, ListDomainScansLookupDomainScansGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/lookup/domain-scans',
+    ...options
+});
+
+/**
+ * Request Domain Scan
+ *
+ * The analyst's re-scan: submits an unlisted urlscan scan of the target
+ * now, through the same function the nightly flow uses, forced past the
+ * ask-once rule; records the row and hands off to result retrieval, which
+ * fills the result in a minute. Answers with the row and its result URL.
+ * A submission already pending for the target is returned instead of a
+ * second one.
+ */
+export const requestDomainScanLookupDomainScansPost = <ThrowOnError extends boolean = false>(options: Options<RequestDomainScanLookupDomainScansPostData, ThrowOnError>): RequestResult<RequestDomainScanLookupDomainScansPostResponses, RequestDomainScanLookupDomainScansPostErrors, ThrowOnError> => (options.client ?? client).post<RequestDomainScanLookupDomainScansPostResponses, RequestDomainScanLookupDomainScansPostErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/lookup/domain-scans',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
  * List Scanners
  *
  * Scanner verdicts written in the window, newest first: why a peer is
@@ -157,6 +189,18 @@ export const listFindingsVerdictFindingsGet = <ThrowOnError extends boolean = fa
 export const listIpRolesReviewIpRolesGet = <ThrowOnError extends boolean = false>(options?: Options<ListIpRolesReviewIpRolesGetData, ThrowOnError>): RequestResult<ListIpRolesReviewIpRolesGetResponses, ListIpRolesReviewIpRolesGetErrors, ThrowOnError> => (options?.client ?? client).get<ListIpRolesReviewIpRolesGetResponses, ListIpRolesReviewIpRolesGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/review/ip-roles',
+    ...options
+});
+
+/**
+ * Peer Review Summary
+ *
+ * The regular-peers review's proposals by the day they were made and the
+ * role proposed, with how many had a scan in hand and their status now.
+ */
+export const peerReviewSummaryReviewIpRolesPeerReviewGet = <ThrowOnError extends boolean = false>(options?: Options<PeerReviewSummaryReviewIpRolesPeerReviewGetData, ThrowOnError>): RequestResult<PeerReviewSummaryReviewIpRolesPeerReviewGetResponses, PeerReviewSummaryReviewIpRolesPeerReviewGetErrors, ThrowOnError> => (options?.client ?? client).get<PeerReviewSummaryReviewIpRolesPeerReviewGetResponses, PeerReviewSummaryReviewIpRolesPeerReviewGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/review/ip-roles/peer-review',
     ...options
 });
 
@@ -346,12 +390,27 @@ export const confirmedContactsDailyRollupConfirmedContactsDailyGet = <ThrowOnErr
 /**
  * Freshness
  *
- * The four freshness checks measured now, the open stale episodes, the
- * head of every stream, and the pull watermarks.
+ * The data checks measured now (the run checks against Prefect are the
+ * flow's only; their episodes still show here), the open stale episodes,
+ * the head of every stream, and the pull watermarks.
  */
 export const freshnessOpsFreshnessGet = <ThrowOnError extends boolean = false>(options?: Options<FreshnessOpsFreshnessGetData, ThrowOnError>): RequestResult<FreshnessOpsFreshnessGetResponses, unknown, ThrowOnError> => (options?.client ?? client).get<FreshnessOpsFreshnessGetResponses, unknown, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/ops/freshness',
+    ...options
+});
+
+/**
+ * Vocabulary
+ *
+ * Every role, family, feature and rule the project runs, with their
+ * descriptions, generated from the rules themselves at import; and the
+ * agentic processes beside them (agentic/catalogue.py), since the
+ * dashboard shows a model's evaluation next to the rules' suggestions.
+ */
+export const vocabularyRulesVocabularyGet = <ThrowOnError extends boolean = false>(options?: Options<VocabularyRulesVocabularyGetData, ThrowOnError>): RequestResult<VocabularyRulesVocabularyGetResponses, unknown, ThrowOnError> => (options?.client ?? client).get<VocabularyRulesVocabularyGetResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/rules/vocabulary',
     ...options
 });
 

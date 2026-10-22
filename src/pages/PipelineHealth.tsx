@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { freshnessOpsFreshnessGet, type Freshness } from "../api/netflow-rollups-client";
+import {
+  freshnessOpsFreshnessGet,
+  peerReviewSummaryReviewIpRolesPeerReviewGet,
+  type Freshness,
+  type PeerReviewDay,
+} from "../api/netflow-rollups-client";
 import {
   fetchDeploymentsByTag,
   fetchFlowRunsByTag,
@@ -18,6 +23,7 @@ type PipelineData = {
   flowRuns: PrefectFlowRun[];
   recordsByRunId: Map<string, number>;
   latestByDeployment: Map<string, PrefectFlowRun>;
+  peerReview: PeerReviewDay[];
 };
 
 const STATE_COLORS: Record<string, string> = {
@@ -75,6 +81,22 @@ function formatTimestamp(iso: string | null): string {
   return new Date(iso).toISOString().slice(0, 16).replace("T", " ");
 }
 
+// freshness.episodes carries every open row of the ledger verbatim,
+// including two synthetic kinds no data-freshness check produces: a
+// deployment that hasn't completed a run in over 2x its cadence, and one
+// with failed/crashed runs in the last 24h. Neither has a matching entry in
+// freshness.checks (those are all data-staleness checks), so there's no
+// "why" to borrow — the prefix is the whole fact.
+function describeEpisode(checkName: string): string {
+  if (checkName.startsWith("run:")) {
+    return `${checkName.slice(4)} hasn't completed a run in over 2× its scheduled cadence.`;
+  }
+  if (checkName.startsWith("failures:")) {
+    return `${checkName.slice(9)} had a failed or crashed run in the last 24h.`;
+  }
+  return checkName;
+}
+
 export function PipelineHealth() {
   const [data, setData] = useState<PipelineData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -85,10 +107,11 @@ export function PipelineHealth() {
     async function load() {
       try {
         const since48h = daysAgo(2).toISOString();
-        const [freshnessResult, deployments, allFlowRuns] = await Promise.all([
+        const [freshnessResult, deployments, allFlowRuns, peerReviewResult] = await Promise.all([
           freshnessOpsFreshnessGet({ throwOnError: true }),
           fetchDeploymentsByTag("netflow-rollups"),
           fetchFlowRunsByTag("netflow-rollups", since48h),
+          peerReviewSummaryReviewIpRolesPeerReviewGet({ throwOnError: true }),
         ]);
         if (cancelled) return;
 
@@ -117,6 +140,7 @@ export function PipelineHealth() {
           flowRuns,
           recordsByRunId,
           latestByDeployment,
+          peerReview: peerReviewResult.data.rows,
         });
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : String(err));
@@ -151,7 +175,9 @@ export function PipelineHealth() {
 }
 
 function PipelineContent({ data }: { data: PipelineData }) {
-  const { freshness, deployments, flowRuns, recordsByRunId, latestByDeployment } = data;
+  const { freshness, deployments, flowRuns, recordsByRunId, latestByDeployment, peerReview } = data;
+
+  const checksByName = new Map(freshness.checks.map((c) => [c.name, c]));
 
   const flowPullDep = deployments.find((d) => d.name === "flow-pull");
   const puller48h = flowPullDep
@@ -214,28 +240,39 @@ function PipelineContent({ data }: { data: PipelineData }) {
         ))}
       </div>
 
-      {freshness.checks.some((c) => c.stale) && (
+      {freshness.episodes.length > 0 && (
         <div className="card" style={{ padding: "18px 22px", marginBottom: 24, borderColor: "#5A2327" }}>
           <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 8 }}>
             <span style={{ color: "#E5484D" }}>Open episode(s)</span>
           </div>
-          {freshness.checks
-            .filter((c) => c.stale)
-            .map((c) => (
-              <div key={c.name} style={{ fontSize: 13, lineHeight: 1.55, marginBottom: 8 }}>
-                <span className="mono">{c.name}</span> stale since{" "}
-                {c.stale_since ? formatTimestamp(c.stale_since) : "—"}
-                {c.last_alerted_at && <> · last alerted {formatTimestamp(c.last_alerted_at)}</>}
-                <div style={{ color: "#6FA89E", fontSize: 12, marginTop: 2 }}>{c.why}</div>
+          {freshness.episodes.map((ep) => {
+            // A data-freshness episode's name matches one of the checks
+            // above and reuses its "why"; run:<deployment> and
+            // failures:<deployment> are synthetic names with no matching
+            // check — describeEpisode() explains those from the prefix.
+            const check = checksByName.get(ep.check_name);
+            return (
+              <div key={ep.check_name} style={{ fontSize: 13, lineHeight: 1.55, marginBottom: 8 }}>
+                <span className="mono">{ep.check_name}</span> stale since{" "}
+                {formatTimestamp(ep.stale_since)}
+                {ep.last_alerted_at && <> · last alerted {formatTimestamp(ep.last_alerted_at)}</>}
+                <div style={{ color: "#6FA89E", fontSize: 12, marginTop: 2 }}>
+                  {check ? check.why : describeEpisode(ep.check_name)}
+                </div>
               </div>
-            ))}
+            );
+          })}
           <div className="note">
             Not shown: a hand-written "what the pipeline did vs. what the upstream says" narrative
-            — that's an analyst's own investigation, not something the API serves. Only the raw
-            facts above come from <span className="mono">ops__freshness_alerts</span>.
+            — that's an analyst's own investigation, not something the API serves. Every open
+            episode of the ledger above comes verbatim from{" "}
+            <span className="mono">ops__freshness_alerts</span> — the same facts the Slack alert
+            reads, so this list and that alert can't disagree.
           </div>
         </div>
       )}
+
+      <PeerReviewStats rows={peerReview} />
 
       <div className="card" style={{ padding: "22px 24px", marginBottom: 24 }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 6, gap: 12, flexWrap: "wrap" }}>
@@ -399,5 +436,138 @@ function PipelineContent({ data }: { data: PipelineData }) {
         </div>
       </div>
     </>
+  );
+}
+
+// "Regular peers" (netflow-rollups, landed 2026-10-20): nightly, peers that
+// talk steadily to a watched IP get admitted, scanned, and judged by a new
+// agentic process ("peer_review") that proposes a role straight into the
+// same review__ip_roles queue Candidate review shows. The owner asked for
+// its first week measured through this dashboard (proposals a night,
+// agreement with the human, how many had no scan in hand) — this is that.
+function PeerReviewStats({ rows }: { rows: PeerReviewDay[] }) {
+  const totals = rows.reduce(
+    (acc, r) => ({
+      proposals: acc.proposals + r.proposals,
+      withScan: acc.withScan + r.with_scan,
+      suggested: acc.suggested + r.suggested,
+      agenticEvaluation: acc.agenticEvaluation + r.agentic_evaluation,
+      confirmed: acc.confirmed + r.confirmed,
+      rejected: acc.rejected + r.rejected,
+      expired: acc.expired + r.expired,
+    }),
+    { proposals: 0, withScan: 0, suggested: 0, agenticEvaluation: 0, confirmed: 0, rejected: 0, expired: 0 },
+  );
+  const days = [...new Set(rows.map((r) => r.day))].sort().reverse();
+  const sorted = [...rows].sort((a, b) => (a.day === b.day ? a.role.localeCompare(b.role) : b.day.localeCompare(a.day)));
+
+  return (
+    <div className="card" style={{ padding: "22px 24px", marginBottom: 24 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4, gap: 12, flexWrap: "wrap" }}>
+        <div style={{ fontSize: 13, fontWeight: 600 }}>Regular peers — first week</div>
+        <span className="src">review__ip_roles/peer-review</span>
+      </div>
+      <div style={{ fontSize: 11, color: "#6FA89E", marginBottom: 16, lineHeight: 1.5 }}>
+        A newer, separate pipeline from the rule-based queues on Candidate review: peers that talk
+        steadily to a watched IP are admitted, scanned, and judged by their own agentic process,
+        landing suggestions in the same queue. A peer judged "none" writes nothing, so it isn't
+        counted here — the sweep's own log carries that count, not this API.
+      </div>
+
+      {rows.length === 0 ? (
+        <div style={{ color: "#6FA89E", fontSize: 13 }}>No proposals yet in this window.</div>
+      ) : (
+        <>
+          <div
+            style={{
+              display: "grid",
+              gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))",
+              gap: 14,
+              marginBottom: 18,
+            }}
+          >
+            <div>
+              <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase" }}>
+                Proposals · {days.length} day{days.length === 1 ? "" : "s"}
+              </div>
+              <div className="mono" style={{ fontSize: 20, fontWeight: 600 }}>
+                {totals.proposals}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase" }}>With a scan in hand</div>
+              <div className="mono" style={{ fontSize: 20, fontWeight: 600 }}>
+                {totals.withScan} <span style={{ fontSize: 12, color: "#6FA89E", fontWeight: 500 }}>of {totals.proposals}</span>
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase" }}>Confirmed</div>
+              <div className="mono" style={{ fontSize: 20, fontWeight: 600, color: "#3DD68C" }}>
+                {totals.confirmed}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase" }}>Rejected</div>
+              <div className="mono" style={{ fontSize: 20, fontWeight: 600, color: totals.rejected > 0 ? "#E5484D" : undefined }}>
+                {totals.rejected}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase" }}>Still awaiting review</div>
+              <div className="mono" style={{ fontSize: 20, fontWeight: 600, color: "#F5A623" }}>
+                {totals.suggested + totals.agenticEvaluation}
+              </div>
+            </div>
+          </div>
+
+          <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                <th>Day</th>
+                <th>Role</th>
+                <th style={{ textAlign: "right" }}>Proposals</th>
+                <th style={{ textAlign: "right" }}>With scan</th>
+                <th style={{ textAlign: "right" }}>Suggested</th>
+                <th style={{ textAlign: "right" }}>Agent-reviewed</th>
+                <th style={{ textAlign: "right" }}>Confirmed</th>
+                <th style={{ textAlign: "right" }}>Rejected</th>
+                <th style={{ textAlign: "right" }}>Expired</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sorted.map((r) => (
+                <tr key={`${r.day}:${r.role}`}>
+                  <td className="mono" style={{ fontSize: 12 }}>
+                    {r.day}
+                  </td>
+                  <td className="mono">{r.role}</td>
+                  <td className="num mono" style={{ textAlign: "right" }}>
+                    {r.proposals}
+                  </td>
+                  <td className="num mono" style={{ textAlign: "right", color: r.with_scan < r.proposals ? "#F5A623" : undefined }}>
+                    {r.with_scan}
+                  </td>
+                  <td className="num mono" style={{ textAlign: "right" }}>
+                    {r.suggested}
+                  </td>
+                  <td className="num mono" style={{ textAlign: "right" }}>
+                    {r.agentic_evaluation}
+                  </td>
+                  <td className="num mono" style={{ textAlign: "right", color: r.confirmed > 0 ? "#3DD68C" : undefined }}>
+                    {r.confirmed}
+                  </td>
+                  <td className="num mono" style={{ textAlign: "right", color: r.rejected > 0 ? "#E5484D" : undefined }}>
+                    {r.rejected}
+                  </td>
+                  <td className="num mono" style={{ textAlign: "right" }}>
+                    {r.expired}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </>
+      )}
+    </div>
   );
 }

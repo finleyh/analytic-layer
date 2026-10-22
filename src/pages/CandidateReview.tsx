@@ -7,11 +7,13 @@ import {
   listSipPairsReviewSipPairsGet,
   flowDailyRollupFlowDailyGet,
   queueReviewQueueGet,
+  vocabularyRulesVocabularyGet,
   type AsnCandidate,
   type IpRole,
   type SipPair,
   type PairRef,
   type ReviewQueue,
+  type Vocabulary,
 } from "../api/netflow-rollups-client";
 import { formatBytes, formatShortDate, isoDate, daysAgo } from "../lib/format";
 
@@ -19,160 +21,92 @@ type Queue = "asn" | "peer" | "watched";
 
 type RoleSuggestion = { reasoning?: string; features?: Record<string, unknown>; first_day?: string; last_day?: string; alarm?: string | null };
 
-// ---------- Feature glossary ----------
+// ---------- Feature glossary, from netflow-rollups' own rules registry ----------
 //
-// Sourced from netflow-rollups' own rule modules (dataclass field comments
-// and function docstrings) as of 2026-10-20, not invented here — see
-// rules/sip/watched.py, rules/sip/pairs.py, rules/web.py, rules/services.py
-// and rules/c2.py. A few fields (the raw counters, the c2 peer features)
-// have no documentation anywhere in that codebase; those entries are a
-// best-effort description from the field name and surrounding context, not
-// a quote. Scoped per rule_name, not per bare feature key, because the same
-// key name (inbound_peers, forward_names, watched_ips) means different
-// things in different rule families.
-type FeatureGlossary = Record<string, string>;
-
-const SIP_WATCHED_FEATURES: FeatureGlossary = {
-  exposed_sip_ports: "SIP ports answering in the latest portscan fingerprint.",
-  sip_in: "SIP packets to our SIP ports from non-scanner peers.",
-  sip_out: "SIP packets we send to peers' SIP ports.",
-  inbound_peers: "Distinct non-scanner peers sending SIP to us.",
-  dialed_peers: "Distinct peers we send SIP to.",
-  symmetric: "Every inbound peer is one we also dial.",
-  src_ports_out: "Distinct source ports we use toward peers' SIP ports.",
-  real_peers: "Distinct non-scanner SIP peers, either direction.",
-  scanner_peers: "SIP peers classified as scanners in this run.",
-  client_peers: "This run's measured pair roles for the IP: peers whose pair role is sip_client.",
-  trunk_peers: "This run's measured pair roles for the IP: peers whose pair role is sip_trunk.",
-  media_records: "RTP media records seen in the window.",
-  max_concurrency: "Peak number of simultaneous calls (overlapping RTP port pairs, 5-minute buckets).",
-  p95_concurrency: "95th-percentile simultaneous calls — less sensitive to one traffic spike than the max.",
-  admin_flows: "web_admin flow records in the window.",
-  https_signaled_peers:
-    "Peers that carry media and HTTPS with this IP but (almost) no SIP-port traffic — the shape of a softphone whose signaling rides inside HTTPS (3CX's web client does this).",
-  exposes_sip: "True if any SIP port answered in the latest fingerprint.",
-  watched_ips: "Alias for real_peers in this rule family: distinct non-scanner SIP peers of this watched IP.",
+// GET /rules/vocabulary — built 2026-10-20 at this project's own request
+// ("the dashboard's (?) icons," per netflow-rollups' docs/api.md) — replaces
+// what used to be a hand-maintained copy of rule-module comments here. It's
+// the authoritative source, regenerated from the rules themselves at
+// import, so it can't drift the way a hardcoded copy already had (25 rules
+// documented by hand vs. 45 live two days later).
+//
+// Shape: a feature is described once per *family* (vocabulary.families[].
+// features), and a rule names which family it belongs to (vocabulary.rules[].
+// family) — scoped that way, not by bare feature key, because the same key
+// name (inbound_peers, forward_names, watched_ips) means different things
+// in different families.
+type Glossary = {
+  ruleFamily: Map<string, string>;
+  familyFeatures: Map<string, Map<string, string>>;
+  roleMeaning: Map<string, string>;
+  // A suggestion's key is sometimes an agentic process name instead of a
+  // rule name (review/ip_roles/writer.py's suggest() accepts either) — the
+  // new "regular peers" pipeline's proposals land under "peer_review", not
+  // under any rule. nameDescription covers both so the header tooltip and
+  // the "no glossary entry" badge don't misread a known process as
+  // undocumented; ruleFamily stays rule-only since only rules have a
+  // family's worth of per-feature descriptions behind them in this
+  // registry — a process's own features fall back to the per-field
+  // "unknown" dot, which is accurate: netflow-rollups doesn't describe a
+  // process's features field-by-field yet, only its named inputs/outputs.
+  nameDescription: Map<string, string>;
 };
 
-const SIP_PAIR_FEATURES: FeatureGlossary = {
-  window_days: "How many days of the lookback window this rule had data for.",
-  sig_days: "Distinct days this pair had SIP signaling.",
-  rtp_days: "Distinct days this pair had RTP media.",
-  sip_packets: "SIP packets exchanged with this peer in the window.",
-  media_records: "RTP media records exchanged with this peer.",
-  media_bytes: "RTP media bytes exchanged with this peer.",
-  sip_per_day_from_peer:
-    "SIP packets per day the peer sends to this IP's signaling ports. A registering phone: tens a day from one port. An IP-auth trunk: a few. A gateway registering a rack of SIMs as separate accounts: hundreds or more.",
-  sip_src_ports: "Distinct source ports the peer used toward this IP's signaling ports.",
-  peer_country: "The peer's most common netflow country code.",
-  tz_offset_hours:
-    "The peer country's standard-time UTC offset — used to judge whether its traffic pattern looks like it sleeps at night in its own time zone.",
-  avg_bytes_per_record: "Average bytes per RTP media record for this pair.",
-  long_calls:
-    "RTP port pairs with enough records to look like a call of roughly 10+ minutes — shorter calls are mostly invisible at this sampling rate.",
-  rec_per_call_median: "Median RTP records per call (each call negotiates a fresh port pair).",
-  rec_per_call_p90: "90th-percentile RTP records per call.",
-  max_concurrency: "Peak number of simultaneous calls with this peer.",
-  p95_concurrency: "95th-percentile simultaneous calls with this peer.",
-  overnight_share: "Share of this pair's activity that falls overnight, in the peer's local time zone.",
-  sibling_ips:
-    "Other addresses in the peer's /24 seen with any watched IP in the window — CGNAT churn, a dynamic address, or a fleet of boxes.",
-  peer_is_consumer: "The peer sits on a residential ISP or mobile network.",
-  peer_is_hosting: "The peer sits on cloud, wholesale VoIP, or bulletproof-hosting infrastructure.",
-  media_per_sip:
-    "Media records per SIP packet. A chatty trunk can send 50+ SIP packets a day too, but it carries hundreds of media records per SIP packet where a phone carries a handful.",
-  pair_roles: "This run's measured role(s) for the pair.",
-  serves_watched_phones: "True if this peer is the switch a watched phone registers to.",
-  watched_ips: "Distinct watched IPs this peer touches — a different count than the same-named field on a watched-vantage suggestion.",
+const EMPTY_GLOSSARY: Glossary = {
+  ruleFamily: new Map(),
+  familyFeatures: new Map(),
+  roleMeaning: new Map(),
+  nameDescription: new Map(),
 };
 
-const WEB_FEATURES: FeatureGlossary = {
-  exposed_web_ports: "Web ports answering in the latest fingerprint, per source.",
-  titles: "Distinct root-page titles seen across sources.",
-  favicon_hashes: "Distinct favicon hashes seen across sources.",
-  inbound_peers: "Distinct non-scanner peers connecting to its web ports.",
-  inbound_records: "Inbound web-port records in the window.",
-  inbound_bytes: "Inbound web-port bytes in the window.",
-  outbound_peers: "Distinct hosts this IP connects to on web ports.",
-  outbound_records: "Outbound web-port records in the window.",
-  outbound_bytes: "Outbound web-port bytes in the window.",
-  outbound_days: "Distinct days this IP connected out on a web port.",
-  exposes_web: "True if any web port answered in the latest fingerprint.",
-  panel_titles:
-    "Root-page titles that look like a real page (a panel, a login page) rather than noise — an HTTP status, a stock default page, a directory listing, a PHP error.",
-  relay_ratio:
-    "Bytes out on web ports over bytes in. A proxy that fetches what it serves sits near 1; a server phoning home sits near 0.",
-};
+function buildGlossary(vocabulary: Vocabulary): Glossary {
+  const familyFeatures = new Map<string, Map<string, string>>();
+  for (const family of vocabulary.families) {
+    const features = new Map<string, string>();
+    for (const feature of family.features) features.set(feature.name, feature.description);
+    familyFeatures.set(family.path, features);
+  }
+  const ruleFamily = new Map<string, string>();
+  const nameDescription = new Map<string, string>();
+  for (const rule of vocabulary.rules) {
+    ruleFamily.set(rule.name, rule.family);
+    nameDescription.set(rule.name, rule.description);
+  }
+  for (const process of vocabulary.processes) {
+    nameDescription.set(process.name, process.description);
+  }
+  const roleMeaning = new Map<string, string>();
+  for (const role of vocabulary.roles) roleMeaning.set(role.name, role.meaning);
+  return { ruleFamily, familyFeatures, roleMeaning, nameDescription };
+}
 
-const SERVICE_FEATURES: FeatureGlossary = {
-  family: "Which service family this suggestion is for (dns, mail, or vpn).",
-  exposed_ports: "This family's ports answering in the latest fingerprint.",
-  software: "What answers on those ports, as the sources name it.",
-  inbound_peers: "Distinct non-scanner peers with enough inbound records to count as real traffic, not a probe.",
-  inbound_any_peers:
-    "Distinct non-scanner peers with any inbound record at all — looser than inbound_peers, since a query-response service can be real at very low per-peer volume (e.g. DNS sampled at ~1-in-1,500).",
-  inbound_records: "Inbound records on this family's ports.",
-  inbound_max_days: "The most days any single inbound peer was seen on.",
-  outbound_peers: "Distinct hosts this IP connects to on this family's ports.",
-  outbound_records: "Outbound records on this family's ports.",
-  exposes: "True if any of this family's ports answered in the latest fingerprint.",
-};
+function useGlossary(): { glossary: Glossary; error: string | null } {
+  const [glossary, setGlossary] = useState<Glossary>(EMPTY_GLOSSARY);
+  const [error, setError] = useState<string | null>(null);
 
-// Provisional (2026-10-20): describes the shape as it exists today, not as
-// a settled vocabulary. netflow-rollups' own agentic process catalogue and
-// findings vocabulary — both still in planning — will eventually be the
-// canonical source for what `findings` and the agent's `evaluation` actually
-// mean; these two entries should be replaced from there once that lands,
-// not treated as final just because they're reachable today.
-const C2_FEATURES: FeatureGlossary = {
-  families: "Known C2 framework names matched by a fingerprint finding on this IP.",
-  findings: "The verdict__findings rows (signature_known_family) behind this suggestion.",
-  c2: "The confirmed c2_server address this peer relationship is measured against.",
-  beacon_rules: "The verdict__findings beacon_* rules that fired for this peer against a confirmed C2.",
-  days_seen: "Distinct days this peer relationship was seen.",
-  records: "Flow records in this peer relationship.",
-  in_records: "Inbound flow records in this peer relationship.",
-  out_records: "Outbound flow records in this peer relationship.",
-  admin_days: "Days with traffic both ways on admin ports (ssh/web/rdp/vnc/telnet-style admin families).",
-  admin_bytes: "Bytes on admin ports in this peer relationship.",
-  c2s: "Confirmed C2 addresses this peer probes.",
-  peer_days: "Distinct days this peer made a probing flow to a confirmed C2.",
-};
+  useEffect(() => {
+    let cancelled = false;
+    vocabularyRulesVocabularyGet({ throwOnError: true })
+      .then((r) => {
+        if (!cancelled) setGlossary(buildGlossary(r.data));
+      })
+      .catch((err) => {
+        // The page still works without it — every (?) icon just falls back
+        // to its honest "no glossary entry" state.
+        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
-// rule_name -> which glossary above describes its features. Exact match,
-// not a prefix guess, since rule_name values are a small fixed set (per
-// netflow-rollups' review/ip_roles/writer.py) rather than open-ended.
-const RULE_FEATURE_GLOSSARY: Record<string, FeatureGlossary> = {
-  sip_server_has_clients: SIP_WATCHED_FEATURES,
-  sip_server_many_peers: SIP_WATCHED_FEATURES,
-  sip_server_exposed_few_peers: SIP_WATCHED_FEATURES,
-  sip_trunk_gateway: SIP_WATCHED_FEATURES,
-  sip_client_outbound_only: SIP_WATCHED_FEATURES,
-  sip_client_single_handset: SIP_WATCHED_FEATURES,
-  sip_client_many_switches: SIP_WATCHED_FEATURES,
-  sip_client_https_signaled: SIP_WATCHED_FEATURES,
-  sip_peer_serves_watched_phones: SIP_PAIR_FEATURES,
-  sip_peer_client_registering: SIP_PAIR_FEATURES,
-  sip_peer_client_consumer_link: SIP_PAIR_FEATURES,
-  sip_peer_trunk_sized_media: SIP_PAIR_FEATURES,
-  sip_peer_trunk_hosting_steady: SIP_PAIR_FEATURES,
-  web_server_many_clients: WEB_FEATURES,
-  web_server_panel_in_use: WEB_FEATURES,
-  web_server_cert_named: WEB_FEATURES,
-  reverse_proxy_fronting: WEB_FEATURES,
-  dns_server_many_peers: SERVICE_FEATURES,
-  dns_server_named_ns: SERVICE_FEATURES,
-  mail_server_receives: SERVICE_FEATURES,
-  mail_server_mailboxes: SERVICE_FEATURES,
-  vpn_server_clients: SERVICE_FEATURES,
-  c2_server_known_family: C2_FEATURES,
-  c2_victim_beaconing: C2_FEATURES,
-  c2_operator_steady_bidirectional: C2_FEATURES,
-  research_periodic_probe: C2_FEATURES,
-};
+  return { glossary, error };
+}
 
-function featureDescription(ruleName: string, featureKey: string): string | null {
-  return RULE_FEATURE_GLOSSARY[ruleName]?.[featureKey] ?? null;
+function featureDescription(glossary: Glossary, ruleName: string, featureKey: string): string | null {
+  const family = glossary.ruleFamily.get(ruleName);
+  if (!family) return null;
+  return glossary.familyFeatures.get(family)?.get(featureKey) ?? null;
 }
 
 // Pulled out from under the generic grid and shown under the IP instead —
@@ -196,12 +130,16 @@ function extractNames(suggestions: Record<string, RoleSuggestion>): { domains: s
   return { domains: [...domains].sort(), certs: [...certs].sort() };
 }
 
-function formatFeatureValue(v: unknown): string {
+function formatScalar(v: unknown): string {
   if (v === null || v === undefined) return "—";
-  if (Array.isArray(v)) return v.length === 0 ? "—" : v.map((x) => String(x)).join(", ");
   if (typeof v === "boolean") return v ? "true" : "false";
   if (typeof v === "object") return JSON.stringify(v);
   return String(v);
+}
+
+function formatFeatureValue(v: unknown): string {
+  if (Array.isArray(v)) return v.length === 0 ? "—" : v.map(formatScalar).join(", ");
+  return formatScalar(v);
 }
 
 // `text` is null when the glossary has nothing for this field — render it
@@ -283,6 +221,7 @@ export function CandidateReview() {
   const [asnPending, setAsnPending] = useState<number | null>(null);
   const [peerPending, setPeerPending] = useState<number | null>(null);
   const [watchedPending, setWatchedPending] = useState<number | null>(null);
+  const { glossary } = useGlossary();
 
   useEffect(() => {
     let cancelled = false;
@@ -337,10 +276,10 @@ export function CandidateReview() {
         <AsnQueue onPendingCount={setAsnPending} />
       </div>
       <div style={{ display: tab === "peer" ? undefined : "none" }}>
-        <IpRoleQueue vantage="peer" onPendingCount={setPeerPending} />
+        <IpRoleQueue vantage="peer" onPendingCount={setPeerPending} glossary={glossary} />
       </div>
       <div style={{ display: tab === "watched" ? undefined : "none" }}>
-        <IpRoleQueue vantage="watched" onPendingCount={setWatchedPending} />
+        <IpRoleQueue vantage="watched" onPendingCount={setWatchedPending} glossary={glossary} />
       </div>
     </>
   );
@@ -672,9 +611,11 @@ function rowKey(row: IpRole): string {
 function IpRoleQueue({
   vantage,
   onPendingCount,
+  glossary,
 }: {
   vantage: "peer" | "watched";
   onPendingCount: (n: number) => void;
+  glossary: Glossary;
 }) {
   const [rows, setRows] = useState<IpRole[] | null>(null);
   const [decided, setDecided] = useState<Map<string, RoleDecided>>(new Map());
@@ -803,6 +744,7 @@ function IpRoleQueue({
             vantage={vantage}
             decided={decided.get(rowKey(row))}
             onDecide={decide}
+            glossary={glossary}
           />
         ))}
         {rows && rows.length === 0 && (
@@ -827,11 +769,13 @@ function IpRoleCard({
   vantage,
   decided,
   onDecide,
+  glossary,
 }: {
   row: IpRole;
   vantage: "peer" | "watched";
   decided: RoleDecided | undefined;
   onDecide: (row: IpRole, decision: "confirm" | "reject", pairs?: PairRef[]) => Promise<void>;
+  glossary: Glossary;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [pairs, setPairs] = useState<SipPair[] | null>(null);
@@ -894,7 +838,9 @@ function IpRoleCard({
             <span className="mono" style={{ fontSize: 15, fontWeight: 600 }}>
               {row.ip}
             </span>
-            <span className="chip pend">suggested {row.role}</span>
+            <span className="chip pend" title={glossary.roleMeaning.get(row.role)}>
+              suggested {row.role}
+            </span>
             {row.status === "agentic_evaluation" && (
               <span className="chip" style={{ color: "#4C8DFF", borderColor: "#1E3A5F" }}>
                 agent-reviewed
@@ -962,14 +908,18 @@ function IpRoleCard({
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", gap: 10, flexWrap: "wrap" }}>
                 <span style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span className="mono" style={{ color: "#4C8DFF", fontWeight: 600, fontSize: 12 }}>
+                  <span
+                    className="mono"
+                    style={{ color: "#4C8DFF", fontWeight: 600, fontSize: 12 }}
+                    title={glossary.nameDescription.get(ruleName)}
+                  >
                     {ruleName}
                   </span>
-                  {!RULE_FEATURE_GLOSSARY[ruleName] && (
+                  {glossary.nameDescription.size > 0 && !glossary.nameDescription.has(ruleName) && (
                     <span
                       className="mono"
                       style={{ fontSize: 10, color: "#6FA89E", border: "1px dashed #3F9C8A", borderRadius: 4, padding: "0 5px" }}
-                      title="This rule isn't in the feature glossary yet — its fields show without tooltips below."
+                      title="This rule or process isn't in the glossary yet — its fields show without tooltips below."
                     >
                       no glossary entry
                     </span>
@@ -993,7 +943,7 @@ function IpRoleCard({
                     {Object.entries(s.features)
                       .filter(([k]) => !NAME_FEATURE_KEYS.has(k))
                       .map(([k, v]) => {
-                        const desc = featureDescription(ruleName, k);
+                        const desc = featureDescription(glossary, ruleName, k);
                         const label = k.replace(/_/g, " ");
                         return (
                           <div key={k}>

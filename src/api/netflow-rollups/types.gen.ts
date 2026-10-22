@@ -372,6 +372,130 @@ export type DailyUnclassifiedContact = {
 };
 
 /**
+ * DomainScan
+ *
+ * One ask of urlscan about a target: a name from the sweep, a URL a finding named, or the analyst's request (`discovered_from`). `urlscan_result_url` is the link to show; `result_fetched_at` is set once the result is in Mongo.
+ */
+export type DomainScan = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Monitored Ip
+     */
+    monitored_ip: string;
+    /**
+     * Target
+     */
+    target: string;
+    /**
+     * Target Key
+     */
+    target_key: string;
+    /**
+     * Discovered From
+     */
+    discovered_from: string;
+    /**
+     * Discovered At
+     */
+    discovered_at: string;
+    /**
+     * Existing Scan Found
+     */
+    existing_scan_found: boolean;
+    /**
+     * Urlscan Uuid
+     */
+    urlscan_uuid: string | null;
+    /**
+     * Urlscan Result Url
+     */
+    urlscan_result_url: string | null;
+    /**
+     * Urlscan Visibility
+     */
+    urlscan_visibility: string | null;
+    /**
+     * Checked At
+     */
+    checked_at: string;
+    /**
+     * Result Fetched At
+     */
+    result_fetched_at: string | null;
+};
+
+/**
+ * FamilyDoc
+ *
+ * A family: what it measures, from which vantage, and the features it describes. `path` is the tree position (`sip/watched`).
+ */
+export type FamilyDoc = {
+    /**
+     * Path
+     */
+    path: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Parent
+     */
+    parent: string | null;
+    /**
+     * Description
+     */
+    description: string;
+    /**
+     * Kind
+     *
+     * exclusion | finding | suggestion, when the family's rules share one
+     */
+    kind: string | null;
+    /**
+     * Vantage
+     */
+    vantage: string | null;
+    /**
+     * Ledger
+     *
+     * the table the family's conclusions land in: review__* waits for a human, verdict__* is acted on by code
+     */
+    ledger: string | null;
+    /**
+     * Deployment
+     *
+     * the Prefect deployment that runs the family's rules
+     */
+    deployment: string | null;
+    /**
+     * Features
+     */
+    features: Array<FeatureDoc>;
+    /**
+     * Rules
+     */
+    rules: Array<string>;
+};
+
+/**
+ * FeatureDoc
+ */
+export type FeatureDoc = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Description
+     */
+    description: string;
+};
+
+/**
  * Finding
  *
  * One row of verdict__findings: a fact a rule established about an IP
@@ -456,6 +580,10 @@ export type Freshness = {
      * Checks
      */
     checks: Array<FreshnessCheckStatus>;
+    /**
+     * Episodes
+     */
+    episodes: Array<FreshnessEpisode>;
     heads: StreamHeads;
     /**
      * Netflow Watermarks
@@ -470,7 +598,7 @@ export type Freshness = {
 /**
  * FreshnessCheckStatus
  *
- * One of ops/freshness.py's checks, measured now, with its open stale
+ * One of ops/freshness_check.py's checks, measured now, with its open stale
  * episode from ops__freshness_alerts if there is one.
  */
 export type FreshnessCheckStatus = {
@@ -481,7 +609,7 @@ export type FreshnessCheckStatus = {
     /**
      * Age Seconds
      *
-     * age of the stream's newest data; null means no data at all
+     * age of the stream's newest data (for urlscan_stuck: of the oldest row still waiting); null means no data at all, which is fine for a check that says so
      */
     age_seconds: number | null;
     /**
@@ -504,6 +632,29 @@ export type FreshnessCheckStatus = {
      * Last Alerted At
      */
     last_alerted_at: string | null;
+};
+
+/**
+ * FreshnessEpisode
+ *
+ * One open row of ops__freshness_alerts, verbatim: a data check's name, or
+ * `run:<deployment>` (no completed run in twice its cadence), or
+ * `failures:<deployment>` (failed runs in the last 24 h, since 2026-10-22).
+ * The data checks' episodes also sit on their check; these are all of them.
+ */
+export type FreshnessEpisode = {
+    /**
+     * Check Name
+     */
+    check_name: string;
+    /**
+     * Stale Since
+     */
+    stale_since: string;
+    /**
+     * Last Alerted At
+     */
+    last_alerted_at: string;
 };
 
 /**
@@ -671,6 +822,12 @@ export type HostScan = {
      * watched | peer
      */
     subject: string;
+    /**
+     * Trigger
+     *
+     * why the record exists: watched_sweep | sip_role | talkative | api
+     */
+    trigger: string;
     /**
      * Source
      */
@@ -1062,6 +1219,24 @@ export type PageDailyUnclassifiedContact = {
 };
 
 /**
+ * Page[DomainScan]
+ */
+export type PageDomainScan = {
+    /**
+     * Rows
+     */
+    rows: Array<DomainScan>;
+    /**
+     * Count
+     */
+    count: number;
+    /**
+     * Newest Day
+     */
+    newest_day?: string | null;
+};
+
+/**
  * Page[Finding]
  */
 export type PageFinding = {
@@ -1177,6 +1352,24 @@ export type PageIpRole = {
      * Rows
      */
     rows: Array<IpRole>;
+    /**
+     * Count
+     */
+    count: number;
+    /**
+     * Newest Day
+     */
+    newest_day?: string | null;
+};
+
+/**
+ * Page[PeerReviewDay]
+ */
+export type PagePeerReviewDay = {
+    /**
+     * Rows
+     */
+    rows: Array<PeerReviewDay>;
     /**
      * Count
      */
@@ -1325,6 +1518,110 @@ export type PairRef = {
      * Peer Ip
      */
     peer_ip: string;
+};
+
+/**
+ * PeerReviewDay
+ *
+ * One (day, role) of the regular-peers review's proposals: how many, how
+ * many were made with a scan record in hand, and where they stand now. The
+ * first-week measurement (docs/proposals/peer_recommendation_chain.md, step
+ * 4): agreement is confirmed against rejected; a judgement of none writes
+ * nothing, so it is not here -- the sweep's log carries that count.
+ */
+export type PeerReviewDay = {
+    /**
+     * Day
+     */
+    day: string;
+    /**
+     * Role
+     */
+    role: string;
+    /**
+     * Proposals
+     */
+    proposals: number;
+    /**
+     * With Scan
+     */
+    with_scan: number;
+    /**
+     * Suggested
+     */
+    suggested: number;
+    /**
+     * Agentic Evaluation
+     */
+    agentic_evaluation: number;
+    /**
+     * Confirmed
+     */
+    confirmed: number;
+    /**
+     * Rejected
+     */
+    rejected: number;
+    /**
+     * Expired
+     */
+    expired: number;
+};
+
+/**
+ * ProcessDoc
+ *
+ * An agentic process (`agentic/catalogue.py`): where an LLM makes a call. Not a rule; served here because the dashboard shows its verdicts beside the rules'.
+ */
+export type ProcessDoc = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Description
+     */
+    description: string;
+    /**
+     * Model
+     */
+    model: string;
+    /**
+     * Cap
+     *
+     * calls a night, when capped
+     */
+    cap: number | null;
+    /**
+     * Reads
+     */
+    reads: Array<string>;
+    /**
+     * Writes Through
+     *
+     * the writer the answer goes through; a process writes nothing itself
+     */
+    writes_through: string;
+    /**
+     * Ledger
+     */
+    ledger: string;
+    /**
+     * Deployment
+     */
+    deployment: string;
+    /**
+     * Since
+     */
+    since: string;
+    /**
+     * Outputs
+     *
+     * the fields it writes, each described
+     */
+    outputs: {
+        [key: string]: string;
+    };
 };
 
 /**
@@ -1498,6 +1795,139 @@ export type RoleDecisionResult = {
      * Rollups
      */
     rollups?: string;
+};
+
+/**
+ * RoleDoc
+ */
+export type RoleDoc = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Meaning
+     */
+    meaning: string;
+};
+
+/**
+ * RuleDoc
+ *
+ * One rule: its name is the key on rows and findings; `reads` names the features its condition uses.
+ */
+export type RuleDoc = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Family
+     */
+    family: string;
+    /**
+     * Kind
+     */
+    kind: string;
+    /**
+     * Role
+     */
+    role: string | null;
+    /**
+     * Vantage
+     */
+    vantage: string | null;
+    /**
+     * Subject
+     *
+     * finding rules: what the finding is about beside the IP
+     */
+    subject: string | null;
+    /**
+     * Prefix
+     *
+     * a name written before the naming convention: the prefix it carries
+     */
+    prefix: string | null;
+    /**
+     * Description
+     */
+    description: string;
+    /**
+     * Reads
+     */
+    reads: Array<string>;
+    /**
+     * Thresholds
+     */
+    thresholds: {
+        [key: string]: unknown;
+    };
+    /**
+     * Order
+     *
+     * position in a first-match ladder, when the family is one
+     */
+    order: number | null;
+    /**
+     * Since
+     */
+    since: string | null;
+    /**
+     * Source
+     */
+    source: string | null;
+    /**
+     * Calibration
+     */
+    calibration: string | null;
+    /**
+     * Supersedes
+     */
+    supersedes: string | null;
+    /**
+     * Retired
+     */
+    retired: string | null;
+    /**
+     * Ledger
+     */
+    ledger: string | null;
+    /**
+     * Deployment
+     */
+    deployment: string | null;
+};
+
+/**
+ * ScanRequest
+ */
+export type ScanRequest = {
+    /**
+     * Target
+     *
+     * a URL (http://203.0.113.10:8000/) or a bare domain
+     */
+    target: string;
+    /**
+     * Monitored Ip
+     *
+     * the watched IP the target belongs to
+     */
+    monitored_ip: string;
+};
+
+/**
+ * ScanRequestResult
+ *
+ * `outcome` is what request_scan did: submitted (a new unlisted scan), pending (one is already waiting for its result; that row is returned), or existing (never for a request: the analyst's ask always submits fresh).
+ */
+export type ScanRequestResult = {
+    /**
+     * Outcome
+     */
+    outcome: string;
+    scan: DomainScan;
 };
 
 /**
@@ -1810,6 +2240,28 @@ export type ValidationError = {
 };
 
 /**
+ * Vocabulary
+ */
+export type Vocabulary = {
+    /**
+     * Roles
+     */
+    roles: Array<RoleDoc>;
+    /**
+     * Families
+     */
+    families: Array<FamilyDoc>;
+    /**
+     * Rules
+     */
+    rules: Array<RuleDoc>;
+    /**
+     * Processes
+     */
+    processes: Array<ProcessDoc>;
+};
+
+/**
  * WatchedIp
  *
  * One row of watch__ips. `tags` mirrors every OpenCTI label on the
@@ -2066,6 +2518,12 @@ export type ListHostScansLookupHostScansGetData = {
          */
         subject?: string | null;
         /**
+         * Trigger
+         *
+         * watched_sweep | sip_role | talkative | api; default: all
+         */
+        trigger?: string | null;
+        /**
          * Source
          */
         source?: string | null;
@@ -2249,6 +2707,91 @@ export type ListHostNamesLookupHostNamesGetResponses = {
 
 export type ListHostNamesLookupHostNamesGetResponse = ListHostNamesLookupHostNamesGetResponses[keyof ListHostNamesLookupHostNamesGetResponses];
 
+export type ListDomainScansLookupDomainScansGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Monitored Ip
+         */
+        monitored_ip?: string | null;
+        /**
+         * Target
+         *
+         * exact target as recorded (a URL or a name)
+         */
+        target?: string | null;
+        /**
+         * Discovered From
+         *
+         * censys | shodan | signature:<rule> | api
+         */
+        discovered_from?: string | null;
+        /**
+         * Limit
+         *
+         * rows to return, at most 1000
+         */
+        limit?: number;
+        /**
+         * From
+         *
+         * first day, inclusive; default: six days before `to`
+         */
+        from?: string | null;
+        /**
+         * To
+         *
+         * last day, inclusive; default: today (UTC)
+         */
+        to?: string | null;
+    };
+    url: '/lookup/domain-scans';
+};
+
+export type ListDomainScansLookupDomainScansGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListDomainScansLookupDomainScansGetError = ListDomainScansLookupDomainScansGetErrors[keyof ListDomainScansLookupDomainScansGetErrors];
+
+export type ListDomainScansLookupDomainScansGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageDomainScan;
+};
+
+export type ListDomainScansLookupDomainScansGetResponse = ListDomainScansLookupDomainScansGetResponses[keyof ListDomainScansLookupDomainScansGetResponses];
+
+export type RequestDomainScanLookupDomainScansPostData = {
+    body: ScanRequest;
+    path?: never;
+    query?: never;
+    url: '/lookup/domain-scans';
+};
+
+export type RequestDomainScanLookupDomainScansPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type RequestDomainScanLookupDomainScansPostError = RequestDomainScanLookupDomainScansPostErrors[keyof RequestDomainScanLookupDomainScansPostErrors];
+
+export type RequestDomainScanLookupDomainScansPostResponses = {
+    /**
+     * Successful Response
+     */
+    202: ScanRequestResult;
+};
+
+export type RequestDomainScanLookupDomainScansPostResponse = RequestDomainScanLookupDomainScansPostResponses[keyof RequestDomainScanLookupDomainScansPostResponses];
+
 export type ListScannersVerdictScannersGetData = {
     body?: never;
     path?: never;
@@ -2420,6 +2963,44 @@ export type ListIpRolesReviewIpRolesGetResponses = {
 };
 
 export type ListIpRolesReviewIpRolesGetResponse = ListIpRolesReviewIpRolesGetResponses[keyof ListIpRolesReviewIpRolesGetResponses];
+
+export type PeerReviewSummaryReviewIpRolesPeerReviewGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * From
+         *
+         * first day, inclusive; default: six days before `to`
+         */
+        from?: string | null;
+        /**
+         * To
+         *
+         * last day, inclusive; default: today (UTC)
+         */
+        to?: string | null;
+    };
+    url: '/review/ip-roles/peer-review';
+};
+
+export type PeerReviewSummaryReviewIpRolesPeerReviewGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type PeerReviewSummaryReviewIpRolesPeerReviewGetError = PeerReviewSummaryReviewIpRolesPeerReviewGetErrors[keyof PeerReviewSummaryReviewIpRolesPeerReviewGetErrors];
+
+export type PeerReviewSummaryReviewIpRolesPeerReviewGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PagePeerReviewDay;
+};
+
+export type PeerReviewSummaryReviewIpRolesPeerReviewGetResponse = PeerReviewSummaryReviewIpRolesPeerReviewGetResponses[keyof PeerReviewSummaryReviewIpRolesPeerReviewGetResponses];
 
 export type GetIpRolesReviewIpRolesIpGetData = {
     body?: never;
@@ -3148,6 +3729,22 @@ export type FreshnessOpsFreshnessGetResponses = {
 };
 
 export type FreshnessOpsFreshnessGetResponse = FreshnessOpsFreshnessGetResponses[keyof FreshnessOpsFreshnessGetResponses];
+
+export type VocabularyRulesVocabularyGetData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/rules/vocabulary';
+};
+
+export type VocabularyRulesVocabularyGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: Vocabulary;
+};
+
+export type VocabularyRulesVocabularyGetResponse = VocabularyRulesVocabularyGetResponses[keyof VocabularyRulesVocabularyGetResponses];
 
 export type HealthHealthGetData = {
     body?: never;

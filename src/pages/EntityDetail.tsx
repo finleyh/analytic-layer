@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useEffect, useState, type FormEvent } from "react";
 import * as d3 from "d3";
 import { Link, useParams } from "react-router-dom";
 import {
@@ -12,6 +12,8 @@ import {
   portFamilyMixDailyRollupPortFamilyMixDailyGet,
   flowHourlyRollupFlowHourlyGet,
   listFindingsVerdictFindingsGet,
+  listDomainScansLookupDomainScansGet,
+  requestDomainScanLookupDomainScansPost,
   type WatchedIp,
   type IpRole,
   type IpIdentity,
@@ -19,6 +21,7 @@ import {
   type FingerprintChange,
   type HostNameSummary,
   type Finding,
+  type DomainScan,
 } from "../api/netflow-rollups-client";
 import { formatBytes, isoDate, daysAgo, darkToGreen } from "../lib/format";
 import { looksLikeHostname } from "../lib/hostNames";
@@ -31,6 +34,7 @@ type EntityData = {
   changes: FingerprintChange[];
   hostNames: HostNameSummary[];
   findings: Finding[];
+  domainScans: DomainScan[];
   bphBytes30d: number;
   bytes7d: number;
   rtpBytes7d: number;
@@ -134,36 +138,50 @@ export function EntityDetail() {
         const to = isoDate(new Date());
         const from30 = isoDate(daysAgo(29));
 
-        const [watchedIp, roles, identityResult, scans, changes, hostNames, findings, bphContact30d, portFamilyMix7d] =
-          await Promise.all([
-            getIpWatchIpsIpGet({ path: { ip: ip! }, throwOnError: true }),
-            getIpRolesReviewIpRolesIpGet({ path: { ip: ip! }, throwOnError: true }).catch(() => null),
-            getIpIdentityLookupIpIdentitiesIpGet({ path: { ip: ip! } }),
-            listHostScansLookupHostScansGet({
-              query: { ip: ip!, from: from30, to, limit: 200 },
-              throwOnError: true,
-            }),
-            hostScanChangesLookupHostScansChangesGet({
-              query: { ip: ip!, from: from30, to },
-              throwOnError: true,
-            }),
-            hostNameSummaryLookupHostNamesSummaryGet({
-              query: { ip: ip!, from: from30, to, limit: 200 },
-              throwOnError: true,
-            }),
-            listFindingsVerdictFindingsGet({
-              query: { ip: ip!, from: from30, to, limit: 200 },
-              throwOnError: true,
-            }),
-            bphContactDailyRollupBphContactDailyGet({
-              query: { monitored_ip: ip!, from: from30, to },
-              throwOnError: true,
-            }),
-            portFamilyMixDailyRollupPortFamilyMixDailyGet({
-              query: { monitored_ip: ip! },
-              throwOnError: true,
-            }),
-          ]);
+        const [
+          watchedIp,
+          roles,
+          identityResult,
+          scans,
+          changes,
+          hostNames,
+          findings,
+          domainScans,
+          bphContact30d,
+          portFamilyMix7d,
+        ] = await Promise.all([
+          getIpWatchIpsIpGet({ path: { ip: ip! }, throwOnError: true }),
+          getIpRolesReviewIpRolesIpGet({ path: { ip: ip! }, throwOnError: true }).catch(() => null),
+          getIpIdentityLookupIpIdentitiesIpGet({ path: { ip: ip! } }),
+          listHostScansLookupHostScansGet({
+            query: { ip: ip!, from: from30, to, limit: 200 },
+            throwOnError: true,
+          }),
+          hostScanChangesLookupHostScansChangesGet({
+            query: { ip: ip!, from: from30, to },
+            throwOnError: true,
+          }),
+          hostNameSummaryLookupHostNamesSummaryGet({
+            query: { ip: ip!, from: from30, to, limit: 200 },
+            throwOnError: true,
+          }),
+          listFindingsVerdictFindingsGet({
+            query: { ip: ip!, from: from30, to, limit: 200 },
+            throwOnError: true,
+          }),
+          listDomainScansLookupDomainScansGet({
+            query: { monitored_ip: ip!, from: from30, to, limit: 200 },
+            throwOnError: true,
+          }),
+          bphContactDailyRollupBphContactDailyGet({
+            query: { monitored_ip: ip!, from: from30, to },
+            throwOnError: true,
+          }),
+          portFamilyMixDailyRollupPortFamilyMixDailyGet({
+            query: { monitored_ip: ip! },
+            throwOnError: true,
+          }),
+        ]);
 
         if (cancelled) return;
         const bytes7d = portFamilyMix7d.data.rows.reduce((s, r) => s + r.bytes_sum, 0);
@@ -179,6 +197,7 @@ export function EntityDetail() {
           changes: changes.data.rows,
           hostNames: hostNames.data.rows,
           findings: findings.data.rows,
+          domainScans: domainScans.data.rows,
           bphBytes30d: bphContact30d.data.rows.reduce((s, r) => s + r.bytes_sum, 0),
           bytes7d,
           rtpBytes7d,
@@ -212,7 +231,33 @@ export function EntityDetail() {
 }
 
 function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
-  const { watchedIp, roles, identity, scans, changes, hostNames, findings, bphBytes30d, bytes7d, rtpBytes7d } = data;
+  const { watchedIp, roles, identity, scans, changes, hostNames, findings, domainScans, bphBytes30d, bytes7d, rtpBytes7d } =
+    data;
+  const [scanRows, setScanRows] = useState<DomainScan[]>(domainScans);
+  const [scanning, setScanning] = useState<Set<string>>(new Set());
+  const [scanError, setScanError] = useState<string | null>(null);
+
+  async function requestScan(target: string) {
+    const t = target.trim();
+    if (!t) return;
+    setScanError(null);
+    setScanning((prev) => new Set(prev).add(t));
+    try {
+      const result = await requestDomainScanLookupDomainScansPost({
+        body: { target: t, monitored_ip: ip },
+        throwOnError: true,
+      });
+      setScanRows((prev) => [result.data.scan, ...prev.filter((s) => s.id !== result.data.scan.id)]);
+    } catch (err) {
+      setScanError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setScanning((prev) => {
+        const next = new Set(prev);
+        next.delete(t);
+        return next;
+      });
+    }
+  }
   const rtpPct = bytes7d > 0 ? Math.round((rtpBytes7d / bytes7d) * 100) : 0;
   const tips = watchedIp.tags.filter((t) => !t.startsWith("msk:"));
   const confirmedRoles = roles.filter((r) => r.status === "confirmed");
@@ -329,7 +374,9 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
 
       <HostNameGantt rows={hostNames} excludeRdns={identity?.rdns} />
 
-      <FindingsList findings={findings} />
+      <FindingsList findings={findings} onScan={requestScan} scanning={scanning} />
+
+      <DomainScansSection ip={ip} scans={scanRows} onScan={requestScan} scanning={scanning} error={scanError} />
 
       <ActivityHeatmap ip={ip} />
 
@@ -560,6 +607,7 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
             <tr>
               <th>Scanned</th>
               <th>Source</th>
+              <th>Trigger</th>
               <th>Fingerprint</th>
               <th style={{ textAlign: "right" }}>Services</th>
             </tr>
@@ -575,6 +623,19 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
                     {s.scan_time?.slice(0, 16).replace("T", " ") ?? "—"}
                   </td>
                   <td className="mono">{s.source}</td>
+                  <td>
+                    <span
+                      className="chip"
+                      style={{ fontSize: 10 }}
+                      title={
+                        s.trigger === "api"
+                          ? "requested by an analyst through this API"
+                          : "lookup__host_scans.trigger — why this scan record exists"
+                      }
+                    >
+                      {s.trigger}
+                    </span>
+                  </td>
                   <td className="mono" style={{ fontSize: 12, color: "#A6D8CD" }}>
                     {s.fingerprint_hash.slice(0, 10)}…
                   </td>
@@ -585,7 +646,7 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
               ))}
             {scans.length === 0 && (
               <tr>
-                <td colSpan={4} style={{ color: "#6FA89E" }}>
+                <td colSpan={5} style={{ color: "#6FA89E" }}>
                   No scans in the last 30 days.
                 </td>
               </tr>
@@ -749,7 +810,19 @@ function HostNameGantt({ rows, excludeRdns }: { rows: HostNameSummary[]; exclude
 
 // ---------- Findings (verdict__findings) ----------
 
-function FindingsList({ findings }: { findings: Finding[] }) {
+function looksLikeUrl(s: string): boolean {
+  return /^https?:\/\//i.test(s);
+}
+
+function FindingsList({
+  findings,
+  onScan,
+  scanning,
+}: {
+  findings: Finding[];
+  onScan: (target: string) => void;
+  scanning: Set<string>;
+}) {
   if (findings.length === 0) return null;
 
   const sorted = [...findings].sort((a, b) => b.day.localeCompare(a.day));
@@ -770,34 +843,200 @@ function FindingsList({ findings }: { findings: Finding[] }) {
         <span className="src">verdict__findings — no effect on the rollups</span>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-        {sorted.map((f, i) => (
-          <div
-            key={i}
-            style={{
-              fontSize: 13,
-              color: "#C6EBE2",
-              background: "#0A2224",
-              border: "1px solid #133A3C",
-              borderRadius: 7,
-              padding: "10px 14px",
-            }}
-          >
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
-              <span className="mono" style={{ color: "#F5A623", fontWeight: 600 }}>
-                {f.rule_name}
-              </span>
-              <span className="mono" style={{ fontSize: 11, color: "#6FA89E" }}>
-                {f.day}
-              </span>
-            </div>
-            {f.subject && (
-              <div className="mono" style={{ fontSize: 12, color: "#A6D8CD", marginTop: 4, wordBreak: "break-all" }}>
-                {f.subject}
+        {sorted.map((f, i) => {
+          const subjectIsUrl = f.subject && looksLikeUrl(f.subject);
+          const isScanning = f.subject ? scanning.has(f.subject.trim()) : false;
+          return (
+            <div
+              key={i}
+              style={{
+                fontSize: 13,
+                color: "#C6EBE2",
+                background: "#0A2224",
+                border: "1px solid #133A3C",
+                borderRadius: 7,
+                padding: "10px 14px",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", gap: 10, flexWrap: "wrap" }}>
+                <span className="mono" style={{ color: "#F5A623", fontWeight: 600 }}>
+                  {f.rule_name}
+                </span>
+                <span className="mono" style={{ fontSize: 11, color: "#6FA89E" }}>
+                  {f.day}
+                </span>
               </div>
-            )}
-          </div>
-        ))}
+              {f.subject && (
+                <div style={{ display: "flex", alignItems: "baseline", gap: 10, marginTop: 4, flexWrap: "wrap" }}>
+                  <div className="mono" style={{ fontSize: 12, color: "#A6D8CD", wordBreak: "break-all" }}>
+                    {f.subject}
+                  </div>
+                  {subjectIsUrl && (
+                    <button
+                      onClick={() => onScan(f.subject)}
+                      disabled={isScanning}
+                      style={{
+                        all: "unset",
+                        cursor: isScanning ? "default" : "pointer",
+                        fontSize: 11,
+                        color: isScanning ? "#6FA89E" : "#7FEFD6",
+                        flexShrink: 0,
+                        whiteSpace: "nowrap",
+                      }}
+                      title="Request a fresh urlscan of this URL — lookup__domain_scans"
+                    >
+                      {isScanning ? "scanning…" : "▸ scan this"}
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })}
       </div>
+    </div>
+  );
+}
+
+// lookup__domain_scans — new 2026-10-20: every ask of urlscan tied to this
+// IP (an automatic sweep finding it via Censys/Shodan, a signature rule
+// flagging a URL, or an analyst's own request here), plus the one write
+// action on this page: POST /lookup/domain-scans always submits a fresh,
+// unlisted scan (never reuses an existing one — that's the point of asking
+// by hand), returning 202 with the scan row once urlscan has accepted it.
+function DomainScansSection({
+  ip,
+  scans,
+  onScan,
+  scanning,
+  error,
+}: {
+  ip: string;
+  scans: DomainScan[];
+  onScan: (target: string) => void;
+  scanning: Set<string>;
+  error: string | null;
+}) {
+  const [target, setTarget] = useState("");
+  const sorted = [...scans].sort((a, b) => b.checked_at.localeCompare(a.checked_at));
+  const trimmed = target.trim();
+  const isScanning = trimmed.length > 0 && scanning.has(trimmed);
+
+  function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    if (!trimmed || isScanning) return;
+    onScan(trimmed);
+    setTarget("");
+  }
+
+  return (
+    <div className="card" style={{ padding: "22px 24px", marginBottom: 24 }}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "baseline",
+          marginBottom: 4,
+          gap: 12,
+          flexWrap: "wrap",
+        }}
+      >
+        <div style={{ fontSize: 13, fontWeight: 600 }}>Domain scans</div>
+        <span className="src">lookup__domain_scans</span>
+      </div>
+      <div style={{ fontSize: 11, color: "#6FA89E", marginBottom: 14, lineHeight: 1.5 }}>
+        Every ask of urlscan tied to this IP — a sweep finding it automatically (Censys/Shodan), a
+        signature rule flagging a URL, or an analyst requesting one directly below. A request here
+        always submits a fresh scan rather than reusing an old result.
+      </div>
+
+      <form onSubmit={handleSubmit} style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
+        <input
+          type="text"
+          value={target}
+          onChange={(e) => setTarget(e.target.value)}
+          placeholder={`http://${ip}:8000/ or a bare domain`}
+          className="mono"
+          style={{
+            flex: "1 1 280px",
+            background: "#0A2224",
+            color: "#E8FFF8",
+            border: "1px solid #2B7266",
+            borderRadius: 6,
+            padding: "8px 10px",
+            fontSize: 12,
+          }}
+        />
+        <button
+          type="submit"
+          disabled={!trimmed || isScanning}
+          style={{
+            all: "unset",
+            cursor: trimmed && !isScanning ? "pointer" : "default",
+            fontSize: 12,
+            fontWeight: 500,
+            padding: "8px 16px",
+            borderRadius: 6,
+            border: "1px solid #1E4D37",
+            background: "#153226",
+            color: trimmed && !isScanning ? "#3DD68C" : "#4D8C7A",
+          }}
+        >
+          {isScanning ? "Requesting…" : "Scan now"}
+        </button>
+      </form>
+      {error && <div style={{ color: "#E5484D", fontSize: 12, marginBottom: 14 }}>Scan request failed: {error}</div>}
+
+      <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <thead>
+          <tr>
+            <th>Checked</th>
+            <th>Target</th>
+            <th>Discovered from</th>
+            <th>Result</th>
+          </tr>
+        </thead>
+        <tbody>
+          {sorted.slice(0, 30).map((s) => (
+            <tr key={s.id}>
+              <td className="mono" style={{ fontSize: 12, whiteSpace: "nowrap" }}>
+                {s.checked_at.slice(0, 16).replace("T", " ")}
+              </td>
+              <td className="mono" style={{ fontSize: 12, wordBreak: "break-all" }}>
+                {s.target}
+              </td>
+              <td>
+                <span className="chip" style={{ fontSize: 10 }}>
+                  {s.discovered_from}
+                </span>
+                {s.existing_scan_found && (
+                  <span style={{ fontSize: 10, color: "#6FA89E", marginLeft: 6 }} title="an earlier scan was reused rather than a fresh one submitted">
+                    reused
+                  </span>
+                )}
+              </td>
+              <td style={{ fontSize: 12 }}>
+                {s.urlscan_result_url ? (
+                  <a href={s.urlscan_result_url} target="_blank" rel="noreferrer">
+                    view ↗
+                  </a>
+                ) : s.result_fetched_at ? (
+                  <span style={{ color: "#6FA89E" }}>no link</span>
+                ) : (
+                  <span style={{ color: "#F5A623" }}>pending</span>
+                )}
+              </td>
+            </tr>
+          ))}
+          {sorted.length === 0 && (
+            <tr>
+              <td colSpan={4} style={{ color: "#6FA89E" }}>
+                No domain scans for this IP yet.
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
     </div>
   );
 }
