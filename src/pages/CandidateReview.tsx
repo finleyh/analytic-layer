@@ -639,20 +639,40 @@ function IpRoleQueue({
   const [roleFilter, setRoleFilter] = useState<string>("");
 
   const ipOptions = useMemo(() => [...new Set((rows ?? []).map((r) => r.ip))].sort(), [rows]);
+  // Each facet's counts (and its own "all N") are computed against rows
+  // filtered by every OTHER active filter, not the raw unfiltered list —
+  // otherwise picking a role leaves the verdict dropdown's numbers
+  // describing a set of rows you can no longer actually see, which reads
+  // as a bug the moment two filters are combined.
+  const rowsForVerdictCounts = useMemo(
+    () => (rows ?? []).filter((r) => (!ipFilter || r.ip === ipFilter) && (!roleFilter || r.role === roleFilter)),
+    [rows, ipFilter, roleFilter],
+  );
+  const rowsForRoleCounts = useMemo(
+    () =>
+      (rows ?? []).filter(
+        (r) => (!ipFilter || r.ip === ipFilter) && (!verdictFilter || verdictBucket(r) === verdictFilter),
+      ),
+    [rows, ipFilter, verdictFilter],
+  );
   const verdictCounts = useMemo(() => {
     const counts: Record<VerdictBucket, number> = { agree: 0, disagree: 0, unsure: 0, unevaluated: 0 };
-    for (const r of rows ?? []) counts[verdictBucket(r)]++;
+    for (const r of rowsForVerdictCounts) counts[verdictBucket(r)]++;
     return counts;
-  }, [rows]);
+  }, [rowsForVerdictCounts]);
   // Counted, not just listed — with peer roles running to dozens of
   // distinct role names at real volume, the count is what tells an
   // analyst which one is worth a dedicated pass before they even pick it.
   const roleCounts = useMemo(() => {
     const counts = new Map<string, number>();
-    for (const r of rows ?? []) counts.set(r.role, (counts.get(r.role) ?? 0) + 1);
+    for (const r of rowsForRoleCounts) counts.set(r.role, (counts.get(r.role) ?? 0) + 1);
     return counts;
-  }, [rows]);
-  const roleOptions = useMemo(() => [...roleCounts.keys()].sort(), [roleCounts]);
+  }, [rowsForRoleCounts]);
+  // The option list itself still spans every role ever seen (not just
+  // ones with a nonzero count under the current ip/verdict filter) so
+  // picking role then clearing verdict doesn't make options disappear —
+  // only their counts move.
+  const allRoleOptions = useMemo(() => [...new Set((rows ?? []).map((r) => r.role))].sort(), [rows]);
   const visibleRows = useMemo(
     () =>
       (rows ?? []).filter(
@@ -787,7 +807,7 @@ function IpRoleQueue({
               fontSize: 12,
             }}
           >
-            <option value="">all {rows.length}</option>
+            <option value="">all {rowsForVerdictCounts.length}</option>
             <option value="agree">agree ({verdictCounts.agree})</option>
             <option value="disagree">disagree ({verdictCounts.disagree})</option>
             <option value="unsure">unsure ({verdictCounts.unsure})</option>
@@ -818,10 +838,10 @@ function IpRoleQueue({
               fontSize: 12,
             }}
           >
-            <option value="">all {rows.length}</option>
-            {roleOptions.map((role) => (
+            <option value="">all {rowsForRoleCounts.length}</option>
+            {allRoleOptions.map((role) => (
               <option key={role} value={role}>
-                {role} ({roleCounts.get(role)})
+                {role} ({roleCounts.get(role) ?? 0})
               </option>
             ))}
           </select>
