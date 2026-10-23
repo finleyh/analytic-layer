@@ -16,6 +16,7 @@ import {
   type Vocabulary,
 } from "../api/netflow-rollups-client";
 import { formatBytes, formatShortDate, isoDate, daysAgo } from "../lib/format";
+import { CopyButton } from "../components/CopyButton";
 
 type Queue = "asn" | "peer" | "watched";
 
@@ -493,6 +494,7 @@ function AsnQueue({ onPendingCount }: { onPendingCount: (n: number) => void }) {
                       <>
                         {" "}
                         · triggered by <span className="mono">{c.triggering_peer_ip}</span>
+                        <CopyButton text={c.triggering_peer_ip} label="Copy IP address" />
                       </>
                     )}
                     {" · "}
@@ -938,6 +940,7 @@ function IpRoleCard({
             <span className="mono" style={{ fontSize: 15, fontWeight: 600 }}>
               {row.ip}
             </span>
+            <CopyButton text={row.ip} label="Copy IP address" />
             <span className="chip pend" title={glossary.roleMeaning.get(row.role)}>
               suggested {row.role}
             </span>
@@ -1161,7 +1164,10 @@ function IpRoleCard({
                           onChange={() => togglePair(p.id)}
                         />
                       </td>
-                      <td className="mono">{otherIp}</td>
+                      <td className="mono" style={{ whiteSpace: "nowrap" }}>
+                        {otherIp}
+                        <CopyButton text={otherIp} label="Copy IP address" />
+                      </td>
                       <td>
                         <span className="chip pend" style={{ fontSize: 11 }}>
                           {p.role}
