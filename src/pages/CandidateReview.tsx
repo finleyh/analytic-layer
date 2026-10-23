@@ -634,6 +634,7 @@ function IpRoleQueue({
   const [actionError, setActionError] = useState<string | null>(null);
   const [ipFilter, setIpFilter] = useState<string>("");
   const [verdictFilter, setVerdictFilter] = useState<VerdictBucket | "">("");
+  const [roleFilter, setRoleFilter] = useState<string>("");
 
   const ipOptions = useMemo(() => [...new Set((rows ?? []).map((r) => r.ip))].sort(), [rows]);
   const verdictCounts = useMemo(() => {
@@ -641,12 +642,24 @@ function IpRoleQueue({
     for (const r of rows ?? []) counts[verdictBucket(r)]++;
     return counts;
   }, [rows]);
+  // Counted, not just listed — with peer roles running to dozens of
+  // distinct role names at real volume, the count is what tells an
+  // analyst which one is worth a dedicated pass before they even pick it.
+  const roleCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const r of rows ?? []) counts.set(r.role, (counts.get(r.role) ?? 0) + 1);
+    return counts;
+  }, [rows]);
+  const roleOptions = useMemo(() => [...roleCounts.keys()].sort(), [roleCounts]);
   const visibleRows = useMemo(
     () =>
       (rows ?? []).filter(
-        (r) => (!ipFilter || r.ip === ipFilter) && (!verdictFilter || verdictBucket(r) === verdictFilter),
+        (r) =>
+          (!ipFilter || r.ip === ipFilter) &&
+          (!verdictFilter || verdictBucket(r) === verdictFilter) &&
+          (!roleFilter || r.role === roleFilter),
       ),
-    [rows, ipFilter, verdictFilter],
+    [rows, ipFilter, verdictFilter, roleFilter],
   );
 
   useEffect(() => {
@@ -655,6 +668,7 @@ function IpRoleQueue({
     setDecided(new Map());
     setIpFilter("");
     setVerdictFilter("");
+    setRoleFilter("");
     listIpRolesReviewIpRolesGet({ query: { vantage, limit: 1000 }, throwOnError: true })
       .then((r) => {
         if (cancelled) return;
@@ -785,6 +799,38 @@ function IpRoleQueue({
               clear
             </button>
           )}
+
+          <label style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase", marginLeft: 8 }}>
+            Filter by role
+          </label>
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className="mono"
+            style={{
+              background: "#0A2224",
+              color: "#E8FFF8",
+              border: "1px solid #2B7266",
+              borderRadius: 6,
+              padding: "6px 8px",
+              fontSize: 12,
+            }}
+          >
+            <option value="">all {rows.length}</option>
+            {roleOptions.map((role) => (
+              <option key={role} value={role}>
+                {role} ({roleCounts.get(role)})
+              </option>
+            ))}
+          </select>
+          {roleFilter && (
+            <button
+              onClick={() => setRoleFilter("")}
+              style={{ all: "unset", cursor: "pointer", fontSize: 11, color: "#7FEFD6" }}
+            >
+              clear
+            </button>
+          )}
         </div>
       )}
 
@@ -807,7 +853,8 @@ function IpRoleQueue({
         {rows && rows.length > 0 && visibleRows.length === 0 && (
           <div className="card" style={{ padding: 20, color: "#6FA89E" }}>
             No {vantage} roles match{ipFilter && <> {ipFilter}</>}
-            {verdictFilter && <> · verdict: {verdictFilter}</>}.
+            {verdictFilter && <> · verdict: {verdictFilter}</>}
+            {roleFilter && <> · role: {roleFilter}</>}.
           </div>
         )}
       </div>
