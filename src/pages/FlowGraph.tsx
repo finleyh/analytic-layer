@@ -2,13 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import * as d3 from "d3";
 import { sankey, sankeyLinkHorizontal, sankeyJustify, type SankeyNodeMinimal, type SankeyLinkMinimal } from "d3-sankey";
 import {
-  confirmedContactsDailyRollupConfirmedContactsDailyGet,
   flowDailyRollupFlowDailyGet,
+  getIpIdentityLookupIpIdentitiesIpGet,
   listIpRolesReviewIpRolesGet,
   listIpsWatchIpsGet,
   vocabularyRulesVocabularyGet,
-  type DailyConfirmedContact,
   type DailyFlow,
+  type IpIdentity,
   type IpRole,
   type WatchedIp,
 } from "../api/netflow-rollups-client";
@@ -58,6 +58,8 @@ const ICON_ROLES = new Set([
   "vpn_server",
   "c2_server",
   "forward_proxy",
+  "operator",
+  "research",
 ]);
 function hasMarker(role: string): boolean {
   return DANGER_ROLES.has(role) || ICON_ROLES.has(role);
@@ -119,10 +121,16 @@ function RoleMarker({ role }: { role: string }) {
         </>
       );
     case "dns_server":
+      // A directory, not a search — DNS is "look this name up in the
+      // book," which a magnifying glass (the first attempt here) said
+      // less clearly than an actual book does.
       return (
         <>
-          <circle cx={-1.5} cy={-1.5} r={6} fill="none" stroke={MARKER_COLOR} strokeWidth={1.5} />
-          <line x1={3} y1={3} x2={8.5} y2={8.5} stroke={MARKER_COLOR} strokeWidth={1.8} strokeLinecap="round" />
+          <rect x={-7} y={-8} width={14} height={16} rx={1} fill="none" stroke={MARKER_COLOR} strokeWidth={1.4} />
+          <line x1={0} y1={-8} x2={0} y2={8} stroke={MARKER_COLOR} strokeWidth={1.4} />
+          <line x1={2.5} y1={-4} x2={5.5} y2={-4} stroke={MARKER_COLOR} strokeWidth={1} />
+          <line x1={2.5} y1={0} x2={5.5} y2={0} stroke={MARKER_COLOR} strokeWidth={1} />
+          <line x1={2.5} y1={4} x2={5.5} y2={4} stroke={MARKER_COLOR} strokeWidth={1} />
         </>
       );
     case "mail_server":
@@ -140,19 +148,46 @@ function RoleMarker({ role }: { role: string }) {
           <line x1={-8} y1={0} x2={8} y2={0} stroke={MARKER_COLOR} strokeWidth={1.2} />
         </>
       );
-    case "forward_proxy":
-      // A gate (checkpoint, not just a pass-through wire) with traffic
-      // passing straight through and continuing outward — a forward
-      // proxy relays a client's own traffic out to an arbitrary
-      // destination, unlike reverse_proxy's fan-out to a few fixed
-      // upstreams, so the arrow deliberately exits past the far post.
+    case "research":
+      // The magnifying glass dns_server gave up — DNS turned out to be
+      // "look it up in the directory," not a search, but research is
+      // exactly a search: someone poking at the watched IP to see what
+      // it is, not administering it or exchanging real traffic with it.
       return (
         <>
-          <line x1={-8} y1={-7} x2={8} y2={-7} stroke={MARKER_COLOR} strokeWidth={1.5} />
-          <line x1={-8} y1={-7} x2={-8} y2={7} stroke={MARKER_COLOR} strokeWidth={1.5} />
-          <line x1={8} y1={-7} x2={8} y2={7} stroke={MARKER_COLOR} strokeWidth={1.5} />
-          <line x1={-11} y1={0} x2={10} y2={0} stroke={MARKER_COLOR} strokeWidth={1.3} />
-          <polygon points="11,0 7,-2.3 7,2.3" fill={MARKER_COLOR} />
+          <circle cx={-1.5} cy={-2} r={6} fill="none" stroke={MARKER_COLOR} strokeWidth={1.4} />
+          <line x1={3} y1={2.5} x2={8} y2={7.5} stroke={MARKER_COLOR} strokeWidth={1.8} strokeLinecap="round" />
+        </>
+      );
+    case "operator":
+      // A monitor with a shell prompt on it, not a generic computer — the
+      // role itself means "whose box this is": a peer that opens admin
+      // sessions (SSH, manager, database, panel ports) to the watched IP,
+      // so what it's doing is specifically administering, not just
+      // talking to, the monitored side.
+      return (
+        <>
+          <rect x={-8} y={-8} width={16} height={11} rx={1} fill="none" stroke={MARKER_COLOR} strokeWidth={1.4} />
+          <line x1={0} y1={3} x2={0} y2={6} stroke={MARKER_COLOR} strokeWidth={1.4} />
+          <line x1={-4} y1={6} x2={4} y2={6} stroke={MARKER_COLOR} strokeWidth={1.4} />
+          <path d="M -4.5,-5 L -1.5,-2.5 L -4.5,0" fill="none" stroke={MARKER_COLOR} strokeWidth={1.1} strokeLinecap="round" strokeLinejoin="round" />
+          <line x1={0} y1={0} x2={3.5} y2={0} stroke={MARKER_COLOR} strokeWidth={1.1} strokeLinecap="round" />
+        </>
+      );
+    case "forward_proxy":
+      // A disguise, not a checkpoint — a forward proxy's whole job is to
+      // hide the client it's relaying for, so sunglasses-and-a-top-hat
+      // reads as "incognito" at a glance, which a gate-with-an-arrow
+      // (the first attempt here) didn't: that one just looked like a bed.
+      return (
+        <>
+          <line x1={-7} y1={-2} x2={7} y2={-2} stroke={MARKER_COLOR} strokeWidth={1.5} />
+          <rect x={-4} y={-9} width={8} height={7} rx={0.5} fill="none" stroke={MARKER_COLOR} strokeWidth={1.4} />
+          <rect x={-7} y={0} width={5} height={4} rx={1.5} fill="none" stroke={MARKER_COLOR} strokeWidth={1.3} />
+          <rect x={2} y={0} width={5} height={4} rx={1.5} fill="none" stroke={MARKER_COLOR} strokeWidth={1.3} />
+          <line x1={-2} y1={2} x2={2} y2={2} stroke={MARKER_COLOR} strokeWidth={1.3} />
+          <line x1={-7} y1={1} x2={-9} y2={0} stroke={MARKER_COLOR} strokeWidth={1} />
+          <line x1={7} y1={1} x2={9} y2={0} stroke={MARKER_COLOR} strokeWidth={1} />
         </>
       );
     default:
@@ -183,12 +218,16 @@ export function FlowGraph() {
     <>
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ margin: "0 0 4px 0", fontSize: 22, fontWeight: 600 }}>Flow graph</h1>
+
         <div style={{ fontSize: 13, color: "#6FA89E" }}>
-          Edges from <span className="mono">rollup__confirmed_contacts_daily</span>, colored by
-          dominant traffic type · peer color from <span className="mono">rollup__flow_daily</span>
-          .peer_categories · monitored-node color from <span className="mono">review__ip_roles</span>
-          — each role is a ring arc, solid = confirmed, faint = suggested; common roles and c2_* get an
-          icon marker
+          <b style={{ color: "#A6D8CD" }}>Every day of real traffic</b> a monitored IP and a peer
+          exchanged (<span className="mono">rollup__flow_daily</span>) draws an edge here — not just
+          reviewed ones. A faint edge is unreviewed, real traffic; a full-brightness edge has cleared
+          the same bar <span className="mono">rollup__confirmed_contacts_daily</span> promotes rows on
+          — a confirmed role on either side, or the pair itself confirmed as a SIP peer. Edge color =
+          dominant traffic type · peer color = peer_categories · monitored nodes are labeled by IP;
+          common roles and c2_* from <span className="mono">review__ip_roles</span> get an icon marker
+          underneath — see the Legend for what's what, click any node for the rest
         </div>
       </div>
 
@@ -243,24 +282,41 @@ type GNode = {
   country?: string | null;
   clusterCount?: number;
   memberIps?: string[];
+  // Cluster-only: which monitored IP's edge brought in each member — a
+  // cluster merges peers for the canvas (that's the whole point of it),
+  // but the compare feature still needs to answer "which of these
+  // members do two selected monitored IPs actually share," and that
+  // answer doesn't exist anywhere else once the merge has happened.
+  memberIpsByMonitored?: Map<string, Set<string>>;
   tags?: string[];
   x: number;
   y: number;
   r: number;
 };
-type GLink = { source: string; target: string; bytes: number; kind: "mm" | "mp"; dominantFamily: string };
+type GLink = { source: string; target: string; bytes: number; kind: "mm" | "mp"; dominantFamily: string; confirmed: boolean };
 
 function buildGraph(
-  confirmed: DailyConfirmedContact[],
+  ips: string[],
   flow: DailyFlow[],
   roles: Map<string, IpRole[]>,
   watched: Map<string, WatchedIp>,
+  identities: Map<string, IpIdentity>,
 ): { nodes: GNode[]; links: GLink[] } {
   const watchedIps = new Set(watched.keys());
 
   // Dedup monitored<->monitored edges (stored once per side's pull); keep
   // the larger measured side rather than summing both.
-  const edgeBytes = new Map<string, { bytes: number; a: string; b: string; kind: "mm" | "mp" }>();
+  //
+  // Edges come from rollup__flow_daily itself now, not the pre-filtered
+  // rollup__confirmed_contacts_daily view — that view turned out to be the
+  // wrong scope for an exploration graph: it silently dropped every day of
+  // real traffic that hadn't yet cleared its review bar, which is exactly
+  // the traffic an analyst hunting for something new would want to see.
+  // flow_daily carries the same per-row monitored_ip_roles/peer_roles/
+  // pair_confirmed fields confirmed-contacts was filtered down from, so
+  // "confirmed" below recomputes that exact bar per row instead of asking
+  // a second endpoint for it.
+  const edgeBytes = new Map<string, { bytes: number; a: string; b: string; kind: "mm" | "mp"; confirmed: boolean }>();
   // Bytes per port_family, per edge — picks which traffic type colors the
   // edge. For an mm edge this sums both sides' breakdowns rather than
   // picking the larger side's alone (edgeBytes does that for the total);
@@ -268,19 +324,27 @@ function buildGraph(
   // compromise — good enough to say which traffic type dominates, not
   // meant to be a byte-exact total.
   const edgeFamilyBytes = new Map<string, Map<string, number>>();
-  for (const r of confirmed) {
+  for (const r of flow) {
     const bIsWatched = watchedIps.has(r.peer_ip);
     const kind: "mm" | "mp" = bIsWatched ? "mm" : "mp";
     const key = bIsWatched
       ? ["mm", ...[r.monitored_ip, r.peer_ip].sort()].join("|")
       : `mp|${r.monitored_ip}|${r.peer_ip}`;
+    // The same bar rollup__confirmed_contacts_daily itself promotes rows
+    // on: either side has a confirmed role, or this exact pair is itself a
+    // confirmed SIP peer. An edge is "confirmed" if ANY day/port-family
+    // row backing it clears this — the same condition under which that
+    // row would have appeared in confirmed-contacts at all.
+    const rowConfirmed = r.monitored_ip_roles.length > 0 || r.peer_roles.length > 0 || r.pair_confirmed;
     const existing = edgeBytes.get(key);
     if (!existing) {
-      edgeBytes.set(key, { bytes: r.bytes_sum, a: r.monitored_ip, b: r.peer_ip, kind });
+      edgeBytes.set(key, { bytes: r.bytes_sum, a: r.monitored_ip, b: r.peer_ip, kind, confirmed: rowConfirmed });
     } else if (kind === "mm") {
       existing.bytes = Math.max(existing.bytes, r.bytes_sum);
+      existing.confirmed = existing.confirmed || rowConfirmed;
     } else {
       existing.bytes += r.bytes_sum;
+      existing.confirmed = existing.confirmed || rowConfirmed;
     }
     const fam = edgeFamilyBytes.get(key) ?? new Map<string, number>();
     fam.set(r.port_family, (fam.get(r.port_family) ?? 0) + r.bytes_sum);
@@ -343,6 +407,7 @@ function buildGraph(
     if (existing) return existing;
     const roleRows = roles.get(ip) ?? [];
     const w = watched.get(ip);
+    const identity = identities.get(ip);
     const n: GNode = {
       id: ip,
       kind: "monitored",
@@ -351,6 +416,8 @@ function buildGraph(
       confirmedRoles: roleRows.filter((r) => r.status === "confirmed").map((r) => r.role),
       pendingRoles: roleRows.filter((r) => r.status !== "confirmed" && r.status !== "rejected").map((r) => r.role),
       tags: w?.tags.filter((t) => !t.startsWith("msk:")) ?? [],
+      asn: identity?.asn ?? null,
+      country: identity?.country ?? null,
       x: 0,
       y: 0,
       r: Math.max(10, nodeRadius(monitoredBytes.get(ip) ?? 0)),
@@ -359,7 +426,7 @@ function buildGraph(
     return n;
   }
 
-  function peerNode(ip: string): GNode {
+  function peerNode(ip: string, monitoredIp: string): GNode {
     const cid = clusterOf.get(ip);
     if (cid) {
       const existing = nodes.get(cid);
@@ -374,6 +441,13 @@ function buildGraph(
           existing.clusterCount = existing.memberIps!.length;
           existing.r = Math.max(10, nodeRadius(existing.bytes));
         }
+        // Recorded on every visit, not just the first — a peer genuinely
+        // reachable from two selected monitored IPs needs to show up
+        // under both of their attribution sets for the compare feature
+        // to find it as a shared member.
+        const set = existing.memberIpsByMonitored!.get(monitoredIp) ?? new Set<string>();
+        set.add(ip);
+        existing.memberIpsByMonitored!.set(monitoredIp, set);
         return existing;
       }
       const asn = asnByPeer.get(ip);
@@ -387,6 +461,7 @@ function buildGraph(
         country: countryByPeer.get(ip) ?? null,
         clusterCount: 1,
         memberIps: [ip],
+        memberIpsByMonitored: new Map([[monitoredIp, new Set([ip])]]),
         x: 0,
         y: 0,
         r: 10,
@@ -415,9 +490,19 @@ function buildGraph(
   const links: GLink[] = [];
   for (const [key, e] of edgeBytes) {
     const a = monitoredNode(e.a);
-    const b = e.kind === "mm" ? monitoredNode(e.b) : peerNode(e.b);
-    links.push({ source: a.id, target: b.id, bytes: e.bytes, kind: e.kind, dominantFamily: dominantFamily(key) });
+    const b = e.kind === "mm" ? monitoredNode(e.b) : peerNode(e.b, e.a);
+    links.push({ source: a.id, target: b.id, bytes: e.bytes, kind: e.kind, dominantFamily: dominantFamily(key), confirmed: e.confirmed });
   }
+
+  // A monitored IP the analyst explicitly picked but that has zero rows
+  // in rollup__flow_daily at all (true silence, not just "nothing
+  // reviewed yet") never got a node at all before this — monitoredNode()
+  // only ever ran from inside the edge loop above, so picking it just
+  // silently produced nothing, with no error and no "it's here, it just
+  // has no edges yet" signal. Force one for every explicitly selected IP
+  // now; its own role and identity data still populate correctly either
+  // way, since those come from `roles`/`identities`, not from flow.
+  for (const ip of ips) monitoredNode(ip);
 
   return { nodes: [...nodes.values()], links };
 }
@@ -435,6 +520,46 @@ function NodeGraph() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<GNode | null>(null);
+  // Shift-click builds this set independently of `selected` — plain click
+  // still opens a node's own detail in the sidebar (unchanged), so
+  // inspecting an ASN cluster's member list never drops whatever else is
+  // in the compare set. Shared edges/neighbors/cluster-members between
+  // its members are computed at render time, not stored here.
+  const [compareSet, setCompareSet] = useState<Set<string>>(new Set());
+  // Shift-click alone turned out to be unreliable as the only way in —
+  // easy to try and get no visible result from (nothing to see unless
+  // the two nodes happen to share a direct edge or cluster member), easy
+  // to mistake for broken. An explicit toggle makes "clicks now build a
+  // compare set" a visible, sticky mode instead of a modifier you have to
+  // remember and trust is registering. Shift-click still works too, as a
+  // shortcut, when the mode is off.
+  const [compareMode, setCompareMode] = useState(false);
+  function toggleCompare(id: string) {
+    setCompareSet((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+  // Clicking a Legend row dims everything that doesn't match it — a role
+  // and a peer category both describe NODES, a traffic type and the mm/mp
+  // distinction both describe EDGES, so exactly one of node/edge dimming
+  // applies depending on which kind of row was clicked; the other kind
+  // stays fully dimmed, not left at full color, since "only the selected
+  // type stays true color" was explicit. Clicking the active row again
+  // (or clicking elsewhere) clears it.
+  const [highlight, setHighlight] = useState<
+    | { kind: "role"; value: string }
+    | { kind: "category"; value: string }
+    | { kind: "family"; value: string }
+    | { kind: "edgeKind"; value: "mm" | "mp" }
+    | { kind: "confirmed"; value: boolean }
+    | null
+  >(null);
+  function toggleHighlight(next: NonNullable<typeof highlight>) {
+    setHighlight((prev) => (prev && prev.kind === next.kind && prev.value === next.value ? null : next));
+  }
   const dragRef = useRef<{ id: string; offsetX: number; offsetY: number; moved: boolean } | null>(null);
   const [draggingId, setDraggingId] = useState<string | null>(null);
   const W = 800;
@@ -480,6 +605,7 @@ function NodeGraph() {
     if (selectedIps.size === 0) {
       setData(null);
       setSelected(null);
+      setCompareSet(new Set());
       setPeerRoles(new Map());
       return;
     }
@@ -497,15 +623,7 @@ function NodeGraph() {
     async function load() {
       try {
         const ips = [...selectedIps];
-        const [confirmedPerIp, flowPerIp, rolesResult, peerRolesResult, watchResult] = await Promise.all([
-          Promise.all(
-            ips.map((ip) =>
-              confirmedContactsDailyRollupConfirmedContactsDailyGet({
-                query: { monitored_ip: ip, limit: 20000 },
-                throwOnError: true,
-              }),
-            ),
-          ),
+        const [flowPerIp, rolesResult, peerRolesResult, watchResult, identityPerIp] = await Promise.all([
           Promise.all(
             ips.map((ip) =>
               flowDailyRollupFlowDailyGet({ query: { monitored_ip: ip, limit: 20000 }, throwOnError: true }),
@@ -518,10 +636,15 @@ function NodeGraph() {
           // since it's one cheap call and keeps the sidebar instant.
           listIpRolesReviewIpRolesGet({ query: { vantage: "peer", limit: 1000 }, throwOnError: true }),
           listIpsWatchIpsGet({ throwOnError: true }),
+          // So the sidebar can show a monitored IP's own ASN/country the
+          // same way it already does for a peer or cluster — not thrown
+          // on failure (same as EntityDetail's own use of this endpoint):
+          // a watched IP with no identity row yet just shows nothing,
+          // it shouldn't take the rest of the graph down with it.
+          Promise.all(ips.map((ip) => getIpIdentityLookupIpIdentitiesIpGet({ path: { ip } }))),
         ]);
         if (cancelled) return;
 
-        const confirmed = confirmedPerIp.flatMap((r) => r.data.rows);
         const flow = flowPerIp.flatMap((r) => r.data.rows);
 
         const roles = new Map<string, IpRole[]>();
@@ -537,24 +660,67 @@ function NodeGraph() {
           peerRoleMap.set(r.ip, list);
         }
         const watched = new Map(watchResult.data.rows.map((w) => [w.ip, w]));
-        const graph = buildGraph(confirmed, flow, roles, watched);
+        const identities = new Map<string, IpIdentity>();
+        for (const r of identityPerIp) {
+          if (r.data) identities.set(r.data.ip, r.data);
+        }
+        const graph = buildGraph(ips, flow, roles, watched, identities);
 
         // d3-force layout, run synchronously then freeze. A node that was
         // already on screen (same id — an IP, or cluster:<asn>) keeps its
         // prior position and is pinned (fx/fy) for this pass, so adding
         // one more monitored IP doesn't reshuffle everything that was
         // already there, including anything the analyst dragged by hand.
-        // Only genuinely new nodes get a fresh, spread-out starting point
-        // — every node starting at (0,0) from buildGraph would make charge
-        // repulsion (division by zero distance) blow up the layout.
+        //
+        // A genuinely new node used to start at a position with no
+        // relation to its neighbors — anywhere in an 0.8*W×0.8*H box
+        // around center — and rely entirely on the link force to pull it
+        // toward its anchor over the tick budget below. With a graph
+        // that's mostly pinned obstacles by the time someone's added a
+        // few IPs, that random start regularly had nowhere obvious to
+        // go: collision couldn't push a cluster of new peers outward
+        // through the existing layout, so they settled in whatever gap
+        // was nearest their random drop point — which, because they're
+        // ALSO pulled toward forceCenter/forceX/forceY, was usually the
+        // middle. Seed every new node near its actual neighbors instead:
+        // monitored nodes first (there are few, and nearly everything
+        // else anchors to one), then everyone else, so a new peer's seed
+        // can reference its monitored node's just-assigned position, not
+        // only nodes that were already pinned. Only a node with no
+        // already-positioned neighbor at all (the very first thing ever
+        // added to an empty graph) falls back to the old anywhere-in-
+        // canvas placement.
+        const neighborIds = new Map<string, string[]>();
+        for (const l of graph.links) {
+          (neighborIds.get(l.source) ?? neighborIds.set(l.source, []).get(l.source)!).push(l.target);
+          (neighborIds.get(l.target) ?? neighborIds.set(l.target, []).get(l.target)!).push(l.source);
+        }
+        const seeded = new Map<string, { x: number; y: number }>(prevPositions);
+        function seedPosition(id: string): { x: number; y: number } {
+          const already = seeded.get(id);
+          if (already) return already;
+          const known = (neighborIds.get(id) ?? []).map((nb) => seeded.get(nb)).filter((p): p is { x: number; y: number } => !!p);
+          let pos: { x: number; y: number };
+          if (known.length > 0) {
+            const avgX = known.reduce((s, p) => s + p.x, 0) / known.length;
+            const avgY = known.reduce((s, p) => s + p.y, 0) / known.length;
+            const angle = Math.random() * Math.PI * 2;
+            const jitter = 40 + Math.random() * 40;
+            pos = { x: avgX + Math.cos(angle) * jitter, y: avgY + Math.sin(angle) * jitter };
+          } else {
+            pos = { x: W / 2 + (Math.random() - 0.5) * W * 0.8, y: H / 2 + (Math.random() - 0.5) * H * 0.8 };
+          }
+          seeded.set(id, pos);
+          return pos;
+        }
+        for (const n of graph.nodes) if (n.kind === "monitored") seedPosition(n.id);
+        for (const n of graph.nodes) if (n.kind !== "monitored") seedPosition(n.id);
+
         const simNodes: (GNode & { fx?: number; fy?: number })[] = graph.nodes.map((n) => {
           const prev = prevPositions.get(n.id);
-          if (prev) return { ...n, x: prev.x, y: prev.y, fx: prev.x, fy: prev.y };
-          return {
-            ...n,
-            x: W / 2 + (Math.random() - 0.5) * W * 0.8,
-            y: H / 2 + (Math.random() - 0.5) * H * 0.8,
-          };
+          const pos = seedPosition(n.id);
+          if (prev) return { ...n, x: pos.x, y: pos.y, fx: pos.x, fy: pos.y };
+          return { ...n, x: pos.x, y: pos.y };
         });
         const simLinks = graph.links.map((l) => ({ ...l }));
         const simulation = d3
@@ -576,17 +742,28 @@ function NodeGraph() {
           .force("y", d3.forceY(H / 2).strength(0.03))
           .force(
             "collide",
-            // A monitored node's visual footprint reaches well past its
-            // own r now — role labels sit at r+14, marker icons at r+28
-            // plus their own ~10px half-size — so its exclusion radius has
-            // to clear that, not just the glyph itself, or two nearby
-            // monitored nodes' labels/markers overlap even though the
-            // simulation considers them already resolved. Peers/clusters
-            // are still plain circles, so they keep the tight padding.
-            d3.forceCollide((d) => {
-              const gd = d as GNode;
-              return gd.kind === "monitored" ? gd.r + 46 : gd.r + 6;
-            }),
+            // No role ring anymore, but a monitored node now carries an
+            // IP-address text label below the icon — fixed width
+            // regardless of n.r (an IPv4 address is ~15 characters, about
+            // 45px at this font size), which is wider than any marker row
+            // and has to clear the SAME way the old ring-based footprint
+            // did, or two nearby monitored nodes' labels overlap. A
+            // standalone peer with a role gets a single small marker
+            // (r+11, no label) — clusters show nothing on the glyph
+            // itself, so they keep the tight padding regardless.
+            d3
+              .forceCollide((d) => {
+                const gd = d as GNode;
+                if (gd.kind === "monitored") return Math.max(30, gd.r + 10);
+                if (gd.kind === "peer" && peerRoleMap.has(gd.id)) return gd.r + 16;
+                return gd.r + 6;
+              })
+              // Default 1 pass/tick isn't enough to fully resolve
+              // collisions in a graph that's mostly pinned obstacles by
+              // the time a few IPs are selected — new nodes could settle
+              // touching an obstacle rather than clearing it. More passes
+              // per tick converges properly without needing more ticks.
+              .iterations(3),
           )
           .stop();
         for (let i = 0; i < 450; i++) simulation.tick();
@@ -723,23 +900,97 @@ function NodeGraph() {
   // Legend scoped to what's actually on screen, not a hardcoded list — a
   // selection of two IPs with one role between them doesn't need to see
   // the other twelve roles that exist in the vocabulary but aren't here.
+  // Standalone peers carry roles too now (their own marker icons render
+  // right on the graph) — this used to only look at monitored nodes, so
+  // a peer-only role like sip_trunk on a peer that has no monitored
+  // counterpart never showed up here even though its marker was visible.
   const rolesPresent = new Map<string, { confirmed: boolean; pending: boolean }>();
   for (const n of data.nodes) {
-    if (n.kind !== "monitored") continue;
-    for (const r of n.confirmedRoles ?? []) {
-      rolesPresent.set(r, { ...(rolesPresent.get(r) ?? { confirmed: false, pending: false }), confirmed: true });
-    }
-    for (const r of n.pendingRoles ?? []) {
-      rolesPresent.set(r, { ...(rolesPresent.get(r) ?? { confirmed: false, pending: false }), pending: true });
+    if (n.kind === "monitored") {
+      for (const r of n.confirmedRoles ?? []) {
+        rolesPresent.set(r, { ...(rolesPresent.get(r) ?? { confirmed: false, pending: false }), confirmed: true });
+      }
+      for (const r of n.pendingRoles ?? []) {
+        rolesPresent.set(r, { ...(rolesPresent.get(r) ?? { confirmed: false, pending: false }), pending: true });
+      }
+    } else if (n.kind === "peer") {
+      for (const row of peerRoles.get(n.id) ?? []) {
+        if (row.status === "rejected") continue;
+        const prev = rolesPresent.get(row.role) ?? { confirmed: false, pending: false };
+        rolesPresent.set(row.role, {
+          confirmed: prev.confirmed || row.status === "confirmed",
+          pending: prev.pending || row.status !== "confirmed",
+        });
+      }
     }
   }
   const familiesPresent = [...new Set(data.links.map((l) => l.dominantFamily))].sort();
+
+  // Compare: with 2+ nodes clicked (compare mode, or shift-click as a
+  // shortcut), figure out what they share — a direct edge between two of
+  // them (handled per-edge above), any other node that's a neighbor of
+  // more than one of them, and for an ASN cluster specifically, which of
+  // its merged members actually trace back to more than one of them
+  // (the thing clustering itself can never show, since those members
+  // have no separate position on the canvas to click).
+  const comparing = compareSet.size >= 2;
+  const neighborsOfCompare = new Map<string, Set<string>>(); // nodeId -> which compared nodes touch it
+  if (comparing) {
+    for (const l of data.links) {
+      const a = nodeById.get(l.source as unknown as string) ?? nodeById.get((l.source as unknown as GNode).id);
+      const b = nodeById.get(l.target as unknown as string) ?? nodeById.get((l.target as unknown as GNode).id);
+      if (!a || !b) continue;
+      if (compareSet.has(a.id) && !compareSet.has(b.id)) {
+        const set = neighborsOfCompare.get(b.id) ?? new Set<string>();
+        set.add(a.id);
+        neighborsOfCompare.set(b.id, set);
+      }
+      if (compareSet.has(b.id) && !compareSet.has(a.id)) {
+        const set = neighborsOfCompare.get(a.id) ?? new Set<string>();
+        set.add(b.id);
+        neighborsOfCompare.set(a.id, set);
+      }
+    }
+  }
+  const sharedNeighborIds = new Set([...neighborsOfCompare.entries()].filter(([, s]) => s.size >= 2).map(([id]) => id));
+  function sharedClusterMembers(cluster: GNode): string[] {
+    const contributors = [...(neighborsOfCompare.get(cluster.id) ?? [])];
+    const byMonitored = cluster.memberIpsByMonitored;
+    if (contributors.length < 2 || !byMonitored) return [];
+    let shared: string[] | null = null;
+    for (const mIp of contributors) {
+      const s = byMonitored.get(mIp);
+      if (!s || s.size === 0) return [];
+      shared = shared === null ? [...s] : shared.filter((ip) => s.has(ip));
+    }
+    return shared ?? [];
+  }
 
   return (
     <>
       {picker}
       <div style={{ display: "flex", gap: 24, alignItems: "flex-start", flexWrap: "wrap" }}>
       <div className="card" style={{ width: W, maxWidth: "100%", height: H, position: "relative", overflow: "hidden", flexShrink: 0 }}>
+        <button
+          onClick={() => setCompareMode((m) => !m)}
+          className="mono"
+          style={{
+            position: "absolute",
+            top: 10,
+            left: 10,
+            zIndex: 1,
+            cursor: "pointer",
+            fontSize: 11,
+            padding: "5px 10px",
+            borderRadius: 6,
+            border: "1px solid",
+            borderColor: compareMode ? "#FFE55C" : "#2B7266",
+            background: compareMode ? "#3A350F" : "#0A2224",
+            color: compareMode ? "#FFE55C" : "#A6D8CD",
+          }}
+        >
+          {compareMode ? "✓ compare mode — click nodes to compare" : "compare mode"}
+        </button>
         <ZoomableSvg width={W} height={H}>
           {data.links.map((l, i) => {
             const a = nodeById.get(l.source as unknown as string) ?? nodeById.get((l.source as unknown as GNode).id);
@@ -747,22 +998,68 @@ function NodeGraph() {
             if (!a || !b) return null;
             const width = Math.max(1, Math.min(8, Math.sqrt(l.bytes) / 200));
             const color = familyColor(l.dominantFamily);
+            // With 2+ nodes in the compare set, that becomes the only
+            // question this view answers — so it takes over dimming from
+            // the Legend highlight rather than combining with it (two
+            // independent dimming reasons get confusing fast). A compare
+            // edge is either a direct edge between two compared nodes, or
+            // an edge from a compared node out to a shared neighbor
+            // (sharedNeighborIds already means "touched by 2+ compared
+            // nodes") — without the second half, the shared-neighbor node
+            // stayed bright while every edge reaching it dimmed to near
+            // nothing, which just looked disconnected.
+            const isCompareEdge =
+              comparing &&
+              ((compareSet.has(a.id) && compareSet.has(b.id)) ||
+                (compareSet.has(a.id) && sharedNeighborIds.has(b.id)) ||
+                (compareSet.has(b.id) && sharedNeighborIds.has(a.id)));
+            const edgeDimmed = comparing
+              ? !isCompareEdge
+              : highlight
+                ? highlight.kind === "family"
+                  ? l.dominantFamily !== highlight.value
+                  : highlight.kind === "edgeKind"
+                    ? l.kind !== highlight.value
+                    : highlight.kind === "confirmed"
+                      ? l.confirmed !== highlight.value
+                      : true // role/category describe nodes, not edges — every edge dims
+                : false;
+            // Confirmed is a third, independent edge channel alongside
+            // color (traffic type) and dash pattern (mm/mp): a day of real
+            // traffic that hasn't cleared the role/pair-confirmation bar
+            // still draws, just faint, rather than not drawing at all.
+            const baseOpacity = l.confirmed ? 1 : 0.32;
             return (
-              <line
-                key={i}
-                x1={a.x}
-                y1={a.y}
-                x2={b.x}
-                y2={b.y}
-                stroke={color}
-                strokeWidth={l.kind === "mm" ? Math.max(2, width) : width}
-                strokeDasharray={l.kind === "mm" ? "3 7" : undefined}
-                strokeLinecap="round"
-              >
-                <title>
-                  {a.label} ↔ {b.label} · {l.dominantFamily} · {formatBytes(l.bytes)}
-                </title>
-              </line>
+              <g key={i}>
+                {isCompareEdge && (
+                  <line
+                    x1={a.x}
+                    y1={a.y}
+                    x2={b.x}
+                    y2={b.y}
+                    stroke="#FFE55C"
+                    strokeWidth={Math.max(4, width + 3)}
+                    strokeLinecap="round"
+                    opacity={0.55}
+                  />
+                )}
+                <line
+                  x1={a.x}
+                  y1={a.y}
+                  x2={b.x}
+                  y2={b.y}
+                  stroke={color}
+                  strokeWidth={l.kind === "mm" ? Math.max(2, width) : width}
+                  strokeDasharray={l.kind === "mm" ? "3 7" : undefined}
+                  strokeLinecap="round"
+                  opacity={edgeDimmed ? 0.08 : baseOpacity}
+                >
+                  <title>
+                    {a.label} ↔ {b.label} · {l.dominantFamily} · {formatBytes(l.bytes)} ·{" "}
+                    {l.confirmed ? "confirmed" : "not yet reviewed"}
+                  </title>
+                </line>
+              </g>
             );
           })}
           {data.nodes.map((n) => {
@@ -776,13 +1073,46 @@ function NodeGraph() {
                   ...(n.pendingRoles ?? []).map((role) => ({ role, confirmed: false })),
                 ]
               : [];
+            // Standalone peers only, deliberately not clusters — a cluster
+            // folds several peers together, so there's no single role to
+            // put on its one glyph; that's still only reachable through
+            // the sidebar's member list. A peer keeps its category circle
+            // either way — role is a second, independent axis (what it
+            // does vs. what kind of infrastructure it is), not a
+            // replacement for category.
+            const peerRoleRows = n.kind === "peer" ? (peerRoles.get(n.id) ?? []) : [];
+            const peerRoleList = [
+              ...peerRoleRows.filter((r) => r.status === "confirmed").map((r) => ({ role: r.role, confirmed: true })),
+              ...peerRoleRows
+                .filter((r) => r.status !== "confirmed" && r.status !== "rejected")
+                .map((r) => ({ role: r.role, confirmed: false })),
+            ];
             const [catBg, catFg] = !isMonitored ? categoryColors(n.category ?? "unclassified") : ["", ""];
+            const nodeDimmed = comparing
+              ? !compareSet.has(n.id) && !sharedNeighborIds.has(n.id)
+              : (() => {
+                  if (!highlight) return false;
+                  if (highlight.kind === "role") {
+                    const allRoles = isMonitored ? roleList.map((r) => r.role) : peerRoleList.map((r) => r.role);
+                    return !allRoles.includes(highlight.value);
+                  }
+                  if (highlight.kind === "category") {
+                    return isMonitored || (n.category ?? "unclassified") !== highlight.value;
+                  }
+                  // family/edgeKind describe edges, not nodes — every node dims.
+                  return true;
+                })();
             return (
               <g
                 key={n.id}
                 data-no-pan
-                onClick={() => {
+                style={{ cursor: draggingId === n.id ? "grabbing" : "grab", opacity: nodeDimmed ? 0.15 : 1 }}
+                onClick={(e) => {
                   if (dragRef.current?.moved) return;
+                  if (compareMode || e.shiftKey) {
+                    toggleCompare(n.id);
+                    return;
+                  }
                   setSelected(n);
                 }}
                 onMouseDown={(e) => {
@@ -824,49 +1154,17 @@ function NodeGraph() {
                   window.addEventListener("mousemove", onMove);
                   window.addEventListener("mouseup", onUp);
                 }}
-                style={{ cursor: draggingId === n.id ? "grabbing" : "grab" }}
               >
                 {isMonitored ? (
                   <>
                     {selected?.id === n.id && (
-                      <circle cx={n.x} cy={n.y} r={n.r + 8} fill="none" stroke="#E8FFF8" strokeWidth={1.5} strokeDasharray="2 3" />
+                      <circle cx={n.x} cy={n.y} r={26} fill="none" stroke="#E8FFF8" strokeWidth={1.5} strokeDasharray="2 3" />
                     )}
-                    {roleList.length === 0 ? (
-                      <circle cx={n.x} cy={n.y} r={n.r} fill="#0F3133" stroke="#6FA89E" strokeWidth={2} />
-                    ) : (
-                      roleList.map((r, i) => {
-                        const c = roleColor(r.role);
-                        const angle = (i / roleList.length) * Math.PI * 2 - Math.PI / 2;
-                        const circumference = 2 * Math.PI * n.r;
-                        const segLen = (circumference / roleList.length) * 0.78;
-                        const strokeW = (DANGER_ROLES.has(r.role) ? 2 : 1) * Math.max(2.5, Math.min(5, n.r * 0.18));
-                        const labelR = n.r + 14;
-                        const lx = n.x + labelR * Math.cos(angle);
-                        const ly = n.y + labelR * Math.sin(angle);
-                        return (
-                          <g key={r.role}>
-                            <circle
-                              cx={n.x}
-                              cy={n.y}
-                              r={n.r}
-                              fill="none"
-                              stroke={c.border}
-                              strokeWidth={strokeW}
-                              strokeOpacity={r.confirmed ? 1 : 0.55}
-                              strokeDasharray={`${segLen} ${circumference - segLen}`}
-                              transform={`rotate(${(angle * 180) / Math.PI} ${n.x} ${n.y})`}
-                            />
-                            <text x={lx} y={ly} textAnchor="middle" fontSize={8} fill={c.border}>
-                              {r.role}
-                            </text>
-                            {hasMarker(r.role) && (
-                              <g transform={`translate(${n.x + (n.r + 28) * Math.cos(angle)},${n.y + (n.r + 28) * Math.sin(angle)}) scale(0.85)`}>
-                                <RoleMarker role={r.role} />
-                              </g>
-                            )}
-                          </g>
-                        );
-                      })
+                    {compareSet.has(n.id) && (
+                      <circle cx={n.x} cy={n.y} r={31} fill="none" stroke="#FFE55C" strokeWidth={2} />
+                    )}
+                    {!compareSet.has(n.id) && sharedNeighborIds.has(n.id) && (
+                      <circle cx={n.x} cy={n.y} r={31} fill="none" stroke="#FFE55C" strokeWidth={1.2} strokeDasharray="1 3" />
                     )}
                     <g transform={`translate(${n.x},${n.y})`}>
                       <rect
@@ -883,24 +1181,66 @@ function NodeGraph() {
                       <line x1={-5} y1={0} x2={5} y2={0} stroke="#6FA89E" strokeWidth={1} />
                       <line x1={-5} y1={5} x2={5} y2={5} stroke="#6FA89E" strokeWidth={1} />
                       <circle cx={4} cy={-7.5} r={1} fill="#3DD68C" />
+                      {(() => {
+                        const marked = roleList.filter((r) => hasMarker(r.role));
+                        if (marked.length === 0) return null;
+                        const startX = -((marked.length - 1) * 13) / 2;
+                        return marked.map((r, i) => (
+                          <g key={r.role} transform={`translate(${startX + i * 13},16) scale(0.5)`}>
+                            <RoleMarker role={r.role} />
+                          </g>
+                        ));
+                      })()}
+                      <text
+                        y={roleList.some((r) => hasMarker(r.role)) ? 29 : 17}
+                        textAnchor="middle"
+                        fontSize={9}
+                        fill="#A6D8CD"
+                        className="mono"
+                      >
+                        {n.id}
+                      </text>
                     </g>
                   </>
                 ) : (
-                  <circle
-                    cx={n.x}
-                    cy={n.y}
-                    r={n.r}
-                    fill={n.kind === "cluster" ? "#0F3133" : catBg}
-                    stroke={selected?.id === n.id ? "#E8FFF8" : n.kind === "cluster" ? "#6FA89E" : catFg}
-                    strokeWidth={selected?.id === n.id ? 3 : 2}
-                    strokeDasharray={n.kind === "cluster" ? "3 3" : undefined}
-                  />
+                  <>
+                    {compareSet.has(n.id) && (
+                      <circle cx={n.x} cy={n.y} r={n.r + 5} fill="none" stroke="#FFE55C" strokeWidth={2} />
+                    )}
+                    {!compareSet.has(n.id) && sharedNeighborIds.has(n.id) && (
+                      <circle cx={n.x} cy={n.y} r={n.r + 5} fill="none" stroke="#FFE55C" strokeWidth={1.2} strokeDasharray="1 3" />
+                    )}
+                    <circle
+                      cx={n.x}
+                      cy={n.y}
+                      r={n.r}
+                      fill={n.kind === "cluster" ? "#0F3133" : catBg}
+                      stroke={selected?.id === n.id ? "#E8FFF8" : n.kind === "cluster" ? "#6FA89E" : catFg}
+                      strokeWidth={selected?.id === n.id ? 3 : 2}
+                      strokeDasharray={n.kind === "cluster" ? "3 3" : undefined}
+                    />
+                    {peerRoleList
+                      .filter((r) => hasMarker(r.role))
+                      .map((r, i, marked) => {
+                        const angle = (i / marked.length) * Math.PI * 2 - Math.PI / 2;
+                        return (
+                          <g
+                            key={r.role}
+                            transform={`translate(${n.x + (n.r + 11) * Math.cos(angle)},${n.y + (n.r + 11) * Math.sin(angle)}) scale(0.5)`}
+                          >
+                            <RoleMarker role={r.role} />
+                          </g>
+                        );
+                      })}
+                  </>
                 )}
                 <title>
                   {n.label} · {formatBytes(n.bytes)}
                   {n.clusterCount ? ` · ${n.clusterCount} peers` : ""}
-                  {roleList.length > 0
-                    ? ` · ${roleList.map((r) => `${r.role}${r.confirmed ? "" : " (suggested)"}`).join(", ")}`
+                  {(isMonitored ? roleList : peerRoleList).length > 0
+                    ? ` · ${(isMonitored ? roleList : peerRoleList)
+                        .map((r) => `${r.role}${r.confirmed ? "" : " (suggested)"}`)
+                        .join(", ")}`
                     : ""}
                 </title>
               </g>
@@ -908,28 +1248,50 @@ function NodeGraph() {
           })}
         </ZoomableSvg>
         <div style={{ position: "absolute", bottom: 10, right: 10, fontSize: 10, color: "#6FA89E", pointerEvents: "none" }}>
-          scroll to zoom · drag empty space to pan · drag a node to move it
+          scroll to zoom · drag empty space to pan · drag a node to move it · shift-click (or compare
+          mode) 2+ nodes to see what they share
         </div>
       </div>
 
       <div style={{ width: 284, flexShrink: 0, display: "flex", flexDirection: "column", gap: 16 }}>
         <div className="card" style={{ padding: "16px 18px" }}>
-          <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 10, color: "#A6D8CD" }}>Legend</div>
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+            <div style={{ fontSize: 12, fontWeight: 600, color: "#A6D8CD" }}>Legend</div>
+            {highlight && (
+              <button
+                onClick={() => setHighlight(null)}
+                style={{ all: "unset", cursor: "pointer", fontSize: 11, color: "#7FEFD6" }}
+              >
+                clear highlight
+              </button>
+            )}
+          </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 14, fontSize: 12 }}>
             {rolesPresent.size > 0 && (
               <div>
                 <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase", marginBottom: 6 }}>
-                  Monitored roles
+                  Roles
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                   {[...rolesPresent.entries()]
                     .sort(([a], [b]) => a.localeCompare(b))
                     .map(([role, state]) => {
                       const c = roleColor(role);
+                      const active = highlight?.kind === "role" && highlight.value === role;
                       return (
                         <div
                           key={role}
-                          style={{ display: "flex", alignItems: "center", gap: 8 }}
+                          onClick={() => toggleHighlight({ kind: "role", value: role })}
+                          style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 8,
+                            cursor: "pointer",
+                            padding: "2px 4px",
+                            marginLeft: -4,
+                            borderRadius: 4,
+                            background: active ? "#153226" : "transparent",
+                          }}
                           title={roleMeaning.get(role)}
                         >
                           <span style={{ display: "flex", gap: 3, flexShrink: 0 }}>
@@ -978,8 +1340,22 @@ function NodeGraph() {
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
                 {Object.keys(categoryColorsLegend).map((cat) => {
                   const [bg, fg] = categoryColors(cat);
+                  const active = highlight?.kind === "category" && highlight.value === cat;
                   return (
-                    <div key={cat} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                    <div
+                      key={cat}
+                      onClick={() => toggleHighlight({ kind: "category", value: cat })}
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: 8,
+                        cursor: "pointer",
+                        padding: "2px 4px",
+                        marginLeft: -4,
+                        borderRadius: 4,
+                        background: active ? "#153226" : "transparent",
+                      }}
+                    >
                       <span
                         style={{
                           width: 12,
@@ -1018,14 +1394,30 @@ function NodeGraph() {
                   Traffic type (edge color)
                 </div>
                 <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                  {familiesPresent.map((fam) => (
-                    <div key={fam} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                      <span
-                        style={{ width: 18, height: 3, background: familyColor(fam), display: "inline-block", flexShrink: 0 }}
-                      />
-                      <span className="mono">{fam}</span>
-                    </div>
-                  ))}
+                  {familiesPresent.map((fam) => {
+                    const active = highlight?.kind === "family" && highlight.value === fam;
+                    return (
+                      <div
+                        key={fam}
+                        onClick={() => toggleHighlight({ kind: "family", value: fam })}
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 8,
+                          cursor: "pointer",
+                          padding: "2px 4px",
+                          marginLeft: -4,
+                          borderRadius: 4,
+                          background: active ? "#153226" : "transparent",
+                        }}
+                      >
+                        <span
+                          style={{ width: 18, height: 3, background: familyColor(fam), display: "inline-block", flexShrink: 0 }}
+                        />
+                        <span className="mono">{fam}</span>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -1035,13 +1427,77 @@ function NodeGraph() {
                 Edge style
               </div>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div
+                  onClick={() => toggleHighlight({ kind: "edgeKind", value: "mm" })}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    cursor: "pointer",
+                    padding: "2px 4px",
+                    marginLeft: -4,
+                    borderRadius: 4,
+                    background: highlight?.kind === "edgeKind" && highlight.value === "mm" ? "#153226" : "transparent",
+                  }}
+                >
                   <span style={{ width: 18, height: 0, borderTop: "2px dashed #A6D8CD", display: "inline-block", flexShrink: 0 }} />
                   monitored ↔ monitored
                 </div>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <div
+                  onClick={() => toggleHighlight({ kind: "edgeKind", value: "mp" })}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    cursor: "pointer",
+                    padding: "2px 4px",
+                    marginLeft: -4,
+                    borderRadius: 4,
+                    background: highlight?.kind === "edgeKind" && highlight.value === "mp" ? "#153226" : "transparent",
+                  }}
+                >
                   <span style={{ width: 18, height: 2, background: "#A6D8CD", display: "inline-block", flexShrink: 0 }} />
                   monitored ↔ peer (width ~ bytes)
+                </div>
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase", marginBottom: 6 }}>
+                Review status (edge opacity)
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <div
+                  onClick={() => toggleHighlight({ kind: "confirmed", value: true })}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    cursor: "pointer",
+                    padding: "2px 4px",
+                    marginLeft: -4,
+                    borderRadius: 4,
+                    background: highlight?.kind === "confirmed" && highlight.value === true ? "#153226" : "transparent",
+                  }}
+                >
+                  <span style={{ width: 18, height: 2, background: "#A6D8CD", opacity: 1, display: "inline-block", flexShrink: 0 }} />
+                  confirmed — role on either side, or pair itself confirmed
+                </div>
+                <div
+                  onClick={() => toggleHighlight({ kind: "confirmed", value: false })}
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
+                    cursor: "pointer",
+                    padding: "2px 4px",
+                    marginLeft: -4,
+                    borderRadius: 4,
+                    background: highlight?.kind === "confirmed" && highlight.value === false ? "#153226" : "transparent",
+                  }}
+                >
+                  <span style={{ width: 18, height: 2, background: "#A6D8CD", opacity: 0.32, display: "inline-block", flexShrink: 0 }} />
+                  not yet reviewed — real traffic, nobody's looked
                 </div>
               </div>
             </div>
@@ -1058,22 +1514,53 @@ function NodeGraph() {
               <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 2 }} className="mono">
                 {selected.label}
               </div>
-              <div style={{ fontSize: 12, color: "#A6D8CD", marginBottom: 10 }}>
-                {selected.kind === "monitored"
-                  ? [
-                      selected.confirmedRoles && selected.confirmedRoles.length > 0
-                        ? `confirmed: ${selected.confirmedRoles.join(", ")}`
-                        : null,
-                      selected.pendingRoles && selected.pendingRoles.length > 0
-                        ? `suggested: ${selected.pendingRoles.join(", ")}`
-                        : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ") || "no role yet"
-                  : selected.kind === "cluster"
+              {(() => {
+                // Identity (ASN/country/category) and role are two
+                // independent facts about any node, monitored or peer —
+                // a cluster is the one exception, since it's several
+                // peers folded together with no single role to show.
+                // Both lines render for both node kinds now; they used to
+                // each only get one or the other.
+                const identityLine =
+                  selected.kind === "cluster"
                     ? `${selected.clusterCount} peers · AS${selected.asn} · ${selected.country ?? "—"}`
-                    : `${selected.category} ${selected.asn ? `· AS${selected.asn}` : ""} ${selected.country ? `· ${selected.country}` : ""}`}
-              </div>
+                    : [
+                        selected.kind === "peer" ? selected.category : null,
+                        selected.asn ? `AS${selected.asn}` : null,
+                        selected.country,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ") || null;
+                const confirmedRoles =
+                  selected.kind === "monitored"
+                    ? (selected.confirmedRoles ?? [])
+                    : selected.kind === "peer"
+                      ? (peerRoles.get(selected.id) ?? []).filter((r) => r.status === "confirmed").map((r) => r.role)
+                      : [];
+                const pendingRoles =
+                  selected.kind === "monitored"
+                    ? (selected.pendingRoles ?? [])
+                    : selected.kind === "peer"
+                      ? (peerRoles.get(selected.id) ?? [])
+                          .filter((r) => r.status !== "confirmed" && r.status !== "rejected")
+                          .map((r) => r.role)
+                      : [];
+                const roleLine =
+                  selected.kind === "cluster"
+                    ? null
+                    : [
+                        confirmedRoles.length > 0 ? `confirmed: ${confirmedRoles.join(", ")}` : null,
+                        pendingRoles.length > 0 ? `suggested: ${pendingRoles.join(", ")}` : null,
+                      ]
+                        .filter(Boolean)
+                        .join(" · ") || "no role yet";
+                return (
+                  <div style={{ fontSize: 12, color: "#A6D8CD", marginBottom: 10 }}>
+                    {identityLine && <div>{identityLine}</div>}
+                    {roleLine && <div>{roleLine}</div>}
+                  </div>
+                );
+              })()}
               {selected.tags && selected.tags.length > 0 && (
                 <div style={{ display: "flex", gap: 6, flexWrap: "wrap", marginBottom: 10 }}>
                   {selected.tags.map((t) => (
@@ -1151,6 +1638,115 @@ function NodeGraph() {
           )}
         </div>
 
+        {compareSet.size > 0 && (
+          <div className="card" style={{ padding: "16px 18px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 }}>
+              <div style={{ fontSize: 12, fontWeight: 600, color: "#FFE55C" }}>Compare ({compareSet.size})</div>
+              <button
+                onClick={() => setCompareSet(new Set())}
+                style={{ all: "unset", cursor: "pointer", fontSize: 11, color: "#7FEFD6" }}
+              >
+                clear
+              </button>
+            </div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 6, marginBottom: 10 }}>
+              {[...compareSet].map((id) => (
+                <span key={id} className="chip mono" style={{ fontSize: 11, borderColor: "#FFE55C", color: "#FFE55C" }}>
+                  {nodeById.get(id)?.label ?? id}
+                </span>
+              ))}
+            </div>
+            {compareSet.size === 1 ? (
+              <div style={{ fontSize: 12, color: "#6FA89E" }}>
+                Click (or shift-click) another node to compare — what they share shows up here
+                automatically, no need to click either node again.
+              </div>
+            ) : (
+              <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+                {(() => {
+                  const directEdges = data.links.filter((l) => {
+                    const a = nodeById.get(l.source as unknown as string) ?? nodeById.get((l.source as unknown as GNode).id);
+                    const b = nodeById.get(l.target as unknown as string) ?? nodeById.get((l.target as unknown as GNode).id);
+                    return !!a && !!b && compareSet.has(a.id) && compareSet.has(b.id);
+                  });
+                  return (
+                    <div>
+                      <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase", marginBottom: 4 }}>
+                        Direct edges
+                      </div>
+                      {directEdges.length === 0 ? (
+                        <div style={{ fontSize: 12, color: "#6FA89E" }}>none</div>
+                      ) : (
+                        directEdges.map((l, i) => {
+                          const a = nodeById.get(l.source as unknown as string) ?? nodeById.get((l.source as unknown as GNode).id);
+                          const b = nodeById.get(l.target as unknown as string) ?? nodeById.get((l.target as unknown as GNode).id);
+                          return (
+                            <div key={i} className="mono" style={{ fontSize: 12, color: "#FFE55C" }}>
+                              {a?.label} ↔ {b?.label} · {formatBytes(l.bytes)}
+                            </div>
+                          );
+                        })
+                      )}
+                    </div>
+                  );
+                })()}
+
+                <div>
+                  <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase", marginBottom: 4 }}>
+                    Shared neighbors
+                  </div>
+                  {(() => {
+                    const shared = [...sharedNeighborIds]
+                      .map((id) => nodeById.get(id))
+                      .filter((nd): nd is GNode => !!nd && nd.kind !== "cluster");
+                    if (shared.length === 0) return <div style={{ fontSize: 12, color: "#6FA89E" }}>none</div>;
+                    return shared.map((nd) => (
+                      <div key={nd.id} style={{ fontSize: 12, color: "#A6D8CD", marginBottom: 3 }}>
+                        <span className="mono">{nd.label}</span>
+                        <span style={{ color: "#6FA89E" }}>
+                          {" "}
+                          — reached from{" "}
+                          {[...(neighborsOfCompare.get(nd.id) ?? [])].map((id) => nodeById.get(id)?.label ?? id).join(", ")}
+                        </span>
+                      </div>
+                    ));
+                  })()}
+                </div>
+
+                <div>
+                  <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase", marginBottom: 4 }}>
+                    Shared inside ASN clusters
+                  </div>
+                  {(() => {
+                    const clusters = [...sharedNeighborIds]
+                      .map((id) => nodeById.get(id))
+                      .filter((nd): nd is GNode => !!nd && nd.kind === "cluster");
+                    const rows = clusters
+                      .map((c) => ({ cluster: c, members: sharedClusterMembers(c) }))
+                      .filter((r) => r.members.length > 0);
+                    if (rows.length === 0) return <div style={{ fontSize: 12, color: "#6FA89E" }}>none</div>;
+                    return rows.map(({ cluster, members }) => (
+                      <div key={cluster.id} style={{ marginBottom: 8 }}>
+                        <div style={{ fontSize: 12, color: "#A6D8CD" }}>
+                          <span className="mono">{cluster.label}</span>
+                          <span style={{ color: "#6FA89E" }}>
+                            {" "}
+                            — {members.length} shared, from{" "}
+                            {[...(neighborsOfCompare.get(cluster.id) ?? [])].map((id) => nodeById.get(id)?.label ?? id).join(", ")}
+                          </span>
+                        </div>
+                        <div className="mono" style={{ fontSize: 11, color: "#FFE55C", paddingLeft: 8, overflowWrap: "anywhere" }}>
+                          {members.join(", ")}
+                        </div>
+                      </div>
+                    ));
+                  })()}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         <div className="card" style={{ padding: "16px 18px" }}>
           <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 10, color: "#F5A623" }}>Data notes</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 9, fontSize: 12, color: "#A6D8CD", lineHeight: 1.5 }}>
@@ -1159,10 +1755,13 @@ function NodeGraph() {
             <div>③ ASN clustering: peers below 0.5% of total graph bytes sharing an ASN with 2+ others collapse into one node — this was blocked until <span className="mono">peer_asn</span> landed on the rollups.</div>
             <div>④ A peer that's itself on the watchlist is drawn as a monitored node, never a plain peer.</div>
             <div>⑤ Role and traffic-type colors are generated from the name, not a hand-picked palette — a new role or port family gets a stable color automatically, never falls back to looking like "no role yet."</div>
-            <div>⑥ A monitored node is drawn as a server glyph (fixed size, independent of byte volume) ringed by one arc per role, each with a text label so the ring never has to be read by color alone.</div>
+            <div>⑥ A monitored node is drawn as a server glyph (fixed size, independent of byte volume) labeled with its own IP address — no role ring anymore, so identity is the one thing always on the canvas; hover or click for exact role names.</div>
             <div>⑦ Markers (phone, envelope, warning triangle, …) render in one fixed color, never a hashed hue — only the roles with real confirmed volume (9 of them, as of forward_proxy's gate icon) plus c2_server/c2_operator/c2_victim get one; every other role is ring color + text only, deliberately, so adding icons per-role doesn't become hand-maintained mapping debt.</div>
             <div>⑧ Click an ASN cluster node to see the individual peer IPs it bucketed, with a copy-all button.</div>
             <div>⑨ The layout is stateful across selection changes: a node already on screen (including anything dragged by hand) keeps its position when you add or remove a monitored IP — only newly appearing nodes get freshly simulated into place.</div>
+            <div>⑩ A standalone peer with a role (from <span className="mono">review__ip_roles</span>, peer vantage) gets a marker icon outside its category circle if the role has one — no ring, no label; click the peer for the exact role. A role without a marker (most of them) shows nothing on a peer's glyph at all. Clustered peers never show a member's role on the glyph (one cluster, several peers, no single role to show) — their roles are in the cluster's own sidebar list instead.</div>
+            <div>⑪ Edges are built from every <span className="mono">rollup__flow_daily</span> row now, not a pre-filtered confirmed-contacts view — a faint edge is real traffic nobody's reviewed yet, not something hidden. An edge counts as confirmed if any day/port-family bucket behind it clears the bar (role on either side, or the pair itself a confirmed SIP peer); click "Review status" in the Legend to isolate either state.</div>
+            <div>⑫ Compare mode (or shift-click) builds a set of 2+ nodes and shows what they share: direct edges between them, any other node that's a neighbor of more than one, and — the one thing an ASN cluster can't show on its own — which of a cluster's merged members actually trace back to more than one of the compared monitored IPs, since those members have no separate position on the canvas to click individually.</div>
           </div>
         </div>
       </div>
