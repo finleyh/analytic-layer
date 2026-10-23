@@ -423,62 +423,6 @@ export type DomainPivot = {
 };
 
 /**
- * DomainScan
- *
- * One ask of urlscan about a target: a name from the sweep, a URL a finding named, or the analyst's request (`discovered_from`). `urlscan_result_url` is the link to show; `result_fetched_at` is set once the result is in Mongo.
- */
-export type DomainScan = {
-    /**
-     * Id
-     */
-    id: number;
-    /**
-     * Monitored Ip
-     */
-    monitored_ip: string;
-    /**
-     * Target
-     */
-    target: string;
-    /**
-     * Target Key
-     */
-    target_key: string;
-    /**
-     * Discovered From
-     */
-    discovered_from: string;
-    /**
-     * Discovered At
-     */
-    discovered_at: string;
-    /**
-     * Existing Scan Found
-     */
-    existing_scan_found: boolean;
-    /**
-     * Urlscan Uuid
-     */
-    urlscan_uuid: string | null;
-    /**
-     * Urlscan Result Url
-     */
-    urlscan_result_url: string | null;
-    /**
-     * Urlscan Visibility
-     */
-    urlscan_visibility: string | null;
-    /**
-     * Checked At
-     */
-    checked_at: string;
-    /**
-     * Result Fetched At
-     */
-    result_fetched_at: string | null;
-};
-
-/**
  * FamilyDoc
  *
  * A family: what it measures, from which vantage, and the features it describes. `path` is the tree position (`sip/watched`).
@@ -551,7 +495,7 @@ export type FeatureDoc = {
  *
  * One row of verdict__findings: a fact a rule established about an IP
  * on a day, about a subject -- the URL a signature is about (`signature_*`
- * rules; the domain chain submits it to urlscan), the watched C2 a peer
+ * rules; the web-scan chain submits it to urlscan), the watched C2 a peer
  * beacons to (`beacon_*`, phase 2 step C). No effect on the rollups.
  */
 export type Finding = {
@@ -585,7 +529,7 @@ export type Finding = {
  * FingerprintChange
  *
  * Per IP and source over the window: how many distinct fingerprint
- * hashes the scans produced (1 means unchanged), and when the last scan
+ * hashes the port scans produced (1 means unchanged), and when the last port scan
  * was fetched.
  */
 export type FingerprintChange = {
@@ -749,7 +693,7 @@ export type HoneypotWatermark = {
 /**
  * HostName
  *
- * One name a source tied to an IP in one scan record. `kind` is the
+ * One name a source tied to an IP in one port scan. `kind` is the
  * kind of DNS evidence and is the thing to read before the name: a
  * `reverse_dns` row is a PTR record (the IP's own reverse lookup), a
  * `forward_dns` row is a name whose A/AAAA record points at the IP,
@@ -809,7 +753,7 @@ export type HostName = {
 /**
  * HostNameSummary
  *
- * Per (IP, name, kind, source) over the window: how many scans carried
+ * Per (IP, name, kind, source) over the window: how many port scans carried
  * it and when it was first and last fetched. The Entity detail page's
  * names list.
  */
@@ -855,7 +799,7 @@ export type HostNameSummary = {
 /**
  * HostScan
  *
- * One passive scan record. `raw_response` is the source's full record
+ * One port scan: a Shodan or Censys host record. `raw_response` is the source's full record
  * and is served only when asked for with `?raw=true`.
  */
 export type HostScan = {
@@ -1288,24 +1232,6 @@ export type PageDomainPivot = {
 };
 
 /**
- * Page[DomainScan]
- */
-export type PageDomainScan = {
-    /**
-     * Rows
-     */
-    rows: Array<DomainScan>;
-    /**
-     * Count
-     */
-    count: number;
-    /**
-     * Newest Day
-     */
-    newest_day?: string | null;
-};
-
-/**
  * Page[Finding]
  */
 export type PageFinding = {
@@ -1576,6 +1502,24 @@ export type PageWatchedIp = {
 };
 
 /**
+ * Page[WebScan]
+ */
+export type PageWebScan = {
+    /**
+     * Rows
+     */
+    rows: Array<WebScan>;
+    /**
+     * Count
+     */
+    count: number;
+    /**
+     * Newest Day
+     */
+    newest_day?: string | null;
+};
+
+/**
  * PairRef
  */
 export type PairRef = {
@@ -1593,7 +1537,7 @@ export type PairRef = {
  * PeerReviewDay
  *
  * One (day, role) of the regular-peers review's proposals: how many, how
- * many were made with a scan record in hand, and where they stand now. The
+ * many were made with a port scan in hand, and where they stand now. The
  * first-week measurement (docs/proposals/peer_recommendation_chain.md, step
  * 4): agreement is confirmed against rejected; a judgement of none writes
  * nothing, so it is not here -- the sweep's log carries that count.
@@ -1996,7 +1940,7 @@ export type ScanRequestResult = {
      * Outcome
      */
     outcome: string;
-    scan: DomainScan;
+    scan: WebScan;
 };
 
 /**
@@ -2358,6 +2302,98 @@ export type WatchedIp = {
      * Tags
      */
     tags: Array<string>;
+};
+
+/**
+ * WebScan
+ *
+ * One ask of urlscan about a target: a name from the sweep, a URL a finding named, or the analyst's request (`discovered_from`). `urlscan_result_url` is the link to show; `result_fetched_at` is set once the result is in Mongo.
+ */
+export type WebScan = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Monitored Ip
+     */
+    monitored_ip: string;
+    /**
+     * Target
+     */
+    target: string;
+    /**
+     * Target Key
+     */
+    target_key: string;
+    /**
+     * Discovered From
+     */
+    discovered_from: string;
+    /**
+     * Discovered At
+     */
+    discovered_at: string;
+    /**
+     * Existing Scan Found
+     */
+    existing_scan_found: boolean;
+    /**
+     * Urlscan Uuid
+     */
+    urlscan_uuid: string | null;
+    /**
+     * Urlscan Result Url
+     */
+    urlscan_result_url: string | null;
+    /**
+     * Urlscan Visibility
+     */
+    urlscan_visibility: string | null;
+    /**
+     * Checked At
+     */
+    checked_at: string;
+    /**
+     * Result Fetched At
+     */
+    result_fetched_at: string | null;
+};
+
+/**
+ * WebScanContent
+ *
+ * urlscan's result for one web scan, from the project's copy in Mongo:
+ * `raw` is the whole document as urlscan returned it, or `summary` (with
+ * `?summary=true`) the page as an analyst reads it -- title, final URL,
+ * verdicts, domains, IPs, servers, certificates, resource hashes, request
+ * count, and the screenshot, DOM and report links. One of the two is set.
+ */
+export type WebScanContent = {
+    /**
+     * Web Scan Id
+     */
+    web_scan_id: number;
+    /**
+     * Urlscan Uuid
+     */
+    urlscan_uuid: string;
+    /**
+     * Fetched At
+     */
+    fetched_at: string | null;
+    /**
+     * Summary
+     */
+    summary?: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Raw
+     */
+    raw?: {
+        [key: string]: unknown;
+    } | null;
 };
 
 export type ListIpsWatchIpsGetData = {
@@ -2776,7 +2812,7 @@ export type ListHostNamesLookupHostNamesGetResponses = {
 
 export type ListHostNamesLookupHostNamesGetResponse = ListHostNamesLookupHostNamesGetResponses[keyof ListHostNamesLookupHostNamesGetResponses];
 
-export type ListDomainScansLookupDomainScansGetData = {
+export type ListWebScansLookupWebScansGetData = {
     body?: never;
     path?: never;
     query?: {
@@ -2815,51 +2851,118 @@ export type ListDomainScansLookupDomainScansGetData = {
          */
         to?: string | null;
     };
-    url: '/lookup/domain-scans';
+    url: '/lookup/web-scans';
 };
 
-export type ListDomainScansLookupDomainScansGetErrors = {
+export type ListWebScansLookupWebScansGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ListDomainScansLookupDomainScansGetError = ListDomainScansLookupDomainScansGetErrors[keyof ListDomainScansLookupDomainScansGetErrors];
+export type ListWebScansLookupWebScansGetError = ListWebScansLookupWebScansGetErrors[keyof ListWebScansLookupWebScansGetErrors];
 
-export type ListDomainScansLookupDomainScansGetResponses = {
+export type ListWebScansLookupWebScansGetResponses = {
     /**
      * Successful Response
      */
-    200: PageDomainScan;
+    200: PageWebScan;
 };
 
-export type ListDomainScansLookupDomainScansGetResponse = ListDomainScansLookupDomainScansGetResponses[keyof ListDomainScansLookupDomainScansGetResponses];
+export type ListWebScansLookupWebScansGetResponse = ListWebScansLookupWebScansGetResponses[keyof ListWebScansLookupWebScansGetResponses];
 
-export type RequestDomainScanLookupDomainScansPostData = {
+export type RequestWebScanLookupWebScansPostData = {
     body: ScanRequest;
     path?: never;
     query?: never;
-    url: '/lookup/domain-scans';
+    url: '/lookup/web-scans';
 };
 
-export type RequestDomainScanLookupDomainScansPostErrors = {
+export type RequestWebScanLookupWebScansPostErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type RequestDomainScanLookupDomainScansPostError = RequestDomainScanLookupDomainScansPostErrors[keyof RequestDomainScanLookupDomainScansPostErrors];
+export type RequestWebScanLookupWebScansPostError = RequestWebScanLookupWebScansPostErrors[keyof RequestWebScanLookupWebScansPostErrors];
 
-export type RequestDomainScanLookupDomainScansPostResponses = {
+export type RequestWebScanLookupWebScansPostResponses = {
     /**
      * Successful Response
      */
     202: ScanRequestResult;
 };
 
-export type RequestDomainScanLookupDomainScansPostResponse = RequestDomainScanLookupDomainScansPostResponses[keyof RequestDomainScanLookupDomainScansPostResponses];
+export type RequestWebScanLookupWebScansPostResponse = RequestWebScanLookupWebScansPostResponses[keyof RequestWebScanLookupWebScansPostResponses];
+
+export type WebScanResultLookupWebScansWebScanIdResultGetData = {
+    body?: never;
+    path: {
+        /**
+         * Web Scan Id
+         */
+        web_scan_id: number;
+    };
+    query?: {
+        /**
+         * Summary
+         *
+         * true: the page as an analyst reads it; false: urlscan's full result document
+         */
+        summary?: boolean;
+    };
+    url: '/lookup/web-scans/{web_scan_id}/result';
+};
+
+export type WebScanResultLookupWebScansWebScanIdResultGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type WebScanResultLookupWebScansWebScanIdResultGetError = WebScanResultLookupWebScansWebScanIdResultGetErrors[keyof WebScanResultLookupWebScansWebScanIdResultGetErrors];
+
+export type WebScanResultLookupWebScansWebScanIdResultGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: WebScanContent;
+};
+
+export type WebScanResultLookupWebScansWebScanIdResultGetResponse = WebScanResultLookupWebScansWebScanIdResultGetResponses[keyof WebScanResultLookupWebScansWebScanIdResultGetResponses];
+
+export type WebScanDomLookupWebScansWebScanIdDomGetData = {
+    body?: never;
+    path: {
+        /**
+         * Web Scan Id
+         */
+        web_scan_id: number;
+    };
+    query?: never;
+    url: '/lookup/web-scans/{web_scan_id}/dom';
+};
+
+export type WebScanDomLookupWebScansWebScanIdDomGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type WebScanDomLookupWebScansWebScanIdDomGetError = WebScanDomLookupWebScansWebScanIdDomGetErrors[keyof WebScanDomLookupWebScansWebScanIdDomGetErrors];
+
+export type WebScanDomLookupWebScansWebScanIdDomGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: string;
+};
+
+export type WebScanDomLookupWebScansWebScanIdDomGetResponse = WebScanDomLookupWebScansWebScanIdDomGetResponses[keyof WebScanDomLookupWebScansWebScanIdDomGetResponses];
 
 export type ListScannersVerdictScannersGetData = {
     body?: never;

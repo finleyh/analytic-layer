@@ -12,8 +12,8 @@ import {
   portFamilyMixDailyRollupPortFamilyMixDailyGet,
   flowHourlyRollupFlowHourlyGet,
   listFindingsVerdictFindingsGet,
-  listDomainScansLookupDomainScansGet,
-  requestDomainScanLookupDomainScansPost,
+  listWebScansLookupWebScansGet,
+  requestWebScanLookupWebScansPost,
   listDomainPivotsVerdictDomainPivotsGet,
   type WatchedIp,
   type IpRole,
@@ -22,7 +22,7 @@ import {
   type FingerprintChange,
   type HostNameSummary,
   type Finding,
-  type DomainScan,
+  type WebScan,
   type DomainPivot,
 } from "../api/netflow-rollups-client";
 import { fetchMonitored } from "../api/spoilerAlert";
@@ -38,7 +38,7 @@ type EntityData = {
   changes: FingerprintChange[];
   hostNames: HostNameSummary[];
   findings: Finding[];
-  domainScans: DomainScan[];
+  webScans: WebScan[];
   domainPivots: DomainPivot[];
   bphBytes30d: number;
   bytes7d: number;
@@ -151,7 +151,7 @@ export function EntityDetail() {
           changes,
           hostNames,
           findings,
-          domainScans,
+          webScans,
           domainPivots,
           bphContact30d,
           portFamilyMix7d,
@@ -175,7 +175,7 @@ export function EntityDetail() {
             query: { ip: ip!, from: from30, to, limit: 200 },
             throwOnError: true,
           }),
-          listDomainScansLookupDomainScansGet({
+          listWebScansLookupWebScansGet({
             query: { monitored_ip: ip!, from: from30, to, limit: 200 },
             throwOnError: true,
           }),
@@ -207,7 +207,7 @@ export function EntityDetail() {
           changes: changes.data.rows,
           hostNames: hostNames.data.rows,
           findings: findings.data.rows,
-          domainScans: domainScans.data.rows,
+          webScans: webScans.data.rows,
           domainPivots: domainPivots.data.rows,
           bphBytes30d: bphContact30d.data.rows.reduce((s, r) => s + r.bytes_sum, 0),
           bytes7d,
@@ -250,13 +250,13 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
     changes,
     hostNames,
     findings,
-    domainScans,
+    webScans,
     domainPivots,
     bphBytes30d,
     bytes7d,
     rtpBytes7d,
   } = data;
-  const [scanRows, setScanRows] = useState<DomainScan[]>(domainScans);
+  const [scanRows, setScanRows] = useState<WebScan[]>(webScans);
   const [scanning, setScanning] = useState<Set<string>>(new Set());
   const [scanError, setScanError] = useState<string | null>(null);
 
@@ -266,7 +266,7 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
     setScanError(null);
     setScanning((prev) => new Set(prev).add(t));
     try {
-      const result = await requestDomainScanLookupDomainScansPost({
+      const result = await requestWebScanLookupWebScansPost({
         body: { target: t, monitored_ip: ip },
         throwOnError: true,
       });
@@ -399,7 +399,7 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
 
       <FindingsList findings={findings} onScan={requestScan} scanning={scanning} />
 
-      <DomainScansSection ip={ip} scans={scanRows} onScan={requestScan} scanning={scanning} error={scanError} />
+      <WebScansSection ip={ip} scans={scanRows} onScan={requestScan} scanning={scanning} error={scanError} />
 
       <SharesContentWith pivots={domainPivots} />
 
@@ -923,13 +923,14 @@ function FindingsList({
   );
 }
 
-// lookup__domain_scans — new 2026-10-20: every ask of urlscan tied to this
-// IP (an automatic sweep finding it via Censys/Shodan, a signature rule
-// flagging a URL, or an analyst's own request here), plus the one write
-// action on this page: POST /lookup/domain-scans always submits a fresh,
-// unlisted scan (never reuses an existing one — that's the point of asking
-// by hand), returning 202 with the scan row once urlscan has accepted it.
-function DomainScansSection({
+// lookup__web_scans — renamed from lookup__domain_scans 2026-10-23: every
+// ask of urlscan tied to this IP (an automatic sweep finding it via
+// Censys/Shodan, a signature rule flagging a URL, or an analyst's own
+// request here), plus the one write action on this page: POST
+// /lookup/web-scans always submits a fresh, unlisted scan (never reuses
+// an existing one — that's the point of asking by hand), returning 202
+// with the scan row once urlscan has accepted it.
+function WebScansSection({
   ip,
   scans,
   onScan,
@@ -937,7 +938,7 @@ function DomainScansSection({
   error,
 }: {
   ip: string;
-  scans: DomainScan[];
+  scans: WebScan[];
   onScan: (target: string) => void;
   scanning: Set<string>;
   error: string | null;
@@ -966,8 +967,8 @@ function DomainScansSection({
           flexWrap: "wrap",
         }}
       >
-        <div style={{ fontSize: 13, fontWeight: 600 }}>Domain scans</div>
-        <span className="src">lookup__domain_scans</span>
+        <div style={{ fontSize: 13, fontWeight: 600 }}>Web scans</div>
+        <span className="src">lookup__web_scans</span>
       </div>
       <div style={{ fontSize: 11, color: "#6FA89E", marginBottom: 14, lineHeight: 1.5 }}>
         Every ask of urlscan tied to this IP — a sweep finding it automatically (Censys/Shodan), a

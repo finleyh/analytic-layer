@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { BphContactDailyRollupBphContactDailyGetData, BphContactDailyRollupBphContactDailyGetErrors, BphContactDailyRollupBphContactDailyGetResponses, ConfirmedContactsDailyRollupConfirmedContactsDailyGetData, ConfirmedContactsDailyRollupConfirmedContactsDailyGetErrors, ConfirmedContactsDailyRollupConfirmedContactsDailyGetResponses, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostData, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostErrors, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostResponses, DecideIpRoleReviewIpRolesIpRoleDecisionPostData, DecideIpRoleReviewIpRolesIpRoleDecisionPostErrors, DecideIpRoleReviewIpRolesIpRoleDecisionPostResponses, FlowDailyRollupFlowDailyGetData, FlowDailyRollupFlowDailyGetErrors, FlowDailyRollupFlowDailyGetResponses, FlowHourlyRollupFlowHourlyGetData, FlowHourlyRollupFlowHourlyGetErrors, FlowHourlyRollupFlowHourlyGetResponses, FreshnessOpsFreshnessGetData, FreshnessOpsFreshnessGetResponses, GetIpIdentityLookupIpIdentitiesIpGetData, GetIpIdentityLookupIpIdentitiesIpGetErrors, GetIpIdentityLookupIpIdentitiesIpGetResponses, GetIpRolesReviewIpRolesIpGetData, GetIpRolesReviewIpRolesIpGetErrors, GetIpRolesReviewIpRolesIpGetResponses, GetIpWatchIpsIpGetData, GetIpWatchIpsIpGetErrors, GetIpWatchIpsIpGetResponses, HealthHealthGetData, HealthHealthGetResponses, HostNameSummaryLookupHostNamesSummaryGetData, HostNameSummaryLookupHostNamesSummaryGetErrors, HostNameSummaryLookupHostNamesSummaryGetResponses, HostScanChangesLookupHostScansChangesGetData, HostScanChangesLookupHostScansChangesGetErrors, HostScanChangesLookupHostScansChangesGetResponses, ListAsnCandidatesReviewAsnCandidatesGetData, ListAsnCandidatesReviewAsnCandidatesGetErrors, ListAsnCandidatesReviewAsnCandidatesGetResponses, ListDomainPivotsVerdictDomainPivotsGetData, ListDomainPivotsVerdictDomainPivotsGetErrors, ListDomainPivotsVerdictDomainPivotsGetResponses, ListDomainScansLookupDomainScansGetData, ListDomainScansLookupDomainScansGetErrors, ListDomainScansLookupDomainScansGetResponses, ListFindingsVerdictFindingsGetData, ListFindingsVerdictFindingsGetErrors, ListFindingsVerdictFindingsGetResponses, ListHostNamesLookupHostNamesGetData, ListHostNamesLookupHostNamesGetErrors, ListHostNamesLookupHostNamesGetResponses, ListHostScansLookupHostScansGetData, ListHostScansLookupHostScansGetErrors, ListHostScansLookupHostScansGetResponses, ListIpRolesReviewIpRolesGetData, ListIpRolesReviewIpRolesGetErrors, ListIpRolesReviewIpRolesGetResponses, ListIpsWatchIpsGetData, ListIpsWatchIpsGetErrors, ListIpsWatchIpsGetResponses, ListProviderCategoriesRefProviderCategoriesGetData, ListProviderCategoriesRefProviderCategoriesGetResponses, ListProvidersRefProvidersGetData, ListProvidersRefProvidersGetErrors, ListProvidersRefProvidersGetResponses, ListScannersVerdictScannersGetData, ListScannersVerdictScannersGetErrors, ListScannersVerdictScannersGetResponses, ListSipPairsReviewSipPairsGetData, ListSipPairsReviewSipPairsGetErrors, ListSipPairsReviewSipPairsGetResponses, PeerReviewSummaryReviewIpRolesPeerReviewGetData, PeerReviewSummaryReviewIpRolesPeerReviewGetErrors, PeerReviewSummaryReviewIpRolesPeerReviewGetResponses, PortFamilyMixDailyRollupPortFamilyMixDailyGetData, PortFamilyMixDailyRollupPortFamilyMixDailyGetErrors, PortFamilyMixDailyRollupPortFamilyMixDailyGetResponses, ProviderMixDailyRollupProviderMixDailyGetData, ProviderMixDailyRollupProviderMixDailyGetErrors, ProviderMixDailyRollupProviderMixDailyGetResponses, QueueReviewQueueGetData, QueueReviewQueueGetResponses, RequestDomainScanLookupDomainScansPostData, RequestDomainScanLookupDomainScansPostErrors, RequestDomainScanLookupDomainScansPostResponses, TopAsnsRollupFlowDailyTopAsnsGetData, TopAsnsRollupFlowDailyTopAsnsGetErrors, TopAsnsRollupFlowDailyTopAsnsGetResponses, TopPeersRollupFlowDailyTopPeersGetData, TopPeersRollupFlowDailyTopPeersGetErrors, TopPeersRollupFlowDailyTopPeersGetResponses, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetData, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetErrors, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetResponses, VocabularyRulesVocabularyGetData, VocabularyRulesVocabularyGetResponses } from './types.gen';
+import type { BphContactDailyRollupBphContactDailyGetData, BphContactDailyRollupBphContactDailyGetErrors, BphContactDailyRollupBphContactDailyGetResponses, ConfirmedContactsDailyRollupConfirmedContactsDailyGetData, ConfirmedContactsDailyRollupConfirmedContactsDailyGetErrors, ConfirmedContactsDailyRollupConfirmedContactsDailyGetResponses, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostData, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostErrors, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostResponses, DecideIpRoleReviewIpRolesIpRoleDecisionPostData, DecideIpRoleReviewIpRolesIpRoleDecisionPostErrors, DecideIpRoleReviewIpRolesIpRoleDecisionPostResponses, FlowDailyRollupFlowDailyGetData, FlowDailyRollupFlowDailyGetErrors, FlowDailyRollupFlowDailyGetResponses, FlowHourlyRollupFlowHourlyGetData, FlowHourlyRollupFlowHourlyGetErrors, FlowHourlyRollupFlowHourlyGetResponses, FreshnessOpsFreshnessGetData, FreshnessOpsFreshnessGetResponses, GetIpIdentityLookupIpIdentitiesIpGetData, GetIpIdentityLookupIpIdentitiesIpGetErrors, GetIpIdentityLookupIpIdentitiesIpGetResponses, GetIpRolesReviewIpRolesIpGetData, GetIpRolesReviewIpRolesIpGetErrors, GetIpRolesReviewIpRolesIpGetResponses, GetIpWatchIpsIpGetData, GetIpWatchIpsIpGetErrors, GetIpWatchIpsIpGetResponses, HealthHealthGetData, HealthHealthGetResponses, HostNameSummaryLookupHostNamesSummaryGetData, HostNameSummaryLookupHostNamesSummaryGetErrors, HostNameSummaryLookupHostNamesSummaryGetResponses, HostScanChangesLookupHostScansChangesGetData, HostScanChangesLookupHostScansChangesGetErrors, HostScanChangesLookupHostScansChangesGetResponses, ListAsnCandidatesReviewAsnCandidatesGetData, ListAsnCandidatesReviewAsnCandidatesGetErrors, ListAsnCandidatesReviewAsnCandidatesGetResponses, ListDomainPivotsVerdictDomainPivotsGetData, ListDomainPivotsVerdictDomainPivotsGetErrors, ListDomainPivotsVerdictDomainPivotsGetResponses, ListFindingsVerdictFindingsGetData, ListFindingsVerdictFindingsGetErrors, ListFindingsVerdictFindingsGetResponses, ListHostNamesLookupHostNamesGetData, ListHostNamesLookupHostNamesGetErrors, ListHostNamesLookupHostNamesGetResponses, ListHostScansLookupHostScansGetData, ListHostScansLookupHostScansGetErrors, ListHostScansLookupHostScansGetResponses, ListIpRolesReviewIpRolesGetData, ListIpRolesReviewIpRolesGetErrors, ListIpRolesReviewIpRolesGetResponses, ListIpsWatchIpsGetData, ListIpsWatchIpsGetErrors, ListIpsWatchIpsGetResponses, ListProviderCategoriesRefProviderCategoriesGetData, ListProviderCategoriesRefProviderCategoriesGetResponses, ListProvidersRefProvidersGetData, ListProvidersRefProvidersGetErrors, ListProvidersRefProvidersGetResponses, ListScannersVerdictScannersGetData, ListScannersVerdictScannersGetErrors, ListScannersVerdictScannersGetResponses, ListSipPairsReviewSipPairsGetData, ListSipPairsReviewSipPairsGetErrors, ListSipPairsReviewSipPairsGetResponses, ListWebScansLookupWebScansGetData, ListWebScansLookupWebScansGetErrors, ListWebScansLookupWebScansGetResponses, PeerReviewSummaryReviewIpRolesPeerReviewGetData, PeerReviewSummaryReviewIpRolesPeerReviewGetErrors, PeerReviewSummaryReviewIpRolesPeerReviewGetResponses, PortFamilyMixDailyRollupPortFamilyMixDailyGetData, PortFamilyMixDailyRollupPortFamilyMixDailyGetErrors, PortFamilyMixDailyRollupPortFamilyMixDailyGetResponses, ProviderMixDailyRollupProviderMixDailyGetData, ProviderMixDailyRollupProviderMixDailyGetErrors, ProviderMixDailyRollupProviderMixDailyGetResponses, QueueReviewQueueGetData, QueueReviewQueueGetResponses, RequestWebScanLookupWebScansPostData, RequestWebScanLookupWebScansPostErrors, RequestWebScanLookupWebScansPostResponses, TopAsnsRollupFlowDailyTopAsnsGetData, TopAsnsRollupFlowDailyTopAsnsGetErrors, TopAsnsRollupFlowDailyTopAsnsGetResponses, TopPeersRollupFlowDailyTopPeersGetData, TopPeersRollupFlowDailyTopPeersGetErrors, TopPeersRollupFlowDailyTopPeersGetResponses, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetData, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetErrors, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetResponses, VocabularyRulesVocabularyGetData, VocabularyRulesVocabularyGetResponses, WebScanDomLookupWebScansWebScanIdDomGetData, WebScanDomLookupWebScansWebScanIdDomGetErrors, WebScanDomLookupWebScansWebScanIdDomGetResponses, WebScanResultLookupWebScansWebScanIdResultGetData, WebScanResultLookupWebScansWebScanIdResultGetErrors, WebScanResultLookupWebScansWebScanIdResultGetResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -65,7 +65,7 @@ export const listProviderCategoriesRefProviderCategoriesGet = <ThrowOnError exte
  * Host Scan Changes
  *
  * Fingerprint drift: per IP and source, how many distinct fingerprints
- * the scans fetched in the window produced. The window is on `fetched_at`,
+ * the port scans fetched in the window produced. The window is on `fetched_at`,
  * our sweep's clock, the same clock the freshness check reads.
  */
 export const hostScanChangesLookupHostScansChangesGet = <ThrowOnError extends boolean = false>(options?: Options<HostScanChangesLookupHostScansChangesGetData, ThrowOnError>): RequestResult<HostScanChangesLookupHostScansChangesGetResponses, HostScanChangesLookupHostScansChangesGetErrors, ThrowOnError> => (options?.client ?? client).get<HostScanChangesLookupHostScansChangesGetResponses, HostScanChangesLookupHostScansChangesGetErrors, ThrowOnError>({
@@ -89,7 +89,7 @@ export const getIpIdentityLookupIpIdentitiesIpGet = <ThrowOnError extends boolea
 /**
  * List Host Scans
  *
- * Scan records fetched in the window, newest first. The window is on
+ * Port scans (Shodan and Censys host records) fetched in the window, newest first. The window is on
  * `fetched_at`, like /host-scans/changes.
  */
 export const listHostScansLookupHostScansGet = <ThrowOnError extends boolean = false>(options?: Options<ListHostScansLookupHostScansGetData, ThrowOnError>): RequestResult<ListHostScansLookupHostScansGetResponses, ListHostScansLookupHostScansGetErrors, ThrowOnError> => (options?.client ?? client).get<ListHostScansLookupHostScansGetResponses, ListHostScansLookupHostScansGetErrors, ThrowOnError>({
@@ -102,7 +102,7 @@ export const listHostScansLookupHostScansGet = <ThrowOnError extends boolean = f
  * Host Name Summary
  *
  * The names seen for an IP in the window, one row per (IP, name, kind,
- * source), with how many scans carried each and when. `kind` tells a PTR
+ * source), with how many port scans carried each and when. `kind` tells a PTR
  * record from a forward record; read it before the name.
  */
 export const hostNameSummaryLookupHostNamesSummaryGet = <ThrowOnError extends boolean = false>(options?: Options<HostNameSummaryLookupHostNamesSummaryGetData, ThrowOnError>): RequestResult<HostNameSummaryLookupHostNamesSummaryGetResponses, HostNameSummaryLookupHostNamesSummaryGetErrors, ThrowOnError> => (options?.client ?? client).get<HostNameSummaryLookupHostNamesSummaryGetResponses, HostNameSummaryLookupHostNamesSummaryGetErrors, ThrowOnError>({
@@ -114,8 +114,8 @@ export const hostNameSummaryLookupHostNamesSummaryGet = <ThrowOnError extends bo
 /**
  * List Host Names
  *
- * Name rows as the scans recorded them, newest fetch first. The window
- * is on the scan's `fetched_at`, like /host-scans.
+ * Name rows as the port scans recorded them, newest fetch first. The window
+ * is on the port scan's `fetched_at`, like /host-scans.
  */
 export const listHostNamesLookupHostNamesGet = <ThrowOnError extends boolean = false>(options?: Options<ListHostNamesLookupHostNamesGetData, ThrowOnError>): RequestResult<ListHostNamesLookupHostNamesGetResponses, ListHostNamesLookupHostNamesGetErrors, ThrowOnError> => (options?.client ?? client).get<ListHostNamesLookupHostNamesGetResponses, ListHostNamesLookupHostNamesGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -124,19 +124,19 @@ export const listHostNamesLookupHostNamesGet = <ThrowOnError extends boolean = f
 });
 
 /**
- * List Domain Scans
+ * List Web Scans
  *
  * Every ask of urlscan in the window (on `checked_at`), newest first:
- * the Entity page's scan list with its result links.
+ * the Entity page's web scan list with its result links.
  */
-export const listDomainScansLookupDomainScansGet = <ThrowOnError extends boolean = false>(options?: Options<ListDomainScansLookupDomainScansGetData, ThrowOnError>): RequestResult<ListDomainScansLookupDomainScansGetResponses, ListDomainScansLookupDomainScansGetErrors, ThrowOnError> => (options?.client ?? client).get<ListDomainScansLookupDomainScansGetResponses, ListDomainScansLookupDomainScansGetErrors, ThrowOnError>({
+export const listWebScansLookupWebScansGet = <ThrowOnError extends boolean = false>(options?: Options<ListWebScansLookupWebScansGetData, ThrowOnError>): RequestResult<ListWebScansLookupWebScansGetResponses, ListWebScansLookupWebScansGetErrors, ThrowOnError> => (options?.client ?? client).get<ListWebScansLookupWebScansGetResponses, ListWebScansLookupWebScansGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/lookup/domain-scans',
+    url: '/lookup/web-scans',
     ...options
 });
 
 /**
- * Request Domain Scan
+ * Request Web Scan
  *
  * The analyst's re-scan: submits an unlisted urlscan scan of the target
  * now, through the same function the nightly flow uses, forced past the
@@ -145,14 +145,42 @@ export const listDomainScansLookupDomainScansGet = <ThrowOnError extends boolean
  * A submission already pending for the target is returned instead of a
  * second one.
  */
-export const requestDomainScanLookupDomainScansPost = <ThrowOnError extends boolean = false>(options: Options<RequestDomainScanLookupDomainScansPostData, ThrowOnError>): RequestResult<RequestDomainScanLookupDomainScansPostResponses, RequestDomainScanLookupDomainScansPostErrors, ThrowOnError> => (options.client ?? client).post<RequestDomainScanLookupDomainScansPostResponses, RequestDomainScanLookupDomainScansPostErrors, ThrowOnError>({
+export const requestWebScanLookupWebScansPost = <ThrowOnError extends boolean = false>(options: Options<RequestWebScanLookupWebScansPostData, ThrowOnError>): RequestResult<RequestWebScanLookupWebScansPostResponses, RequestWebScanLookupWebScansPostErrors, ThrowOnError> => (options.client ?? client).post<RequestWebScanLookupWebScansPostResponses, RequestWebScanLookupWebScansPostErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/lookup/domain-scans',
+    url: '/lookup/web-scans',
     ...options,
     headers: {
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * Web Scan Result
+ *
+ * urlscan's result for one web scan, from the project's own copy in Mongo
+ * (`urlscan_results`, kept a year): the whole document, or `?summary=true`
+ * for the page's title, verdicts, domains, IPs, certificates, hashes and the
+ * screenshot and DOM links. 404 while the result has not been fetched, or
+ * once Mongo's TTL has removed it.
+ */
+export const webScanResultLookupWebScansWebScanIdResultGet = <ThrowOnError extends boolean = false>(options: Options<WebScanResultLookupWebScansWebScanIdResultGetData, ThrowOnError>): RequestResult<WebScanResultLookupWebScansWebScanIdResultGetResponses, WebScanResultLookupWebScansWebScanIdResultGetErrors, ThrowOnError> => (options.client ?? client).get<WebScanResultLookupWebScansWebScanIdResultGetResponses, WebScanResultLookupWebScansWebScanIdResultGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/lookup/web-scans/{web_scan_id}/result',
+    ...options
+});
+
+/**
+ * Web Scan Dom
+ *
+ * The page's DOM as urlscan captured it, from the project's copy in Mongo
+ * (`urlscan_doms`, filled by lookup-web-dom-retrieval after the result; kept
+ * a year), served as text/html. 404 until it is fetched or once aged out.
+ */
+export const webScanDomLookupWebScansWebScanIdDomGet = <ThrowOnError extends boolean = false>(options: Options<WebScanDomLookupWebScansWebScanIdDomGetData, ThrowOnError>): RequestResult<WebScanDomLookupWebScansWebScanIdDomGetResponses, WebScanDomLookupWebScansWebScanIdDomGetErrors, ThrowOnError> => (options.client ?? client).get<WebScanDomLookupWebScansWebScanIdDomGetResponses, WebScanDomLookupWebScansWebScanIdDomGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/lookup/web-scans/{web_scan_id}/dom',
+    ...options
 });
 
 /**
@@ -209,7 +237,7 @@ export const listIpRolesReviewIpRolesGet = <ThrowOnError extends boolean = false
  * Peer Review Summary
  *
  * The regular-peers review's proposals by the day they were made and the
- * role proposed, with how many had a scan in hand and their status now.
+ * role proposed, with how many had a port scan in hand and their status now.
  */
 export const peerReviewSummaryReviewIpRolesPeerReviewGet = <ThrowOnError extends boolean = false>(options?: Options<PeerReviewSummaryReviewIpRolesPeerReviewGetData, ThrowOnError>): RequestResult<PeerReviewSummaryReviewIpRolesPeerReviewGetResponses, PeerReviewSummaryReviewIpRolesPeerReviewGetErrors, ThrowOnError> => (options?.client ?? client).get<PeerReviewSummaryReviewIpRolesPeerReviewGetResponses, PeerReviewSummaryReviewIpRolesPeerReviewGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
