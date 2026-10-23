@@ -15,6 +15,7 @@ import {
 import { formatBytes, isoDate, daysAgo } from "../lib/format";
 import { categoryColors } from "../lib/categories";
 import { ZoomableSvg } from "../components/ZoomableSvg";
+import { CopyButton } from "../components/CopyButton";
 
 type Tab = "graph" | "sankey";
 
@@ -37,6 +38,126 @@ function roleColor(role: string): { bg: string; border: string } {
 }
 function familyColor(family: string): string {
   return `hsl(${hueOf(`family:${family}`)}, 65%, 58%)`;
+}
+
+// Markers render in one fixed neutral color, never a hashed hue — the
+// point is that a marker always reads as "a marker", distinguishable at
+// a glance from the hash-colored ring arcs underneath it. c2_* gets the
+// warning triangle regardless of whether it's also icon-eligible below;
+// danger is a separate, narrower classification than "common enough to
+// deserve its own glyph" and is checked first.
+const MARKER_COLOR = "#F2C94C";
+const DANGER_ROLES = new Set(["c2_server", "c2_operator", "c2_victim"]);
+const ICON_ROLES = new Set([
+  "sip_client",
+  "sip_trunk",
+  "sip_server",
+  "web_server",
+  "dns_server",
+  "mail_server",
+  "vpn_server",
+  "c2_server",
+  "forward_proxy",
+]);
+function hasMarker(role: string): boolean {
+  return DANGER_ROLES.has(role) || ICON_ROLES.has(role);
+}
+
+// One glyph per role, centered on the origin — callers wrap this in a
+// <g transform="translate(x,y)">. Every role not listed here (and every
+// role that doesn't clear the "common enough" or "dangerous enough" bar)
+// falls back to the ring arc + text label alone, which is deliberate:
+// giving every role in the vocabulary its own hand-drawn icon would
+// reintroduce the hand-maintained-per-role mapping this whole system
+// was built to avoid.
+function RoleMarker({ role }: { role: string }) {
+  if (DANGER_ROLES.has(role)) {
+    return (
+      <>
+        <polygon points="0,-8 -7,7 7,7" fill={MARKER_COLOR} stroke="#2C2003" strokeWidth={1.1} />
+        <line x1={0} y1={-3} x2={0} y2={2} stroke="#2C2003" strokeWidth={1.4} />
+        <circle cx={0} cy={4.6} r={0.8} fill="#2C2003" />
+      </>
+    );
+  }
+  switch (role) {
+    case "sip_client":
+      return (
+        <>
+          <rect x={-3} y={-9} width={6} height={11} rx={3} fill="none" stroke={MARKER_COLOR} strokeWidth={1.5} />
+          <path d="M -6,-1 A 6,6 0 0 0 6,-1" fill="none" stroke={MARKER_COLOR} strokeWidth={1.3} />
+          <line x1={0} y1={5} x2={0} y2={8.5} stroke={MARKER_COLOR} strokeWidth={1.3} />
+          <line x1={-4} y1={8.5} x2={4} y2={8.5} stroke={MARKER_COLOR} strokeWidth={1.3} />
+        </>
+      );
+    case "sip_trunk":
+      return (
+        <>
+          <line x1={-6} y1={-9} x2={-2} y2={-1} stroke={MARKER_COLOR} strokeWidth={1.2} />
+          <line x1={0} y1={-9} x2={0} y2={-1} stroke={MARKER_COLOR} strokeWidth={1.2} />
+          <line x1={6} y1={-9} x2={2} y2={-1} stroke={MARKER_COLOR} strokeWidth={1.2} />
+          <rect x={-4} y={-1} width={8} height={10} rx={1.8} fill="none" stroke={MARKER_COLOR} strokeWidth={1.5} />
+          <line x1={-2} y1={2} x2={2} y2={2} stroke={MARKER_COLOR} strokeWidth={1} />
+          <circle cx={0} cy={6.3} r={0.8} fill={MARKER_COLOR} />
+        </>
+      );
+    case "sip_server":
+      return (
+        <>
+          <rect x={-5} y={-9} width={10} height={18} rx={2} fill="none" stroke={MARKER_COLOR} strokeWidth={1.6} />
+          <line x1={-2.5} y1={-6} x2={2.5} y2={-6} stroke={MARKER_COLOR} strokeWidth={1.2} />
+          <circle cx={0} cy={6.2} r={1} fill={MARKER_COLOR} />
+        </>
+      );
+    case "web_server":
+      return (
+        <>
+          <rect x={-9} y={-7} width={18} height={14} rx={1.5} fill="none" stroke={MARKER_COLOR} strokeWidth={1.5} />
+          <line x1={-9} y1={-3} x2={9} y2={-3} stroke={MARKER_COLOR} strokeWidth={1.2} />
+          <circle cx={-6.5} cy={-5} r={0.6} fill={MARKER_COLOR} />
+          <circle cx={-4.5} cy={-5} r={0.6} fill={MARKER_COLOR} />
+        </>
+      );
+    case "dns_server":
+      return (
+        <>
+          <circle cx={-1.5} cy={-1.5} r={6} fill="none" stroke={MARKER_COLOR} strokeWidth={1.5} />
+          <line x1={3} y1={3} x2={8.5} y2={8.5} stroke={MARKER_COLOR} strokeWidth={1.8} strokeLinecap="round" />
+        </>
+      );
+    case "mail_server":
+      return (
+        <>
+          <rect x={-9} y={-6} width={18} height={12} rx={1.5} fill="none" stroke={MARKER_COLOR} strokeWidth={1.5} />
+          <path d="M -9,-6 L 0,2 L 9,-6" fill="none" stroke={MARKER_COLOR} strokeWidth={1.3} />
+        </>
+      );
+    case "vpn_server":
+      return (
+        <>
+          <circle cx={0} cy={0} r={8} fill="none" stroke={MARKER_COLOR} strokeWidth={1.5} />
+          <ellipse cx={0} cy={0} rx={3.2} ry={8} fill="none" stroke={MARKER_COLOR} strokeWidth={1.2} />
+          <line x1={-8} y1={0} x2={8} y2={0} stroke={MARKER_COLOR} strokeWidth={1.2} />
+        </>
+      );
+    case "forward_proxy":
+      // A gate (checkpoint, not just a pass-through wire) with traffic
+      // passing straight through and continuing outward — a forward
+      // proxy relays a client's own traffic out to an arbitrary
+      // destination, unlike reverse_proxy's fan-out to a few fixed
+      // upstreams, so the arrow deliberately exits past the far post.
+      return (
+        <>
+          <line x1={-8} y1={-7} x2={8} y2={-7} stroke={MARKER_COLOR} strokeWidth={1.5} />
+          <line x1={-8} y1={-7} x2={-8} y2={7} stroke={MARKER_COLOR} strokeWidth={1.5} />
+          <line x1={8} y1={-7} x2={8} y2={7} stroke={MARKER_COLOR} strokeWidth={1.5} />
+          <line x1={-11} y1={0} x2={10} y2={0} stroke={MARKER_COLOR} strokeWidth={1.3} />
+          <polygon points="11,0 7,-2.3 7,2.3" fill={MARKER_COLOR} />
+        </>
+      );
+    default:
+      return null;
+  }
 }
 
 // Node positions (n.x/n.y) live in the SVG's own user space, inside
@@ -66,7 +187,8 @@ export function FlowGraph() {
           Edges from <span className="mono">rollup__confirmed_contacts_daily</span>, colored by
           dominant traffic type · peer color from <span className="mono">rollup__flow_daily</span>
           .peer_categories · monitored-node color from <span className="mono">review__ip_roles</span>
-          — solid = confirmed, dashed = suggested, satellite dots mark roles beyond the primary one
+          — each role is a ring arc, solid = confirmed, faint = suggested; common roles and c2_* get an
+          icon marker
         </div>
       </div>
 
@@ -120,6 +242,7 @@ type GNode = {
   asn?: number | null;
   country?: string | null;
   clusterCount?: number;
+  memberIps?: string[];
   tags?: string[];
   x: number;
   y: number;
@@ -241,9 +364,16 @@ function buildGraph(
     if (cid) {
       const existing = nodes.get(cid);
       if (existing) {
-        existing.bytes += peerBytes.get(ip) ?? 0;
-        existing.clusterCount = (existing.clusterCount ?? 0) + 1;
-        existing.r = Math.max(10, nodeRadius(existing.bytes));
+        // A peer that talks to more than one selected monitored IP calls
+        // this twice for the same peer (once per edge) — guard on
+        // membership rather than blindly incrementing, or it double-counts
+        // that one peer as two.
+        if (!existing.memberIps!.includes(ip)) {
+          existing.bytes += peerBytes.get(ip) ?? 0;
+          existing.memberIps!.push(ip);
+          existing.clusterCount = existing.memberIps!.length;
+          existing.r = Math.max(10, nodeRadius(existing.bytes));
+        }
         return existing;
       }
       const asn = asnByPeer.get(ip);
@@ -256,6 +386,7 @@ function buildGraph(
         asn,
         country: countryByPeer.get(ip) ?? null,
         clusterCount: 1,
+        memberIps: [ip],
         x: 0,
         y: 0,
         r: 10,
@@ -297,6 +428,10 @@ function NodeGraph() {
   const [roleMeaning, setRoleMeaning] = useState<Map<string, string>>(new Map());
   const [selectedIps, setSelectedIps] = useState<Set<string>>(new Set());
   const [data, setData] = useState<{ nodes: GNode[]; links: GLink[] } | null>(null);
+  // peer-vantage review__ip_roles, keyed by IP — only used by the ASN
+  // cluster sidebar list, so it's kept separate from GNode/buildGraph
+  // rather than threaded through the graph structure itself.
+  const [peerRoles, setPeerRoles] = useState<Map<string, IpRole[]>>(new Map());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<GNode | null>(null);
@@ -345,6 +480,7 @@ function NodeGraph() {
     if (selectedIps.size === 0) {
       setData(null);
       setSelected(null);
+      setPeerRoles(new Map());
       return;
     }
 
@@ -352,10 +488,16 @@ function NodeGraph() {
     setLoading(true);
     setError(null);
 
+    // Snapshot before the fetch, not inside load() after it — this is the
+    // layout as the user left it (including any manual drags) the moment
+    // they changed the selection, not whatever setData calls happen to
+    // land while the fetch is in flight.
+    const prevPositions = new Map(data?.nodes.map((n) => [n.id, { x: n.x, y: n.y }]) ?? []);
+
     async function load() {
       try {
         const ips = [...selectedIps];
-        const [confirmedPerIp, flowPerIp, rolesResult, watchResult] = await Promise.all([
+        const [confirmedPerIp, flowPerIp, rolesResult, peerRolesResult, watchResult] = await Promise.all([
           Promise.all(
             ips.map((ip) =>
               confirmedContactsDailyRollupConfirmedContactsDailyGet({
@@ -370,6 +512,11 @@ function NodeGraph() {
             ),
           ),
           listIpRolesReviewIpRolesGet({ query: { vantage: "watched", limit: 1000 }, throwOnError: true }),
+          // Only used by the ASN-cluster sidebar list ("which of these
+          // bucketed peers already have a role?") — fetched unconditionally
+          // alongside everything else rather than lazily on cluster click,
+          // since it's one cheap call and keeps the sidebar instant.
+          listIpRolesReviewIpRolesGet({ query: { vantage: "peer", limit: 1000 }, throwOnError: true }),
           listIpsWatchIpsGet({ throwOnError: true }),
         ]);
         if (cancelled) return;
@@ -383,18 +530,32 @@ function NodeGraph() {
           list.push(r);
           roles.set(r.ip, list);
         }
+        const peerRoleMap = new Map<string, IpRole[]>();
+        for (const r of peerRolesResult.data.rows) {
+          const list = peerRoleMap.get(r.ip) ?? [];
+          list.push(r);
+          peerRoleMap.set(r.ip, list);
+        }
         const watched = new Map(watchResult.data.rows.map((w) => [w.ip, w]));
         const graph = buildGraph(confirmed, flow, roles, watched);
 
-        // d3-force layout, run synchronously then freeze.
-        // Every node starts at (0,0) from buildGraph — give d3-force a
-        // spread-out starting point, since coincident nodes make charge
+        // d3-force layout, run synchronously then freeze. A node that was
+        // already on screen (same id — an IP, or cluster:<asn>) keeps its
+        // prior position and is pinned (fx/fy) for this pass, so adding
+        // one more monitored IP doesn't reshuffle everything that was
+        // already there, including anything the analyst dragged by hand.
+        // Only genuinely new nodes get a fresh, spread-out starting point
+        // — every node starting at (0,0) from buildGraph would make charge
         // repulsion (division by zero distance) blow up the layout.
-        const simNodes = graph.nodes.map((n) => ({
-          ...n,
-          x: W / 2 + (Math.random() - 0.5) * W * 0.8,
-          y: H / 2 + (Math.random() - 0.5) * H * 0.8,
-        }));
+        const simNodes: (GNode & { fx?: number; fy?: number })[] = graph.nodes.map((n) => {
+          const prev = prevPositions.get(n.id);
+          if (prev) return { ...n, x: prev.x, y: prev.y, fx: prev.x, fy: prev.y };
+          return {
+            ...n,
+            x: W / 2 + (Math.random() - 0.5) * W * 0.8,
+            y: H / 2 + (Math.random() - 0.5) * H * 0.8,
+          };
+        });
         const simLinks = graph.links.map((l) => ({ ...l }));
         const simulation = d3
           .forceSimulation(simNodes as d3.SimulationNodeDatum[])
@@ -415,13 +576,32 @@ function NodeGraph() {
           .force("y", d3.forceY(H / 2).strength(0.03))
           .force(
             "collide",
-            d3.forceCollide((d) => (d as GNode).r + 6),
+            // A monitored node's visual footprint reaches well past its
+            // own r now — role labels sit at r+14, marker icons at r+28
+            // plus their own ~10px half-size — so its exclusion radius has
+            // to clear that, not just the glyph itself, or two nearby
+            // monitored nodes' labels/markers overlap even though the
+            // simulation considers them already resolved. Peers/clusters
+            // are still plain circles, so they keep the tight padding.
+            d3.forceCollide((d) => {
+              const gd = d as GNode;
+              return gd.kind === "monitored" ? gd.r + 46 : gd.r + 6;
+            }),
           )
           .stop();
-        for (let i = 0; i < 300; i++) simulation.tick();
+        for (let i = 0; i < 450; i++) simulation.tick();
+        // fx/fy only mattered for pinning during the tick loop above — the
+        // simulation never runs again after this (positions only change
+        // from here via a manual drag), so release them rather than leave
+        // stale pin coordinates sitting on the node.
+        for (const n of simNodes) {
+          delete n.fx;
+          delete n.fy;
+        }
 
         if (cancelled) return;
         setData({ nodes: simNodes as GNode[], links: graph.links });
+        setPeerRoles(peerRoleMap);
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : String(err));
       } finally {
@@ -587,20 +767,15 @@ function NodeGraph() {
           })}
           {data.nodes.map((n) => {
             const isMonitored = n.kind === "monitored";
-            // Confirmed roles first, so the primary (diamond) color always
-            // prefers something confirmed over merely suggested; anything
-            // past the first becomes a satellite dot rather than being
-            // silently dropped — six watched IPs right now carry more than
-            // one confirmed role at once.
+            // Confirmed roles first, purely for stable ordering (so a
+            // role's ring position doesn't jump between renders) — every
+            // role gets an equal arc now, there's no "primary" concept.
             const roleList = isMonitored
               ? [
                   ...(n.confirmedRoles ?? []).map((role) => ({ role, confirmed: true })),
                   ...(n.pendingRoles ?? []).map((role) => ({ role, confirmed: false })),
                 ]
               : [];
-            const primary = roleList[0];
-            const extraRoles = roleList.slice(1);
-            const primaryColor = primary ? roleColor(primary.role) : null;
             const [catBg, catFg] = !isMonitored ? categoryColors(n.category ?? "unclassified") : ["", ""];
             return (
               <g
@@ -653,34 +828,62 @@ function NodeGraph() {
               >
                 {isMonitored ? (
                   <>
-                    <rect
-                      x={n.x - n.r}
-                      y={n.y - n.r}
-                      width={n.r * 2}
-                      height={n.r * 2}
-                      transform={`rotate(45 ${n.x} ${n.y})`}
-                      fill={primary ? (primary.confirmed ? primaryColor!.bg : "transparent") : "#0F3133"}
-                      stroke={selected?.id === n.id ? "#E8FFF8" : primary ? primaryColor!.border : "#6FA89E"}
-                      strokeWidth={selected?.id === n.id ? 3 : 2}
-                      strokeDasharray={primary && !primary.confirmed ? "4 3" : undefined}
-                    />
-                    {extraRoles.map((r2, i) => {
-                      const c = roleColor(r2.role);
-                      const angle = (i / Math.max(extraRoles.length, 1)) * Math.PI * 2 - Math.PI / 2;
-                      const dx = n.x + (n.r + 7) * Math.cos(angle);
-                      const dy = n.y + (n.r + 7) * Math.sin(angle);
-                      return (
-                        <circle
-                          key={r2.role}
-                          cx={dx}
-                          cy={dy}
-                          r={3.5}
-                          fill={r2.confirmed ? c.border : "none"}
-                          stroke={c.border}
-                          strokeWidth={1.3}
-                        />
-                      );
-                    })}
+                    {selected?.id === n.id && (
+                      <circle cx={n.x} cy={n.y} r={n.r + 8} fill="none" stroke="#E8FFF8" strokeWidth={1.5} strokeDasharray="2 3" />
+                    )}
+                    {roleList.length === 0 ? (
+                      <circle cx={n.x} cy={n.y} r={n.r} fill="#0F3133" stroke="#6FA89E" strokeWidth={2} />
+                    ) : (
+                      roleList.map((r, i) => {
+                        const c = roleColor(r.role);
+                        const angle = (i / roleList.length) * Math.PI * 2 - Math.PI / 2;
+                        const circumference = 2 * Math.PI * n.r;
+                        const segLen = (circumference / roleList.length) * 0.78;
+                        const strokeW = (DANGER_ROLES.has(r.role) ? 2 : 1) * Math.max(2.5, Math.min(5, n.r * 0.18));
+                        const labelR = n.r + 14;
+                        const lx = n.x + labelR * Math.cos(angle);
+                        const ly = n.y + labelR * Math.sin(angle);
+                        return (
+                          <g key={r.role}>
+                            <circle
+                              cx={n.x}
+                              cy={n.y}
+                              r={n.r}
+                              fill="none"
+                              stroke={c.border}
+                              strokeWidth={strokeW}
+                              strokeOpacity={r.confirmed ? 1 : 0.55}
+                              strokeDasharray={`${segLen} ${circumference - segLen}`}
+                              transform={`rotate(${(angle * 180) / Math.PI} ${n.x} ${n.y})`}
+                            />
+                            <text x={lx} y={ly} textAnchor="middle" fontSize={8} fill={c.border}>
+                              {r.role}
+                            </text>
+                            {hasMarker(r.role) && (
+                              <g transform={`translate(${n.x + (n.r + 28) * Math.cos(angle)},${n.y + (n.r + 28) * Math.sin(angle)}) scale(0.85)`}>
+                                <RoleMarker role={r.role} />
+                              </g>
+                            )}
+                          </g>
+                        );
+                      })
+                    )}
+                    <g transform={`translate(${n.x},${n.y})`}>
+                      <rect
+                        x={-8}
+                        y={-10}
+                        width={16}
+                        height={20}
+                        rx={2}
+                        fill={selected?.id === n.id ? "#16403A" : "#0F3133"}
+                        stroke={selected?.id === n.id ? "#E8FFF8" : "#6FA89E"}
+                        strokeWidth={selected?.id === n.id ? 2.5 : 2}
+                      />
+                      <line x1={-5} y1={-5} x2={5} y2={-5} stroke="#6FA89E" strokeWidth={1} />
+                      <line x1={-5} y1={0} x2={5} y2={0} stroke="#6FA89E" strokeWidth={1} />
+                      <line x1={-5} y1={5} x2={5} y2={5} stroke="#6FA89E" strokeWidth={1} />
+                      <circle cx={4} cy={-7.5} r={1} fill="#3DD68C" />
+                    </g>
                   </>
                 ) : (
                   <circle
@@ -735,9 +938,9 @@ function NodeGraph() {
                                 style={{
                                   width: 11,
                                   height: 11,
+                                  borderRadius: "50%",
                                   background: c.bg,
                                   border: `2px solid ${c.border}`,
-                                  transform: "rotate(45deg)",
                                   display: "inline-block",
                                 }}
                               />
@@ -747,14 +950,19 @@ function NodeGraph() {
                                 style={{
                                   width: 11,
                                   height: 11,
+                                  borderRadius: "50%",
                                   background: "transparent",
                                   border: `2px dashed ${c.border}`,
-                                  transform: "rotate(45deg)",
                                   display: "inline-block",
                                 }}
                               />
                             )}
                           </span>
+                          {hasMarker(role) && (
+                            <svg width={14} height={14} viewBox="-12 -12 24 24" style={{ flexShrink: 0 }}>
+                              <RoleMarker role={role} />
+                            </svg>
+                          )}
                           <span className="mono">{role}</span>
                         </div>
                       );
@@ -876,6 +1084,69 @@ function NodeGraph() {
                 </div>
               )}
               <div style={{ fontSize: 12, color: "#6FA89E" }}>{formatBytes(selected.bytes)} confirmed, this window</div>
+              {selected.kind === "cluster" && selected.memberIps && selected.memberIps.length > 0 && (
+                <div style={{ marginTop: 12 }}>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                    <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase" }}>
+                      Bucketed peer IPs ({selected.memberIps.length})
+                    </div>
+                    <CopyButton text={selected.memberIps.join("\n")} label="Copy all IPs" />
+                  </div>
+                  <div
+                    className="mono"
+                    style={{
+                      maxHeight: 180,
+                      overflowY: "auto",
+                      fontSize: 11,
+                      color: "#A6D8CD",
+                      background: "#07181A",
+                      border: "1px solid #1E4D37",
+                      borderRadius: 6,
+                      padding: "6px 8px",
+                      lineHeight: 1.6,
+                    }}
+                  >
+                    {selected.memberIps.map((ip) => {
+                      const rows = peerRoles.get(ip) ?? [];
+                      const confirmedRoles = rows.filter((r) => r.status === "confirmed").map((r) => r.role);
+                      const pendingRoles = rows
+                        .filter((r) => r.status !== "confirmed" && r.status !== "rejected")
+                        .map((r) => r.role);
+                      const hasRole = confirmedRoles.length > 0 || pendingRoles.length > 0;
+                      return (
+                        <div key={ip} style={{ marginBottom: 3 }}>
+                          <div>{ip}</div>
+                          <div style={{ color: "#6FA89E", fontSize: 10, paddingLeft: 8 }}>
+                            {hasRole ? (
+                              <>
+                                {confirmedRoles.map((r) => (
+                                  <span key={r} style={{ marginRight: 6 }}>
+                                    {r}
+                                  </span>
+                                ))}
+                                {pendingRoles.map((r) => (
+                                  <span key={r} style={{ marginRight: 6, opacity: 0.65 }}>
+                                    {r} (suggested)
+                                  </span>
+                                ))}
+                              </>
+                            ) : (
+                              // Visible, not silent: this peer was checked
+                              // against review__ip_roles (peer vantage) and
+                              // genuinely has no row there — most of them
+                              // don't, since only 211 peer-vantage roles
+                              // exist at all. Saying so plainly instead of
+                              // rendering nothing is the only way to tell
+                              // "checked, none" apart from "broken".
+                              <span style={{ opacity: 0.5, fontStyle: "italic" }}>no role</span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
@@ -888,7 +1159,10 @@ function NodeGraph() {
             <div>③ ASN clustering: peers below 0.5% of total graph bytes sharing an ASN with 2+ others collapse into one node — this was blocked until <span className="mono">peer_asn</span> landed on the rollups.</div>
             <div>④ A peer that's itself on the watchlist is drawn as a monitored node, never a plain peer.</div>
             <div>⑤ Role and traffic-type colors are generated from the name, not a hand-picked palette — a new role or port family gets a stable color automatically, never falls back to looking like "no role yet."</div>
-            <div>⑥ A monitored node's diamond is colored by its first role (confirmed preferred over suggested); any further roles become small dots around it rather than being dropped.</div>
+            <div>⑥ A monitored node is drawn as a server glyph (fixed size, independent of byte volume) ringed by one arc per role, each with a text label so the ring never has to be read by color alone.</div>
+            <div>⑦ Markers (phone, envelope, warning triangle, …) render in one fixed color, never a hashed hue — only the roles with real confirmed volume (9 of them, as of forward_proxy's gate icon) plus c2_server/c2_operator/c2_victim get one; every other role is ring color + text only, deliberately, so adding icons per-role doesn't become hand-maintained mapping debt.</div>
+            <div>⑧ Click an ASN cluster node to see the individual peer IPs it bucketed, with a copy-all button.</div>
+            <div>⑨ The layout is stateful across selection changes: a node already on screen (including anything dragged by hand) keeps its position when you add or remove a monitored IP — only newly appearing nodes get freshly simulated into place.</div>
           </div>
         </div>
       </div>
