@@ -21,6 +21,17 @@ type Queue = "asn" | "peer" | "watched";
 
 type RoleSuggestion = { reasoning?: string; features?: Record<string, unknown>; first_day?: string; last_day?: string; alarm?: string | null };
 
+// review__ip_roles.evaluation (since netflow-rollups 0091): the
+// role_evaluation agent's own read of a rule's suggested role — null
+// until the agent has looked at the row at all, which is a distinct,
+// fourth bucket from an explicit "unsure" verdict, not the same thing.
+type VerdictBucket = "agree" | "disagree" | "unsure" | "unevaluated";
+
+function verdictBucket(row: IpRole): VerdictBucket {
+  const verdict = (row.evaluation as { verdict?: string } | null)?.verdict;
+  return verdict === "agree" || verdict === "disagree" || verdict === "unsure" ? verdict : "unevaluated";
+}
+
 // ---------- Feature glossary, from netflow-rollups' own rules registry ----------
 //
 // GET /rules/vocabulary — built 2026-10-20 at this project's own request
@@ -622,11 +633,20 @@ function IpRoleQueue({
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [ipFilter, setIpFilter] = useState<string>("");
+  const [verdictFilter, setVerdictFilter] = useState<VerdictBucket | "">("");
 
   const ipOptions = useMemo(() => [...new Set((rows ?? []).map((r) => r.ip))].sort(), [rows]);
+  const verdictCounts = useMemo(() => {
+    const counts: Record<VerdictBucket, number> = { agree: 0, disagree: 0, unsure: 0, unevaluated: 0 };
+    for (const r of rows ?? []) counts[verdictBucket(r)]++;
+    return counts;
+  }, [rows]);
   const visibleRows = useMemo(
-    () => (ipFilter ? (rows ?? []).filter((r) => r.ip === ipFilter) : (rows ?? [])),
-    [rows, ipFilter],
+    () =>
+      (rows ?? []).filter(
+        (r) => (!ipFilter || r.ip === ipFilter) && (!verdictFilter || verdictBucket(r) === verdictFilter),
+      ),
+    [rows, ipFilter, verdictFilter],
   );
 
   useEffect(() => {
@@ -634,6 +654,7 @@ function IpRoleQueue({
     setRows(null);
     setDecided(new Map());
     setIpFilter("");
+    setVerdictFilter("");
     listIpRolesReviewIpRolesGet({ query: { vantage, limit: 1000 }, throwOnError: true })
       .then((r) => {
         if (cancelled) return;
@@ -733,6 +754,37 @@ function IpRoleQueue({
               clear
             </button>
           )}
+
+          <label style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase", marginLeft: 8 }}>
+            Filter by verdict
+          </label>
+          <select
+            value={verdictFilter}
+            onChange={(e) => setVerdictFilter(e.target.value as VerdictBucket | "")}
+            className="mono"
+            style={{
+              background: "#0A2224",
+              color: "#E8FFF8",
+              border: "1px solid #2B7266",
+              borderRadius: 6,
+              padding: "6px 8px",
+              fontSize: 12,
+            }}
+          >
+            <option value="">all {rows.length}</option>
+            <option value="agree">agree ({verdictCounts.agree})</option>
+            <option value="disagree">disagree ({verdictCounts.disagree})</option>
+            <option value="unsure">unsure ({verdictCounts.unsure})</option>
+            <option value="unevaluated">not yet evaluated ({verdictCounts.unevaluated})</option>
+          </select>
+          {verdictFilter && (
+            <button
+              onClick={() => setVerdictFilter("")}
+              style={{ all: "unset", cursor: "pointer", fontSize: 11, color: "#7FEFD6" }}
+            >
+              clear
+            </button>
+          )}
         </div>
       )}
 
@@ -754,7 +806,8 @@ function IpRoleQueue({
         )}
         {rows && rows.length > 0 && visibleRows.length === 0 && (
           <div className="card" style={{ padding: 20, color: "#6FA89E" }}>
-            No {vantage} roles awaiting review for {ipFilter}.
+            No {vantage} roles match{ipFilter && <> {ipFilter}</>}
+            {verdictFilter && <> · verdict: {verdictFilter}</>}.
           </div>
         )}
       </div>
