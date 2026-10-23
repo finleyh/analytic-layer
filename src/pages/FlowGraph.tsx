@@ -39,6 +39,22 @@ function familyColor(family: string): string {
   return `hsl(${hueOf(`family:${family}`)}, 65%, 58%)`;
 }
 
+// Node positions (n.x/n.y) live in the SVG's own user space, inside
+// ZoomableSvg's zoomed/panned <g> — converting a pointer event's screen
+// coordinates into that same space means inverting the element's full
+// screen CTM (viewBox scaling and the current zoom/pan transform both
+// folded in), not just subtracting the SVG's bounding-box offset.
+function toSvgPoint(el: SVGGraphicsElement, clientX: number, clientY: number): { x: number; y: number } {
+  const svg = el.ownerSVGElement;
+  const ctm = el.getScreenCTM();
+  if (!svg || !ctm) return { x: clientX, y: clientY };
+  const pt = svg.createSVGPoint();
+  pt.x = clientX;
+  pt.y = clientY;
+  const p = pt.matrixTransform(ctm.inverse());
+  return { x: p.x, y: p.y };
+}
+
 export function FlowGraph() {
   const [tab, setTab] = useState<Tab>("graph");
 
@@ -284,6 +300,8 @@ function NodeGraph() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selected, setSelected] = useState<GNode | null>(null);
+  const dragRef = useRef<{ id: string; offsetX: number; offsetY: number; moved: boolean } | null>(null);
+  const [draggingId, setDraggingId] = useState<string | null>(null);
   const W = 800;
   const H = 620;
 
@@ -585,7 +603,54 @@ function NodeGraph() {
             const primaryColor = primary ? roleColor(primary.role) : null;
             const [catBg, catFg] = !isMonitored ? categoryColors(n.category ?? "unclassified") : ["", ""];
             return (
-              <g key={n.id} onClick={() => setSelected(n)} style={{ cursor: "pointer" }}>
+              <g
+                key={n.id}
+                data-no-pan
+                onClick={() => {
+                  if (dragRef.current?.moved) return;
+                  setSelected(n);
+                }}
+                onMouseDown={(e) => {
+                  // data-no-pan (ZoomableSvg.tsx) is what keeps this from
+                  // also panning the canvas — d3.zoom's own filter() skips
+                  // starting a pan gesture for any event on a data-no-pan
+                  // descendant. stopPropagation here is unrelated, just
+                  // defense in depth against other ancestor handlers.
+                  e.stopPropagation();
+                  const gEl = e.currentTarget;
+                  const start = toSvgPoint(gEl, e.clientX, e.clientY);
+                  dragRef.current = { id: n.id, offsetX: start.x - n.x, offsetY: start.y - n.y, moved: false };
+                  setDraggingId(n.id);
+
+                  function onMove(ev: MouseEvent) {
+                    const d = dragRef.current;
+                    if (!d || d.id !== n.id) return;
+                    const p = toSvgPoint(gEl, ev.clientX, ev.clientY);
+                    const nx = p.x - d.offsetX;
+                    const ny = p.y - d.offsetY;
+                    if (Math.abs(nx - n.x) > 1 || Math.abs(ny - n.y) > 1) d.moved = true;
+                    setData((prev) =>
+                      prev
+                        ? { ...prev, nodes: prev.nodes.map((node) => (node.id === n.id ? { ...node, x: nx, y: ny } : node)) }
+                        : prev,
+                    );
+                  }
+                  function onUp() {
+                    window.removeEventListener("mousemove", onMove);
+                    window.removeEventListener("mouseup", onUp);
+                    setDraggingId(null);
+                    // Deferred so onClick (fires right after mouseup, same
+                    // task) can still read dragRef.current.moved before it's
+                    // cleared.
+                    setTimeout(() => {
+                      dragRef.current = null;
+                    }, 0);
+                  }
+                  window.addEventListener("mousemove", onMove);
+                  window.addEventListener("mouseup", onUp);
+                }}
+                style={{ cursor: draggingId === n.id ? "grabbing" : "grab" }}
+              >
                 {isMonitored ? (
                   <>
                     <rect
@@ -640,7 +705,7 @@ function NodeGraph() {
           })}
         </ZoomableSvg>
         <div style={{ position: "absolute", bottom: 10, right: 10, fontSize: 10, color: "#6FA89E", pointerEvents: "none" }}>
-          scroll to zoom · drag to pan
+          scroll to zoom · drag empty space to pan · drag a node to move it
         </div>
       </div>
 
