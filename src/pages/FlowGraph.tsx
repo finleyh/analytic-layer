@@ -6,6 +6,7 @@ import {
   flowDailyRollupFlowDailyGet,
   listIpRolesReviewIpRolesGet,
   listIpsWatchIpsGet,
+  vocabularyRulesVocabularyGet,
   type DailyConfirmedContact,
   type DailyFlow,
   type IpRole,
@@ -17,12 +18,26 @@ import { ZoomableSvg } from "../components/ZoomableSvg";
 
 type Tab = "graph" | "sankey";
 
-const ROLE_COLORS: Record<string, { bg: string; border: string }> = {
-  sip_trunk: { bg: "#2A2013", border: "#F5A623" },
-  sip_server: { bg: "#2A1216", border: "#E5484D" },
-  sip_client: { bg: "#0F2A27", border: "#2DD4BF" },
-};
-const PENDING_ROLE = { bg: "#0F3133", border: "#A6D8CD" };
+// Deterministic, not a hand-picked palette: confirmed roles alone span 8
+// values today across ~20 possible ones, and traffic types span 20 distinct
+// port_family values on confirmed-contacts edges — too many to maintain by
+// hand, and a hardcoded map silently drops a new value into "unstyled"
+// forever (what happened here before: a 3-entry ROLE_COLORS map meant a
+// confirmed web_server or c2_server node looked identical to one with no
+// confirmed role at all). A hash of the string is cheap, stable across
+// reloads, and never missing an entry.
+function hueOf(key: string): number {
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  return hash % 360;
+}
+function roleColor(role: string): { bg: string; border: string } {
+  const hue = hueOf(`role:${role}`);
+  return { bg: `hsl(${hue}, 55%, 14%)`, border: `hsl(${hue}, 70%, 60%)` };
+}
+function familyColor(family: string): string {
+  return `hsl(${hueOf(`family:${family}`)}, 65%, 58%)`;
+}
 
 export function FlowGraph() {
   const [tab, setTab] = useState<Tab>("graph");
@@ -32,9 +47,10 @@ export function FlowGraph() {
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ margin: "0 0 4px 0", fontSize: 22, fontWeight: 600 }}>Flow graph</h1>
         <div style={{ fontSize: 13, color: "#6FA89E" }}>
-          Edges from <span className="mono">rollup__confirmed_contacts_daily</span> · peer color
-          from <span className="mono">rollup__flow_daily</span>.peer_categories · monitored-node
-          color from <span className="mono">review__ip_roles</span>'s confirmed role(s)
+          Edges from <span className="mono">rollup__confirmed_contacts_daily</span>, colored by
+          dominant traffic type · peer color from <span className="mono">rollup__flow_daily</span>
+          .peer_categories · monitored-node color from <span className="mono">review__ip_roles</span>
+          — solid = confirmed, dashed = suggested, satellite dots mark roles beyond the primary one
         </div>
       </div>
 
@@ -93,7 +109,7 @@ type GNode = {
   y: number;
   r: number;
 };
-type GLink = { source: string; target: string; bytes: number; kind: "mm" | "mp" };
+type GLink = { source: string; target: string; bytes: number; kind: "mm" | "mp"; dominantFamily: string };
 
 function buildGraph(
   confirmed: DailyConfirmedContact[],
@@ -106,6 +122,13 @@ function buildGraph(
   // Dedup monitored<->monitored edges (stored once per side's pull); keep
   // the larger measured side rather than summing both.
   const edgeBytes = new Map<string, { bytes: number; a: string; b: string; kind: "mm" | "mp" }>();
+  // Bytes per port_family, per edge — picks which traffic type colors the
+  // edge. For an mm edge this sums both sides' breakdowns rather than
+  // picking the larger side's alone (edgeBytes does that for the total);
+  // an approximation, same spirit as edgeBytes' own "keep the larger side"
+  // compromise — good enough to say which traffic type dominates, not
+  // meant to be a byte-exact total.
+  const edgeFamilyBytes = new Map<string, Map<string, number>>();
   for (const r of confirmed) {
     const bIsWatched = watchedIps.has(r.peer_ip);
     const kind: "mm" | "mp" = bIsWatched ? "mm" : "mp";
@@ -120,6 +143,14 @@ function buildGraph(
     } else {
       existing.bytes += r.bytes_sum;
     }
+    const fam = edgeFamilyBytes.get(key) ?? new Map<string, number>();
+    fam.set(r.port_family, (fam.get(r.port_family) ?? 0) + r.bytes_sum);
+    edgeFamilyBytes.set(key, fam);
+  }
+  function dominantFamily(key: string): string {
+    const fam = edgeFamilyBytes.get(key);
+    if (!fam || fam.size === 0) return "other";
+    return [...fam.entries()].sort((a, b) => b[1] - a[1])[0][0];
   }
 
   // peer_ip -> categories, from flow_daily (confirmed-contacts doesn't carry them)
@@ -235,10 +266,10 @@ function buildGraph(
   }
 
   const links: GLink[] = [];
-  for (const e of edgeBytes.values()) {
+  for (const [key, e] of edgeBytes) {
     const a = monitoredNode(e.a);
     const b = e.kind === "mm" ? monitoredNode(e.b) : peerNode(e.b);
-    links.push({ source: a.id, target: b.id, bytes: e.bytes, kind: e.kind });
+    links.push({ source: a.id, target: b.id, bytes: e.bytes, kind: e.kind, dominantFamily: dominantFamily(key) });
   }
 
   return { nodes: [...nodes.values()], links };
@@ -247,6 +278,7 @@ function buildGraph(
 function NodeGraph() {
   const [watchedIps, setWatchedIps] = useState<WatchedIp[] | null>(null);
   const [watchError, setWatchError] = useState<string | null>(null);
+  const [roleMeaning, setRoleMeaning] = useState<Map<string, string>>(new Map());
   const [selectedIps, setSelectedIps] = useState<Set<string>>(new Set());
   const [data, setData] = useState<{ nodes: GNode[]; links: GLink[] } | null>(null);
   const [loading, setLoading] = useState(false);
@@ -266,6 +298,23 @@ function NodeGraph() {
       })
       .catch((err) => {
         if (!cancelled) setWatchError(err instanceof Error ? err.message : String(err));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // Role meanings for the legend's tooltips — cheap, not gated behind IP
+  // selection; the legend itself still only lists roles actually present
+  // in the current graph, this just explains them once they are.
+  useEffect(() => {
+    let cancelled = false;
+    vocabularyRulesVocabularyGet({ throwOnError: true })
+      .then((r) => {
+        if (!cancelled) setRoleMeaning(new Map(r.data.roles.map((role) => [role.name, role.meaning])));
+      })
+      .catch(() => {
+        // Legend just shows role names with no tooltip if this fails.
       });
     return () => {
       cancelled = true;
@@ -473,6 +522,21 @@ function NodeGraph() {
 
   const nodeById = new Map(data.nodes.map((n) => [n.id, n]));
 
+  // Legend scoped to what's actually on screen, not a hardcoded list — a
+  // selection of two IPs with one role between them doesn't need to see
+  // the other twelve roles that exist in the vocabulary but aren't here.
+  const rolesPresent = new Map<string, { confirmed: boolean; pending: boolean }>();
+  for (const n of data.nodes) {
+    if (n.kind !== "monitored") continue;
+    for (const r of n.confirmedRoles ?? []) {
+      rolesPresent.set(r, { ...(rolesPresent.get(r) ?? { confirmed: false, pending: false }), confirmed: true });
+    }
+    for (const r of n.pendingRoles ?? []) {
+      rolesPresent.set(r, { ...(rolesPresent.get(r) ?? { confirmed: false, pending: false }), pending: true });
+    }
+  }
+  const familiesPresent = [...new Set(data.links.map((l) => l.dominantFamily))].sort();
+
   return (
     <>
       {picker}
@@ -484,6 +548,7 @@ function NodeGraph() {
             const b = nodeById.get(l.target as unknown as string) ?? nodeById.get((l.target as unknown as GNode).id);
             if (!a || !b) return null;
             const width = Math.max(1, Math.min(8, Math.sqrt(l.bytes) / 200));
+            const color = familyColor(l.dominantFamily);
             return (
               <line
                 key={i}
@@ -491,34 +556,67 @@ function NodeGraph() {
                 y1={a.y}
                 x2={b.x}
                 y2={b.y}
-                stroke={l.kind === "mm" ? "#F5A623" : "#4D8C80"}
+                stroke={color}
                 strokeWidth={l.kind === "mm" ? Math.max(2, width) : width}
                 strokeDasharray={l.kind === "mm" ? "3 7" : undefined}
                 strokeLinecap="round"
-              />
+              >
+                <title>
+                  {a.label} ↔ {b.label} · {l.dominantFamily} · {formatBytes(l.bytes)}
+                </title>
+              </line>
             );
           })}
           {data.nodes.map((n) => {
             const isMonitored = n.kind === "monitored";
-            const roleColors = isMonitored
-              ? n.confirmedRoles && n.confirmedRoles.length > 0
-                ? (ROLE_COLORS[n.confirmedRoles[0]] ?? PENDING_ROLE)
-                : PENDING_ROLE
-              : null;
+            // Confirmed roles first, so the primary (diamond) color always
+            // prefers something confirmed over merely suggested; anything
+            // past the first becomes a satellite dot rather than being
+            // silently dropped — six watched IPs right now carry more than
+            // one confirmed role at once.
+            const roleList = isMonitored
+              ? [
+                  ...(n.confirmedRoles ?? []).map((role) => ({ role, confirmed: true })),
+                  ...(n.pendingRoles ?? []).map((role) => ({ role, confirmed: false })),
+                ]
+              : [];
+            const primary = roleList[0];
+            const extraRoles = roleList.slice(1);
+            const primaryColor = primary ? roleColor(primary.role) : null;
             const [catBg, catFg] = !isMonitored ? categoryColors(n.category ?? "unclassified") : ["", ""];
             return (
               <g key={n.id} onClick={() => setSelected(n)} style={{ cursor: "pointer" }}>
                 {isMonitored ? (
-                  <rect
-                    x={n.x - n.r}
-                    y={n.y - n.r}
-                    width={n.r * 2}
-                    height={n.r * 2}
-                    transform={`rotate(45 ${n.x} ${n.y})`}
-                    fill={roleColors!.bg}
-                    stroke={selected?.id === n.id ? "#E8FFF8" : roleColors!.border}
-                    strokeWidth={selected?.id === n.id ? 3 : 2}
-                  />
+                  <>
+                    <rect
+                      x={n.x - n.r}
+                      y={n.y - n.r}
+                      width={n.r * 2}
+                      height={n.r * 2}
+                      transform={`rotate(45 ${n.x} ${n.y})`}
+                      fill={primary ? (primary.confirmed ? primaryColor!.bg : "transparent") : "#0F3133"}
+                      stroke={selected?.id === n.id ? "#E8FFF8" : primary ? primaryColor!.border : "#6FA89E"}
+                      strokeWidth={selected?.id === n.id ? 3 : 2}
+                      strokeDasharray={primary && !primary.confirmed ? "4 3" : undefined}
+                    />
+                    {extraRoles.map((r2, i) => {
+                      const c = roleColor(r2.role);
+                      const angle = (i / Math.max(extraRoles.length, 1)) * Math.PI * 2 - Math.PI / 2;
+                      const dx = n.x + (n.r + 7) * Math.cos(angle);
+                      const dy = n.y + (n.r + 7) * Math.sin(angle);
+                      return (
+                        <circle
+                          key={r2.role}
+                          cx={dx}
+                          cy={dy}
+                          r={3.5}
+                          fill={r2.confirmed ? c.border : "none"}
+                          stroke={c.border}
+                          strokeWidth={1.3}
+                        />
+                      );
+                    })}
+                  </>
                 ) : (
                   <circle
                     cx={n.x}
@@ -533,6 +631,9 @@ function NodeGraph() {
                 <title>
                   {n.label} · {formatBytes(n.bytes)}
                   {n.clusterCount ? ` · ${n.clusterCount} peers` : ""}
+                  {roleList.length > 0
+                    ? ` · ${roleList.map((r) => `${r.role}${r.confirmed ? "" : " (suggested)"}`).join(", ")}`
+                    : ""}
                 </title>
               </g>
             );
@@ -546,38 +647,130 @@ function NodeGraph() {
       <div style={{ width: 284, flexShrink: 0, display: "flex", flexDirection: "column", gap: 16 }}>
         <div className="card" style={{ padding: "16px 18px" }}>
           <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 10, color: "#A6D8CD" }}>Legend</div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 7, fontSize: 12 }}>
-            {Object.entries(ROLE_COLORS).map(([role, c]) => (
-              <div key={role} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                <span style={{ width: 12, height: 12, background: c.bg, border: `2px solid ${c.border}`, transform: "rotate(45deg)", display: "inline-block", flexShrink: 0 }} />
-                Monitored — reviewed <span className="mono">{role}</span>
-              </div>
-            ))}
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ width: 12, height: 12, background: PENDING_ROLE.bg, border: `2px solid ${PENDING_ROLE.border}`, transform: "rotate(45deg)", display: "inline-block", flexShrink: 0 }} />
-              Monitored — role pending review
-            </div>
-            {Object.keys(categoryColorsLegend).map((cat) => {
-              const [bg, fg] = categoryColors(cat);
-              return (
-                <div key={cat} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ width: 12, height: 12, borderRadius: "50%", background: bg, border: `2px solid ${fg}`, display: "inline-block", flexShrink: 0 }} />
-                  Peer — {cat.replace(/_/g, " ")}
+          <div style={{ display: "flex", flexDirection: "column", gap: 14, fontSize: 12 }}>
+            {rolesPresent.size > 0 && (
+              <div>
+                <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase", marginBottom: 6 }}>
+                  Monitored roles
                 </div>
-              );
-            })}
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ width: 12, height: 12, borderRadius: "50%", background: "#0F3133", border: "2px dashed #6FA89E", display: "inline-block", flexShrink: 0 }} />
-              Peer cluster — small peers sharing an ASN
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {[...rolesPresent.entries()]
+                    .sort(([a], [b]) => a.localeCompare(b))
+                    .map(([role, state]) => {
+                      const c = roleColor(role);
+                      return (
+                        <div
+                          key={role}
+                          style={{ display: "flex", alignItems: "center", gap: 8 }}
+                          title={roleMeaning.get(role)}
+                        >
+                          <span style={{ display: "flex", gap: 3, flexShrink: 0 }}>
+                            {state.confirmed && (
+                              <span
+                                style={{
+                                  width: 11,
+                                  height: 11,
+                                  background: c.bg,
+                                  border: `2px solid ${c.border}`,
+                                  transform: "rotate(45deg)",
+                                  display: "inline-block",
+                                }}
+                              />
+                            )}
+                            {state.pending && (
+                              <span
+                                style={{
+                                  width: 11,
+                                  height: 11,
+                                  background: "transparent",
+                                  border: `2px dashed ${c.border}`,
+                                  transform: "rotate(45deg)",
+                                  display: "inline-block",
+                                }}
+                              />
+                            )}
+                          </span>
+                          <span className="mono">{role}</span>
+                        </div>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase", marginBottom: 6 }}>
+                Peer categories
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                {Object.keys(categoryColorsLegend).map((cat) => {
+                  const [bg, fg] = categoryColors(cat);
+                  return (
+                    <div key={cat} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span
+                        style={{
+                          width: 12,
+                          height: 12,
+                          borderRadius: "50%",
+                          background: bg,
+                          border: `2px solid ${fg}`,
+                          display: "inline-block",
+                          flexShrink: 0,
+                        }}
+                      />
+                      {cat.replace(/_/g, " ")}
+                    </div>
+                  );
+                })}
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span
+                    style={{
+                      width: 12,
+                      height: 12,
+                      borderRadius: "50%",
+                      background: "#0F3133",
+                      border: "2px dashed #6FA89E",
+                      display: "inline-block",
+                      flexShrink: 0,
+                    }}
+                  />
+                  cluster — small peers sharing an ASN
+                </div>
+              </div>
             </div>
-            <div style={{ height: 1, background: "#2B7266", margin: "4px 0" }} />
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ width: 18, height: 2, background: "#F5A623", display: "inline-block", flexShrink: 0 }} />
-              Monitored ↔ monitored
-            </div>
-            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-              <span style={{ width: 18, height: 3, background: "#4D8C80", display: "inline-block", flexShrink: 0 }} />
-              Monitored ↔ peer (width ~ bytes)
+
+            {familiesPresent.length > 0 && (
+              <div>
+                <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase", marginBottom: 6 }}>
+                  Traffic type (edge color)
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                  {familiesPresent.map((fam) => (
+                    <div key={fam} style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                      <span
+                        style={{ width: 18, height: 3, background: familyColor(fam), display: "inline-block", flexShrink: 0 }}
+                      />
+                      <span className="mono">{fam}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div>
+              <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase", marginBottom: 6 }}>
+                Edge style
+              </div>
+              <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ width: 18, height: 0, borderTop: "2px dashed #A6D8CD", display: "inline-block", flexShrink: 0 }} />
+                  monitored ↔ monitored
+                </div>
+                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                  <span style={{ width: 18, height: 2, background: "#A6D8CD", display: "inline-block", flexShrink: 0 }} />
+                  monitored ↔ peer (width ~ bytes)
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -594,11 +787,16 @@ function NodeGraph() {
               </div>
               <div style={{ fontSize: 12, color: "#A6D8CD", marginBottom: 10 }}>
                 {selected.kind === "monitored"
-                  ? selected.confirmedRoles && selected.confirmedRoles.length > 0
-                    ? `reviewed role${selected.confirmedRoles.length > 1 ? "s" : ""}: ${selected.confirmedRoles.join(", ")}`
-                    : selected.pendingRoles && selected.pendingRoles.length > 0
-                      ? `pending — proposed ${selected.pendingRoles.join(", ")}`
-                      : "no role yet"
+                  ? [
+                      selected.confirmedRoles && selected.confirmedRoles.length > 0
+                        ? `confirmed: ${selected.confirmedRoles.join(", ")}`
+                        : null,
+                      selected.pendingRoles && selected.pendingRoles.length > 0
+                        ? `suggested: ${selected.pendingRoles.join(", ")}`
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(" · ") || "no role yet"
                   : selected.kind === "cluster"
                     ? `${selected.clusterCount} peers · AS${selected.asn} · ${selected.country ?? "—"}`
                     : `${selected.category} ${selected.asn ? `· AS${selected.asn}` : ""} ${selected.country ? `· ${selected.country}` : ""}`}
@@ -624,6 +822,8 @@ function NodeGraph() {
             <div>② The edge view carries roles, not categories — peer color is joined back from <span className="mono">rollup__flow_daily</span>.</div>
             <div>③ ASN clustering: peers below 0.5% of total graph bytes sharing an ASN with 2+ others collapse into one node — this was blocked until <span className="mono">peer_asn</span> landed on the rollups.</div>
             <div>④ A peer that's itself on the watchlist is drawn as a monitored node, never a plain peer.</div>
+            <div>⑤ Role and traffic-type colors are generated from the name, not a hand-picked palette — a new role or port family gets a stable color automatically, never falls back to looking like "no role yet."</div>
+            <div>⑥ A monitored node's diamond is colored by its first role (confirmed preferred over suggested); any further roles become small dots around it rather than being dropped.</div>
           </div>
         </div>
       </div>
