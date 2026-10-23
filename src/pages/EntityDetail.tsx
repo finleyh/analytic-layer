@@ -1,4 +1,5 @@
 import { Fragment, useEffect, useState, type FormEvent } from "react";
+import { createPortal } from "react-dom";
 import * as d3 from "d3";
 import { Link, useParams } from "react-router-dom";
 import {
@@ -14,6 +15,7 @@ import {
   listFindingsVerdictFindingsGet,
   listWebScansLookupWebScansGet,
   requestWebScanLookupWebScansPost,
+  webScanResultLookupWebScansWebScanIdResultGet,
   listDomainPivotsVerdictDomainPivotsGet,
   type WatchedIp,
   type IpRole,
@@ -908,7 +910,7 @@ function FindingsList({
                         flexShrink: 0,
                         whiteSpace: "nowrap",
                       }}
-                      title="Request a fresh urlscan of this URL — lookup__domain_scans"
+                      title="Request a fresh urlscan of this URL — lookup__web_scans"
                     >
                       {isScanning ? "scanning…" : "▸ scan this"}
                     </button>
@@ -1019,6 +1021,7 @@ function WebScansSection({
             <th>Checked</th>
             <th>Target</th>
             <th>Discovered from</th>
+            <th>Preview</th>
             <th>Result</th>
           </tr>
         </thead>
@@ -1041,6 +1044,9 @@ function WebScansSection({
                   </span>
                 )}
               </td>
+              <td>
+                <WebScanPreview scanId={s.id} resultFetched={Boolean(s.result_fetched_at)} />
+              </td>
               <td style={{ fontSize: 12 }}>
                 {s.urlscan_result_url ? (
                   <a href={s.urlscan_result_url} target="_blank" rel="noreferrer">
@@ -1056,14 +1062,179 @@ function WebScansSection({
           ))}
           {sorted.length === 0 && (
             <tr>
-              <td colSpan={4} style={{ color: "#6FA89E" }}>
-                No domain scans for this IP yet.
+              <td colSpan={5} style={{ color: "#6FA89E" }}>
+                No web scans for this IP yet.
               </td>
             </tr>
           )}
         </tbody>
       </table>
     </div>
+  );
+}
+
+// GET /lookup/web-scans/{id}/result?summary=true — new 2026-10-23, one
+// fetch per row rather than one bulk call (no bulk shape exists). Only
+// fires once the scan's result is actually in Mongo (result_fetched_at
+// set); a "private" visibility scan still returns a summary, but its
+// screenshot_url points at urlscan's own CDN, which 404s for anything
+// not public/unlisted — handled as a graceful "no preview", not an error.
+function WebScanPreview({ scanId, resultFetched }: { scanId: number; resultFetched: boolean }) {
+  const [summary, setSummary] = useState<Record<string, unknown> | "loading" | "error" | null>(
+    resultFetched ? "loading" : null,
+  );
+  const [imgFailed, setImgFailed] = useState(false);
+  const [lightbox, setLightbox] = useState<"screenshot" | "dom" | null>(null);
+
+  useEffect(() => {
+    if (!resultFetched) return;
+    let cancelled = false;
+    webScanResultLookupWebScansWebScanIdResultGet({
+      path: { web_scan_id: scanId },
+      query: { summary: true },
+    })
+      .then((res) => {
+        if (cancelled) return;
+        setSummary((res.data?.summary as Record<string, unknown> | undefined) ?? "error");
+      })
+      .catch(() => {
+        if (!cancelled) setSummary("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [scanId, resultFetched]);
+
+  if (!resultFetched) return <span style={{ color: "#6FA89E", fontSize: 11 }}>—</span>;
+  if (summary === "loading") return <span style={{ color: "#6FA89E", fontSize: 11 }}>…</span>;
+  if (summary === "error" || summary === null) return <span style={{ color: "#6FA89E", fontSize: 11 }}>no preview</span>;
+
+  const screenshotUrl = typeof summary.screenshot_url === "string" ? summary.screenshot_url : null;
+
+  return (
+    <>
+      <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+        {screenshotUrl && !imgFailed ? (
+          <img
+            src={screenshotUrl}
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            onError={() => setImgFailed(true)}
+            onClick={() => setLightbox("screenshot")}
+            alt="page screenshot thumbnail"
+            title="Click to enlarge"
+            style={{
+              width: 56,
+              height: 36,
+              objectFit: "cover",
+              borderRadius: 3,
+              border: "1px solid #1E4D37",
+              cursor: "pointer",
+              display: "block",
+            }}
+          />
+        ) : (
+          <span style={{ fontSize: 10, color: "#6FA89E" }} title="No screenshot — urlscan only serves this image for public/unlisted scans">
+            no preview
+          </span>
+        )}
+        <button
+          onClick={() => setLightbox("dom")}
+          style={{ all: "unset", cursor: "pointer", fontSize: 10, color: "#6FA89E", textDecoration: "underline" }}
+          title="View the page's captured DOM"
+        >
+          DOM
+        </button>
+      </div>
+      {lightbox && (
+        <WebScanLightbox scanId={scanId} kind={lightbox} screenshotUrl={screenshotUrl} onClose={() => setLightbox(null)} />
+      )}
+    </>
+  );
+}
+
+// Rendered through a portal straight to document.body: this page's
+// .card ancestor sets backdrop-filter, which (like transform/filter/
+// contain) creates a new containing block for position:fixed
+// descendants — without the portal the "fixed" overlay is scoped to
+// that card instead of the viewport.
+//
+// The DOM panel renders attacker-reachable content (this is a scan of
+// suspected CVS infrastructure) inside our own analyst app's origin, so
+// it's sandboxed with every permission withheld — no scripts, no
+// same-origin, no forms, no top navigation. Never relax this.
+function WebScanLightbox({
+  scanId,
+  kind,
+  screenshotUrl,
+  onClose,
+}: {
+  scanId: number;
+  kind: "screenshot" | "dom";
+  screenshotUrl: string | null;
+  onClose: () => void;
+}) {
+  return createPortal(
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed",
+        inset: 0,
+        background: "rgba(5, 15, 15, 0.85)",
+        zIndex: 1000,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: 24,
+      }}
+    >
+      <div
+        onClick={(e) => e.stopPropagation()}
+        style={{
+          background: "#0A2224",
+          border: "1px solid #2B7266",
+          borderRadius: 8,
+          width: "min(1000px, 100%)",
+          height: kind === "dom" ? "min(800px, 90vh)" : "auto",
+          maxHeight: "90vh",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
+        <div
+          style={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            padding: "10px 14px",
+            borderBottom: "1px solid #1E4D37",
+            flex: "0 0 auto",
+          }}
+        >
+          <span style={{ fontSize: 12, fontWeight: 600 }}>{kind === "screenshot" ? "Screenshot" : "Captured DOM"}</span>
+          <button onClick={onClose} style={{ all: "unset", cursor: "pointer", fontSize: 12, color: "#6FA89E" }}>
+            close ✕
+          </button>
+        </div>
+        {kind === "screenshot" ? (
+          screenshotUrl ? (
+            <img src={screenshotUrl} alt="page screenshot, full size" style={{ width: "100%", display: "block", overflow: "auto" }} />
+          ) : (
+            <div style={{ padding: 20, color: "#6FA89E", fontSize: 12 }}>No screenshot available.</div>
+          )
+        ) : (
+          <iframe
+            src={`/api/netflow-rollups/lookup/web-scans/${scanId}/dom`}
+            title="captured DOM"
+            sandbox=""
+            referrerPolicy="no-referrer"
+            style={{ flex: 1, border: "none", background: "#fff" }}
+          />
+        )}
+      </div>
+    </div>,
+    document.body,
   );
 }
 
