@@ -22,6 +22,16 @@ type Queue = "asn" | "peer" | "watched";
 
 type RoleSuggestion = { reasoning?: string; features?: Record<string, unknown>; first_day?: string; last_day?: string; alarm?: string | null };
 
+// netflow-rollups' own SIP_ROLES (review/ip_roles/writer.py) — the only
+// roles review__sip_pairs ever carries evidence for, and the only roles
+// confirm_role() accepts a `pairs` argument for at all (any other role
+// with a non-empty pairs list raises "not a SIP role; it has no pairs to
+// confirm" server-side). A peer confirmed operator, research, web_server,
+// etc. will never have a row here — that's not a gap in what's been
+// measured, it's a different kind of evidence entirely (ports/sessions in
+// the role's own suggestion, not a measured SIP pair).
+const SIP_ROLES = new Set(["sip_client", "sip_trunk", "sip_server"]);
+
 // review__ip_roles.evaluation (since netflow-rollups 0091): the
 // role_evaluation agent's own read of a rule's suggested role — null
 // until the agent has looked at the row at all, which is a distinct,
@@ -911,7 +921,7 @@ function IpRoleCard({
   async function toggleExpand() {
     const next = !expanded;
     setExpanded(next);
-    if (next && pairs === null) {
+    if (next && pairs === null && SIP_ROLES.has(row.role)) {
       try {
         const query = vantage === "peer" ? { peer_ip: row.ip } : { monitored_ip: row.ip };
         const result = await listSipPairsReviewSipPairsGet({
@@ -1140,10 +1150,20 @@ function IpRoleCard({
           display: "inline-block",
         }}
       >
-        {expanded ? "▾" : "▸"} Relationships{pairs ? ` (${pairs.length})` : ""}
+        {expanded ? "▾" : "▸"} Relationships
+        {SIP_ROLES.has(row.role) && pairs ? ` (${pairs.length})` : ""}
       </button>
 
-      {expanded && (
+      {expanded && !SIP_ROLES.has(row.role) && (
+        <div style={{ marginTop: 10, fontSize: 13, color: "#6FA89E", lineHeight: 1.5 }}>
+          Relationships only tracks measured SIP pairs (
+          <span className="mono">review__sip_pairs</span>) — sip_client, sip_trunk, and sip_server
+          evidence, confirmable pair-by-pair. <span className="mono">{row.role}</span> isn't a SIP
+          role, so it has none here and never will — that's not "nothing found," this table simply
+          doesn't model it. Its evidence is the context and feature grid above instead.
+        </div>
+      )}
+      {expanded && SIP_ROLES.has(row.role) && (
         <div style={{ marginTop: 10, overflowX: "auto" }}>
           {pairsError && (
             <div style={{ color: "#E5484D", fontSize: 13 }}>Failed to load relationships: {pairsError}</div>
