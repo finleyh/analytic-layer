@@ -896,6 +896,9 @@ function NodeGraph() {
   }
 
   const nodeById = new Map(data.nodes.map((n) => [n.id, n]));
+  // Aliased so nodeHighlightMatch (a named function, not a closure TS
+  // re-narrows `data` through) can read it without a redundant null check.
+  const links = data.links;
 
   // Legend scoped to what's actually on screen, not a hardcoded list — a
   // selection of two IPs with one role between them doesn't need to see
@@ -966,6 +969,44 @@ function NodeGraph() {
     return shared ?? [];
   }
 
+  // Shared by both the edge loop and the node loop, so a role/category
+  // Legend highlight dims a node and every edge touching it the same way
+  // — an edge only stays lit if BOTH ends match, which is what actually
+  // answers "which monitored IP does this highlighted peer talk to."
+  function nodeHighlightMatch(n: GNode): boolean {
+    if (!highlight) return true;
+    if (highlight.kind === "role") {
+      const rows =
+        n.kind === "monitored"
+          ? [...(n.confirmedRoles ?? []), ...(n.pendingRoles ?? [])]
+          : n.kind === "peer"
+            ? (peerRoles.get(n.id) ?? []).filter((r) => r.status !== "rejected").map((r) => r.role)
+            : []; // a cluster carries no role of its own
+      return rows.includes(highlight.value);
+    }
+    if (highlight.kind === "category") {
+      if (n.kind === "monitored") return true; // context, never the match target
+      // A cluster carries one stored category same as a peer does (its
+      // first member's) — treated the same way as any other peer node
+      // here, matching or dimming on it rather than being special-cased.
+      return (n.category ?? "unclassified") === highlight.value;
+    }
+    // family/edgeKind/confirmed describe edges, not nodes directly — but a
+    // node clicked through one of these Legend rows behaves the same as
+    // one clicked through role/category: a monitored IP stays as context,
+    // and anything else counts as a match if it has at least one edge of
+    // the highlighted kind touching it.
+    if (n.kind === "monitored") return true;
+    return links.some((l) => {
+      const a = nodeById.get(l.source as unknown as string) ?? nodeById.get((l.source as unknown as GNode).id);
+      const b = nodeById.get(l.target as unknown as string) ?? nodeById.get((l.target as unknown as GNode).id);
+      if (!a || !b || (a.id !== n.id && b.id !== n.id)) return false;
+      if (highlight.kind === "family") return l.dominantFamily === highlight.value;
+      if (highlight.kind === "edgeKind") return l.kind === highlight.value;
+      return l.confirmed === highlight.value;
+    });
+  }
+
   return (
     <>
       {picker}
@@ -1022,7 +1063,11 @@ function NodeGraph() {
                     ? l.kind !== highlight.value
                     : highlight.kind === "confirmed"
                       ? l.confirmed !== highlight.value
-                      : true // role/category describe nodes, not edges — every edge dims
+                      : // role/category: stay lit only between two nodes that
+                        // both match — that's what actually shows which
+                        // monitored IP a highlighted peer talks to, instead
+                        // of blanking every edge regardless of relevance.
+                        !(nodeHighlightMatch(a) && nodeHighlightMatch(b))
                 : false;
             // Confirmed is a third, independent edge channel alongside
             // color (traffic type) and dash pattern (mm/mp): a day of real
@@ -1090,18 +1135,7 @@ function NodeGraph() {
             const [catBg, catFg] = !isMonitored ? categoryColors(n.category ?? "unclassified") : ["", ""];
             const nodeDimmed = comparing
               ? !compareSet.has(n.id) && !sharedNeighborIds.has(n.id)
-              : (() => {
-                  if (!highlight) return false;
-                  if (highlight.kind === "role") {
-                    const allRoles = isMonitored ? roleList.map((r) => r.role) : peerRoleList.map((r) => r.role);
-                    return !allRoles.includes(highlight.value);
-                  }
-                  if (highlight.kind === "category") {
-                    return isMonitored || (n.category ?? "unclassified") !== highlight.value;
-                  }
-                  // family/edgeKind describe edges, not nodes — every node dims.
-                  return true;
-                })();
+              : !nodeHighlightMatch(n);
             return (
               <g
                 key={n.id}
