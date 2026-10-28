@@ -1256,7 +1256,19 @@ function IpRoleCard({
                 {pairs.length === 0 && (
                   <tr>
                     <td colSpan={16} style={{ color: "#6FA89E" }}>
-                      No measured pairs for this IP.
+                      {row.role === "sip_server"
+                        ? // Unlike sip_trunk/sip_client, which come from
+                          // sip_pairs.py's own pair-volume rule, sip_server is
+                          // usually suggested from an exposure heuristic
+                          // (serves-few-peers) or passive scan evidence
+                          // (an open SIP port, a PBX fingerprint) — neither
+                          // writes a review__sip_pairs row, so this table is
+                          // routinely empty for a real, well-evidenced
+                          // sip_server suggestion. Checked live across every
+                          // sip_server candidate in this dataset (2026-10-28):
+                          // all of them, zero exceptions.
+                          "No measured SIP pair for this IP — sip_server is usually suggested from an exposed SIP port or a serves-few-peers pattern, not a paired flow-volume rule, so it rarely has one of these. See the evidence above instead."
+                        : "No measured pairs for this IP."}
                     </td>
                   </tr>
                 )}
