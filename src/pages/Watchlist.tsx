@@ -342,7 +342,7 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
                           color: "#4C8DFF",
                           verticalAlign: "middle",
                         }}
-                        title={`Shares content with another domain on ${pivotCount} resource${pivotCount === 1 ? "" : "s"} — verdict__domain_pivots, see the Entity page`}
+                        title={`Shares content with another domain on ${pivotCount} resource${pivotCount === 1 ? "" : "s"} — verdict__web_scan_pivots, see the Entity page`}
                       >
                         <svg width="11" height="11" viewBox="0 0 14 14" fill="none">
                           <path

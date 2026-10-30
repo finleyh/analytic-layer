@@ -1242,7 +1242,7 @@ function urlscanResultLink(uuid: string | null): string | null {
   return uuid ? `https://urlscan.io/result/${uuid}/` : null;
 }
 
-// verdict__domain_pivots — new 2026-10-23: a resource on this IP's page
+// verdict__web_scan_pivots (verdict__domain_pivots until netflow-rollups step 22) — new 2026-10-23: a resource on this IP's page
 // (urlscan-fetched) shares a content hash with one served by another
 // domain, and only a small number of domains do (the rule's own filter —
 // a hash common to hundreds of sites, a shared CDN library, wouldn't
@@ -1284,7 +1284,7 @@ function SharesContentWith({ pivots }: { pivots: WebScanPivot[] }) {
         }}
       >
         <div style={{ fontSize: 13, fontWeight: 600 }}>Shares content with</div>
-        <span className="src">verdict__domain_pivots</span>
+        <span className="src">verdict__web_scan_pivots</span>
       </div>
       <div style={{ fontSize: 11, color: "#6FA89E", marginBottom: 14, lineHeight: 1.5 }}>
         A resource urlscan fetched from this IP's page has the same content hash as one served by
