@@ -16,7 +16,7 @@ import {
   listWebScansLookupWebScansGet,
   requestWebScanLookupWebScansPost,
   webScanResultLookupWebScansWebScanIdResultGet,
-  listDomainPivotsVerdictDomainPivotsGet,
+  listWebScanPivotsVerdictWebScanPivotsGet,
   type WatchedIp,
   type IpRole,
   type IpIdentity,
@@ -25,7 +25,7 @@ import {
   type HostNameSummary,
   type Finding,
   type WebScan,
-  type DomainPivot,
+  type WebScanPivot,
 } from "../api/netflow-rollups-client";
 import { fetchMonitored } from "../api/spoilerAlert";
 import { formatBytes, isoDate, daysAgo, darkToGreen } from "../lib/format";
@@ -41,7 +41,7 @@ type EntityData = {
   hostNames: HostNameSummary[];
   findings: Finding[];
   webScans: WebScan[];
-  domainPivots: DomainPivot[];
+  domainPivots: WebScanPivot[];
   bphBytes30d: number;
   bytes7d: number;
   rtpBytes7d: number;
@@ -178,19 +178,19 @@ export function EntityDetail() {
             throwOnError: true,
           }),
           listWebScansLookupWebScansGet({
-            query: { monitored_ip: ip!, from: from30, to, limit: 200 },
+            query: { watched_ip: ip!, from: from30, to, limit: 200 },
             throwOnError: true,
           }),
-          listDomainPivotsVerdictDomainPivotsGet({
-            query: { monitored_ip: ip!, from: from30, to, limit: 200 },
+          listWebScanPivotsVerdictWebScanPivotsGet({
+            query: { watched_ip: ip!, from: from30, to, limit: 200 },
             throwOnError: true,
           }),
           bphContactDailyRollupBphContactDailyGet({
-            query: { monitored_ip: ip!, from: from30, to },
+            query: { watched_ip: ip!, from: from30, to },
             throwOnError: true,
           }),
           portFamilyMixDailyRollupPortFamilyMixDailyGet({
-            query: { monitored_ip: ip! },
+            query: { watched_ip: ip! },
             throwOnError: true,
           }),
         ]);
@@ -269,7 +269,7 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
     setScanning((prev) => new Set(prev).add(t));
     try {
       const result = await requestWebScanLookupWebScansPost({
-        body: { target: t, monitored_ip: ip },
+        body: { target: t, watched_ip: ip },
         throwOnError: true,
       });
       setScanRows((prev) => [result.data.scan, ...prev.filter((s) => s.id !== result.data.scan.id)]);
@@ -1248,7 +1248,7 @@ function urlscanResultLink(uuid: string | null): string | null {
 // a hash common to hundreds of sites, a shared CDN library, wouldn't
 // qualify). Not proof of a relationship by itself, just a fingerprint
 // worth an analyst's eye — framed that way below rather than as a verdict.
-function SharesContentWith({ pivots }: { pivots: DomainPivot[] }) {
+function SharesContentWith({ pivots }: { pivots: WebScanPivot[] }) {
   const [trackedDomains, setTrackedDomains] = useState<Map<string, string>>(new Map());
 
   useEffect(() => {
@@ -1309,8 +1309,8 @@ function SharesContentWith({ pivots }: { pivots: DomainPivot[] }) {
         </thead>
         <tbody>
           {sorted.map((p) => {
-            const trackedId = trackedDomains.get(p.matched_domain);
-            const rare = p.distinct_domain_count_at_detection <= 2;
+            const trackedId = trackedDomains.get(p.matched_target);
+            const rare = p.distinct_target_count_at_detection <= 2;
             const sourceLink = urlscanResultLink(p.source_scan_uuid);
             const matchedLink = urlscanResultLink(p.matched_scan_uuid);
             return (
@@ -1336,15 +1336,15 @@ function SharesContentWith({ pivots }: { pivots: DomainPivot[] }) {
                   }}
                   title={rare ? "A tight match — few other domains serve this exact resource" : undefined}
                 >
-                  {p.distinct_domain_count_at_detection}
+                  {p.distinct_target_count_at_detection}
                 </td>
                 <td>
                   {trackedId ? (
                     <Link to={`/domains/${trackedId}`} className="mono row-link">
-                      {p.matched_domain}
+                      {p.matched_target}
                     </Link>
                   ) : (
-                    <span className="mono">{p.matched_domain}</span>
+                    <span className="mono">{p.matched_target}</span>
                   )}
                   {trackedId && (
                     <span className="chip" style={{ fontSize: 9, marginLeft: 6 }}>
@@ -1403,7 +1403,7 @@ function ActivityHeatmap({ ip }: { ip: string }) {
         const from = daysAgo(6);
         from.setUTCHours(0, 0, 0, 0);
         const result = await flowHourlyRollupFlowHourlyGet({
-          query: { monitored_ip: ip, from: from.toISOString(), to: to.toISOString(), limit: 20000 },
+          query: { watched_ip: ip, from: from.toISOString(), to: to.toISOString(), limit: 20000 },
           throwOnError: true,
         });
         if (cancelled) return;

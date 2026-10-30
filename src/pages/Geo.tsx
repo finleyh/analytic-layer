@@ -62,7 +62,7 @@ type Arc = {
 type GeoData = {
   rows: DailyFlow[];
   watched: WatchedIp[];
-  originByIp: Map<string, string | null>; // monitored_ip -> alpha2 country
+  originByIp: Map<string, string | null>; // watched_ip -> alpha2 country
 };
 
 export function Geo() {
@@ -114,13 +114,13 @@ export function Geo() {
 
   const arcs = useMemo(() => {
     if (!data) return [];
-    const filtered = monitoredFilter ? data.rows.filter((r) => r.monitored_ip === monitoredFilter) : data.rows;
+    const filtered = monitoredFilter ? data.rows.filter((r) => r.watched_ip === monitoredFilter) : data.rows;
     const byKey = new Map<string, Arc>();
     for (const r of filtered) {
       if (!r.peer_country) continue;
-      const key = `${r.monitored_ip}|${r.peer_country}`;
+      const key = `${r.watched_ip}|${r.peer_country}`;
       const a = byKey.get(key) ?? {
-        monitoredIp: r.monitored_ip,
+        monitoredIp: r.watched_ip,
         peerCountry: r.peer_country,
         bytes: 0,
         peers: new Set<string>(),

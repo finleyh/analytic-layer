@@ -54,9 +54,9 @@ function toRow(r: DailyFlow | HourlyFlow): Row {
 
 function dailyToRow(r: DailyFlow): Row {
   return {
-    key: `${r.day}|${r.monitored_ip}|${r.peer_ip}|${r.protocol}|${r.port_family}`,
+    key: `${r.day}|${r.watched_ip}|${r.peer_ip}|${r.protocol}|${r.port_family}`,
     when: r.day,
-    monitoredIp: r.monitored_ip,
+    monitoredIp: r.watched_ip,
     peerIp: r.peer_ip,
     peerAsn: r.peer_asn,
     peerCountry: r.peer_country,
@@ -72,9 +72,9 @@ function dailyToRow(r: DailyFlow): Row {
 
 function hourlyToRow(r: HourlyFlow): Row {
   return {
-    key: `${r.hour}|${r.monitored_ip}|${r.peer_ip}|${r.protocol}|${r.port_family}`,
+    key: `${r.hour}|${r.watched_ip}|${r.peer_ip}|${r.protocol}|${r.port_family}`,
     when: r.hour,
-    monitoredIp: r.monitored_ip,
+    monitoredIp: r.watched_ip,
     peerIp: r.peer_ip,
     peerAsn: r.peer_asn,
     peerCountry: r.peer_country,
@@ -186,7 +186,7 @@ export function Netflow() {
               query: {
                 from,
                 to,
-                monitored_ip: filters.monitoredIp || undefined,
+                watched_ip: filters.monitoredIp || undefined,
                 peer_ip: filters.peerIp.trim() || undefined,
                 port_family: filters.portFamily.trim() || undefined,
                 limit: LIMIT,
@@ -201,7 +201,7 @@ export function Netflow() {
               query: {
                 from: from.toISOString(),
                 to: to.toISOString(),
-                monitored_ip: filters.monitoredIp || undefined,
+                watched_ip: filters.monitoredIp || undefined,
                 peer_ip: filters.peerIp.trim() || undefined,
                 port_family: filters.portFamily.trim() || undefined,
                 limit: LIMIT,

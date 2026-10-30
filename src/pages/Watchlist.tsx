@@ -12,7 +12,7 @@ import {
   freshnessOpsFreshnessGet,
   getIpIdentityLookupIpIdentitiesIpGet,
   hostNameSummaryLookupHostNamesSummaryGet,
-  listDomainPivotsVerdictDomainPivotsGet,
+  listWebScanPivotsVerdictWebScanPivotsGet,
   type WatchedIp,
   type IpRole,
   type DailyPortFamilyMix,
@@ -23,7 +23,7 @@ import {
   type Freshness,
   type IpIdentity,
   type HostNameSummary,
-  type DomainPivot,
+  type WebScanPivot,
 } from "../api/netflow-rollups-client";
 import { formatBytes, formatShortDate, isoDate, daysAgo, blueToWhite } from "../lib/format";
 import { categoryColors } from "../lib/categories";
@@ -40,7 +40,7 @@ type WatchlistData = {
   freshness: Freshness;
   identityByIp: Map<string, IpIdentity>;
   hostNamesByIp: Map<string, HostNameSummary[]>;
-  domainPivots: DomainPivot[];
+  domainPivots: WebScanPivot[];
 };
 
 function groupSum<T>(rows: T[], keyFn: (r: T) => string, valFn: (r: T) => number): Map<string, number> {
@@ -92,7 +92,7 @@ export function Watchlist() {
           // Unfiltered, not per-IP — the volume (a couple hundred rows at
           // most) is cheap enough as one bulk call, same reasoning as the
           // host-names summary just below.
-          listDomainPivotsVerdictDomainPivotsGet({
+          listWebScanPivotsVerdictWebScanPivotsGet({
             query: { from: from30, to, limit: 1000 },
             throwOnError: true,
           }),
@@ -202,21 +202,21 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
 
   const pivotsByIp = new Map<string, number>();
   for (const p of domainPivots) {
-    pivotsByIp.set(p.monitored_ip, (pivotsByIp.get(p.monitored_ip) ?? 0) + 1);
+    pivotsByIp.set(p.watched_ip, (pivotsByIp.get(p.watched_ip) ?? 0) + 1);
   }
 
-  const bytesByIp = groupSum(portFamilyMix7d, (r) => r.monitored_ip, (r) => r.bytes_sum);
+  const bytesByIp = groupSum(portFamilyMix7d, (r) => r.watched_ip, (r) => r.bytes_sum);
   const rtpByIp = groupSum(
     portFamilyMix7d.filter((r) => r.port_family === "rtp_media"),
-    (r) => r.monitored_ip,
+    (r) => r.watched_ip,
     (r) => r.bytes_sum,
   );
 
   const categoryByIp = new Map<string, Map<string, number>>();
   for (const r of providerMix7d) {
-    const m = categoryByIp.get(r.monitored_ip) ?? new Map<string, number>();
+    const m = categoryByIp.get(r.watched_ip) ?? new Map<string, number>();
     m.set(r.provider_category, (m.get(r.provider_category) ?? 0) + r.bytes_sum);
-    categoryByIp.set(r.monitored_ip, m);
+    categoryByIp.set(r.watched_ip, m);
   }
   function dominantCategory(ip: string): string | null {
     const m = categoryByIp.get(ip);
@@ -233,13 +233,13 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
     return best;
   }
 
-  const bphByIp = groupSum(bphContact30d, (r) => r.monitored_ip, (r) => r.bytes_sum);
+  const bphByIp = groupSum(bphContact30d, (r) => r.watched_ip, (r) => r.bytes_sum);
 
   const unclPeersByIp = new Map<string, Set<string>>();
   for (const r of unclassified7d) {
-    const s = unclPeersByIp.get(r.monitored_ip) ?? new Set<string>();
+    const s = unclPeersByIp.get(r.watched_ip) ?? new Set<string>();
     s.add(r.peer_ip);
-    unclPeersByIp.set(r.monitored_ip, s);
+    unclPeersByIp.set(r.watched_ip, s);
   }
 
   const fpByIp = new Map<string, FingerprintChange[]>();

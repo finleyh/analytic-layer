@@ -84,7 +84,7 @@ export function TopTalkers() {
         days: new Set<string>(),
         lastDay: "",
       };
-      e.monitoredIps.add(r.monitored_ip);
+      e.monitoredIps.add(r.watched_ip);
       e.bytes += r.bytes_sum;
       e.flows += r.flow_count;
       e.days.add(r.day);

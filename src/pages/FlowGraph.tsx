@@ -312,7 +312,7 @@ function buildGraph(
   // wrong scope for an exploration graph: it silently dropped every day of
   // real traffic that hadn't yet cleared its review bar, which is exactly
   // the traffic an analyst hunting for something new would want to see.
-  // flow_daily carries the same per-row monitored_ip_roles/peer_roles/
+  // flow_daily carries the same per-row watched_ip_roles/peer_roles/
   // pair_confirmed fields confirmed-contacts was filtered down from, so
   // "confirmed" below recomputes that exact bar per row instead of asking
   // a second endpoint for it.
@@ -328,17 +328,17 @@ function buildGraph(
     const bIsWatched = watchedIps.has(r.peer_ip);
     const kind: "mm" | "mp" = bIsWatched ? "mm" : "mp";
     const key = bIsWatched
-      ? ["mm", ...[r.monitored_ip, r.peer_ip].sort()].join("|")
-      : `mp|${r.monitored_ip}|${r.peer_ip}`;
+      ? ["mm", ...[r.watched_ip, r.peer_ip].sort()].join("|")
+      : `mp|${r.watched_ip}|${r.peer_ip}`;
     // The same bar rollup__confirmed_contacts_daily itself promotes rows
     // on: either side has a confirmed role, or this exact pair is itself a
     // confirmed SIP peer. An edge is "confirmed" if ANY day/port-family
     // row backing it clears this — the same condition under which that
     // row would have appeared in confirmed-contacts at all.
-    const rowConfirmed = r.monitored_ip_roles.length > 0 || r.peer_roles.length > 0 || r.pair_confirmed;
+    const rowConfirmed = r.watched_ip_roles.length > 0 || r.peer_roles.length > 0 || r.pair_confirmed;
     const existing = edgeBytes.get(key);
     if (!existing) {
-      edgeBytes.set(key, { bytes: r.bytes_sum, a: r.monitored_ip, b: r.peer_ip, kind, confirmed: rowConfirmed });
+      edgeBytes.set(key, { bytes: r.bytes_sum, a: r.watched_ip, b: r.peer_ip, kind, confirmed: rowConfirmed });
     } else if (kind === "mm") {
       existing.bytes = Math.max(existing.bytes, r.bytes_sum);
       existing.confirmed = existing.confirmed || rowConfirmed;
@@ -626,7 +626,7 @@ function NodeGraph() {
         const [flowPerIp, rolesResult, peerRolesResult, watchResult, identityPerIp] = await Promise.all([
           Promise.all(
             ips.map((ip) =>
-              flowDailyRollupFlowDailyGet({ query: { monitored_ip: ip, limit: 20000 }, throwOnError: true }),
+              flowDailyRollupFlowDailyGet({ query: { watched_ip: ip, limit: 20000 }, throwOnError: true }),
             ),
           ),
           listIpRolesReviewIpRolesGet({ query: { vantage: "watched", limit: 1000 }, throwOnError: true }),
@@ -1877,20 +1877,20 @@ function SankeyDiagram() {
     };
   }, []);
 
-  const monitoredOptions = useMemo(() => [...new Set((rows ?? []).map((r) => r.monitored_ip))].sort(), [rows]);
+  const monitoredOptions = useMemo(() => [...new Set((rows ?? []).map((r) => r.watched_ip))].sort(), [rows]);
 
   const graph = useMemo(() => {
     if (!rows) return null;
     const filtered = rows.filter(
-      (r) => (!monitoredFilter || r.monitored_ip === monitoredFilter) && (!familyFilter || r.port_family === familyFilter),
+      (r) => (!monitoredFilter || r.watched_ip === monitoredFilter) && (!familyFilter || r.port_family === familyFilter),
     );
 
     // Rank peers per monitored IP by total bytes; top 28 stay individual.
     const peerTotalByMonitored = new Map<string, Map<string, number>>();
     for (const r of filtered) {
-      const m = peerTotalByMonitored.get(r.monitored_ip) ?? new Map<string, number>();
+      const m = peerTotalByMonitored.get(r.watched_ip) ?? new Map<string, number>();
       m.set(r.peer_ip, (m.get(r.peer_ip) ?? 0) + r.bytes_sum);
-      peerTotalByMonitored.set(r.monitored_ip, m);
+      peerTotalByMonitored.set(r.watched_ip, m);
     }
     const topPeers = new Set<string>();
     for (const [, m] of peerTotalByMonitored) {
@@ -1933,7 +1933,7 @@ function SankeyDiagram() {
 
       const c = node(`c:${cls}`, 0, cls.replace(/_/g, " "), CLASS_COLOR[cls]);
       const p = node(peerId, 1, peerLabel, CLASS_COLOR[cls]);
-      const m = node(`m:${r.monitored_ip}`, 2, r.monitored_ip, "#A6D8CD");
+      const m = node(`m:${r.watched_ip}`, 2, r.watched_ip, "#A6D8CD");
       const f = node(`f:${r.port_family}`, 3, r.port_family, FAMILY_COLOR[r.port_family]);
       c.mb += mb;
       p.mb += mb;

@@ -231,7 +231,7 @@ function OverviewContent({ data }: { data: OverviewData }) {
   const bphByIp = new Map<string, number>();
   const bphByDay = new Map<string, number>();
   for (const r of bphContact30d) {
-    bphByIp.set(r.monitored_ip, (bphByIp.get(r.monitored_ip) ?? 0) + r.bytes_sum);
+    bphByIp.set(r.watched_ip, (bphByIp.get(r.watched_ip) ?? 0) + r.bytes_sum);
     bphByDay.set(r.day, (bphByDay.get(r.day) ?? 0) + r.bytes_sum);
   }
   const topBphIp = [...bphByIp.entries()].sort((a, b) => b[1] - a[1])[0];

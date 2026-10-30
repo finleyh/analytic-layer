@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { BphContactDailyRollupBphContactDailyGetData, BphContactDailyRollupBphContactDailyGetErrors, BphContactDailyRollupBphContactDailyGetResponses, ConfirmedContactsDailyRollupConfirmedContactsDailyGetData, ConfirmedContactsDailyRollupConfirmedContactsDailyGetErrors, ConfirmedContactsDailyRollupConfirmedContactsDailyGetResponses, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostData, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostErrors, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostResponses, DecideIpRoleReviewIpRolesIpRoleDecisionPostData, DecideIpRoleReviewIpRolesIpRoleDecisionPostErrors, DecideIpRoleReviewIpRolesIpRoleDecisionPostResponses, FlowDailyRollupFlowDailyGetData, FlowDailyRollupFlowDailyGetErrors, FlowDailyRollupFlowDailyGetResponses, FlowHourlyRollupFlowHourlyGetData, FlowHourlyRollupFlowHourlyGetErrors, FlowHourlyRollupFlowHourlyGetResponses, FreshnessOpsFreshnessGetData, FreshnessOpsFreshnessGetResponses, GetIpIdentityLookupIpIdentitiesIpGetData, GetIpIdentityLookupIpIdentitiesIpGetErrors, GetIpIdentityLookupIpIdentitiesIpGetResponses, GetIpRolesReviewIpRolesIpGetData, GetIpRolesReviewIpRolesIpGetErrors, GetIpRolesReviewIpRolesIpGetResponses, GetIpWatchIpsIpGetData, GetIpWatchIpsIpGetErrors, GetIpWatchIpsIpGetResponses, HealthHealthGetData, HealthHealthGetResponses, HostNameSummaryLookupHostNamesSummaryGetData, HostNameSummaryLookupHostNamesSummaryGetErrors, HostNameSummaryLookupHostNamesSummaryGetResponses, HostScanChangesLookupHostScansChangesGetData, HostScanChangesLookupHostScansChangesGetErrors, HostScanChangesLookupHostScansChangesGetResponses, ListAsnCandidatesReviewAsnCandidatesGetData, ListAsnCandidatesReviewAsnCandidatesGetErrors, ListAsnCandidatesReviewAsnCandidatesGetResponses, ListDomainPivotsVerdictDomainPivotsGetData, ListDomainPivotsVerdictDomainPivotsGetErrors, ListDomainPivotsVerdictDomainPivotsGetResponses, ListFindingsVerdictFindingsGetData, ListFindingsVerdictFindingsGetErrors, ListFindingsVerdictFindingsGetResponses, ListHostNamesLookupHostNamesGetData, ListHostNamesLookupHostNamesGetErrors, ListHostNamesLookupHostNamesGetResponses, ListHostScansLookupHostScansGetData, ListHostScansLookupHostScansGetErrors, ListHostScansLookupHostScansGetResponses, ListIpRolesReviewIpRolesGetData, ListIpRolesReviewIpRolesGetErrors, ListIpRolesReviewIpRolesGetResponses, ListIpsWatchIpsGetData, ListIpsWatchIpsGetErrors, ListIpsWatchIpsGetResponses, ListProviderCategoriesRefProviderCategoriesGetData, ListProviderCategoriesRefProviderCategoriesGetResponses, ListProvidersRefProvidersGetData, ListProvidersRefProvidersGetErrors, ListProvidersRefProvidersGetResponses, ListScannersVerdictScannersGetData, ListScannersVerdictScannersGetErrors, ListScannersVerdictScannersGetResponses, ListSipPairsReviewSipPairsGetData, ListSipPairsReviewSipPairsGetErrors, ListSipPairsReviewSipPairsGetResponses, ListWebScansLookupWebScansGetData, ListWebScansLookupWebScansGetErrors, ListWebScansLookupWebScansGetResponses, PeerReviewSummaryReviewIpRolesPeerReviewGetData, PeerReviewSummaryReviewIpRolesPeerReviewGetErrors, PeerReviewSummaryReviewIpRolesPeerReviewGetResponses, PortFamilyMixDailyRollupPortFamilyMixDailyGetData, PortFamilyMixDailyRollupPortFamilyMixDailyGetErrors, PortFamilyMixDailyRollupPortFamilyMixDailyGetResponses, ProviderMixDailyRollupProviderMixDailyGetData, ProviderMixDailyRollupProviderMixDailyGetErrors, ProviderMixDailyRollupProviderMixDailyGetResponses, QueueReviewQueueGetData, QueueReviewQueueGetResponses, RequestWebScanLookupWebScansPostData, RequestWebScanLookupWebScansPostErrors, RequestWebScanLookupWebScansPostResponses, TopAsnsRollupFlowDailyTopAsnsGetData, TopAsnsRollupFlowDailyTopAsnsGetErrors, TopAsnsRollupFlowDailyTopAsnsGetResponses, TopPeersRollupFlowDailyTopPeersGetData, TopPeersRollupFlowDailyTopPeersGetErrors, TopPeersRollupFlowDailyTopPeersGetResponses, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetData, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetErrors, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetResponses, VocabularyRulesVocabularyGetData, VocabularyRulesVocabularyGetResponses, WebScanDomLookupWebScansWebScanIdDomGetData, WebScanDomLookupWebScansWebScanIdDomGetErrors, WebScanDomLookupWebScansWebScanIdDomGetResponses, WebScanResultLookupWebScansWebScanIdResultGetData, WebScanResultLookupWebScansWebScanIdResultGetErrors, WebScanResultLookupWebScansWebScanIdResultGetResponses } from './types.gen';
+import type { BphContactDailyRollupBphContactDailyGetData, BphContactDailyRollupBphContactDailyGetErrors, BphContactDailyRollupBphContactDailyGetResponses, ConfirmedContactsDailyRollupConfirmedContactsDailyGetData, ConfirmedContactsDailyRollupConfirmedContactsDailyGetErrors, ConfirmedContactsDailyRollupConfirmedContactsDailyGetResponses, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostData, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostErrors, DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostResponses, DecideIpRelationReviewIpRelationsIpRelationOtherIpDecisionPostData, DecideIpRelationReviewIpRelationsIpRelationOtherIpDecisionPostErrors, DecideIpRelationReviewIpRelationsIpRelationOtherIpDecisionPostResponses, DecideIpRoleReviewIpRolesIpRoleDecisionPostData, DecideIpRoleReviewIpRolesIpRoleDecisionPostErrors, DecideIpRoleReviewIpRolesIpRoleDecisionPostResponses, FlowDailyRollupFlowDailyGetData, FlowDailyRollupFlowDailyGetErrors, FlowDailyRollupFlowDailyGetResponses, FlowHourlyRollupFlowHourlyGetData, FlowHourlyRollupFlowHourlyGetErrors, FlowHourlyRollupFlowHourlyGetResponses, FreshnessOpsFreshnessGetData, FreshnessOpsFreshnessGetResponses, GetIpIdentityLookupIpIdentitiesIpGetData, GetIpIdentityLookupIpIdentitiesIpGetErrors, GetIpIdentityLookupIpIdentitiesIpGetResponses, GetIpRelationHistoryReviewIpRelationsIpHistoryGetData, GetIpRelationHistoryReviewIpRelationsIpHistoryGetErrors, GetIpRelationHistoryReviewIpRelationsIpHistoryGetResponses, GetIpRelationsReviewIpRelationsIpGetData, GetIpRelationsReviewIpRelationsIpGetErrors, GetIpRelationsReviewIpRelationsIpGetResponses, GetIpRoleHistoryReviewIpRolesIpHistoryGetData, GetIpRoleHistoryReviewIpRolesIpHistoryGetErrors, GetIpRoleHistoryReviewIpRolesIpHistoryGetResponses, GetIpRolesReviewIpRolesIpGetData, GetIpRolesReviewIpRolesIpGetErrors, GetIpRolesReviewIpRolesIpGetResponses, GetIpWatchIpsIpGetData, GetIpWatchIpsIpGetErrors, GetIpWatchIpsIpGetResponses, HealthHealthGetData, HealthHealthGetResponses, HostNameSummaryLookupHostNamesSummaryGetData, HostNameSummaryLookupHostNamesSummaryGetErrors, HostNameSummaryLookupHostNamesSummaryGetResponses, HostScanChangesLookupHostScansChangesGetData, HostScanChangesLookupHostScansChangesGetErrors, HostScanChangesLookupHostScansChangesGetResponses, ListAsnCandidatesReviewAsnCandidatesGetData, ListAsnCandidatesReviewAsnCandidatesGetErrors, ListAsnCandidatesReviewAsnCandidatesGetResponses, ListFindingsVerdictFindingsGetData, ListFindingsVerdictFindingsGetErrors, ListFindingsVerdictFindingsGetResponses, ListHostNamesLookupHostNamesGetData, ListHostNamesLookupHostNamesGetErrors, ListHostNamesLookupHostNamesGetResponses, ListHostScansLookupHostScansGetData, ListHostScansLookupHostScansGetErrors, ListHostScansLookupHostScansGetResponses, ListIpRelationsReviewIpRelationsGetData, ListIpRelationsReviewIpRelationsGetErrors, ListIpRelationsReviewIpRelationsGetResponses, ListIpRolesReviewIpRolesGetData, ListIpRolesReviewIpRolesGetErrors, ListIpRolesReviewIpRolesGetResponses, ListIpsWatchIpsGetData, ListIpsWatchIpsGetErrors, ListIpsWatchIpsGetResponses, ListProviderCategoriesRefProviderCategoriesGetData, ListProviderCategoriesRefProviderCategoriesGetResponses, ListProvidersRefProvidersGetData, ListProvidersRefProvidersGetErrors, ListProvidersRefProvidersGetResponses, ListScannersVerdictScannersGetData, ListScannersVerdictScannersGetErrors, ListScannersVerdictScannersGetResponses, ListSipPairsReviewSipPairsGetData, ListSipPairsReviewSipPairsGetErrors, ListSipPairsReviewSipPairsGetResponses, ListWebScanPivotsVerdictWebScanPivotsGetData, ListWebScanPivotsVerdictWebScanPivotsGetErrors, ListWebScanPivotsVerdictWebScanPivotsGetResponses, ListWebScansLookupWebScansGetData, ListWebScansLookupWebScansGetErrors, ListWebScansLookupWebScansGetResponses, PeerReviewSummaryReviewIpRolesPeerReviewGetData, PeerReviewSummaryReviewIpRolesPeerReviewGetErrors, PeerReviewSummaryReviewIpRolesPeerReviewGetResponses, PortFamilyMixDailyRollupPortFamilyMixDailyGetData, PortFamilyMixDailyRollupPortFamilyMixDailyGetErrors, PortFamilyMixDailyRollupPortFamilyMixDailyGetResponses, ProviderMixDailyRollupProviderMixDailyGetData, ProviderMixDailyRollupProviderMixDailyGetErrors, ProviderMixDailyRollupProviderMixDailyGetResponses, QueueReviewQueueGetData, QueueReviewQueueGetResponses, RequestWebScanLookupWebScansPostData, RequestWebScanLookupWebScansPostErrors, RequestWebScanLookupWebScansPostResponses, TopAsnsRollupFlowDailyTopAsnsGetData, TopAsnsRollupFlowDailyTopAsnsGetErrors, TopAsnsRollupFlowDailyTopAsnsGetResponses, TopPeersRollupFlowDailyTopPeersGetData, TopPeersRollupFlowDailyTopPeersGetErrors, TopPeersRollupFlowDailyTopPeersGetResponses, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetData, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetErrors, UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetResponses, VocabularyRulesVocabularyGetData, VocabularyRulesVocabularyGetResponses, WebScanDomLookupWebScansWebScanIdDomGetData, WebScanDomLookupWebScansWebScanIdDomGetErrors, WebScanDomLookupWebScansWebScanIdDomGetResponses, WebScanResultLookupWebScansWebScanIdResultGetData, WebScanResultLookupWebScansWebScanIdResultGetErrors, WebScanResultLookupWebScansWebScanIdResultGetResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -42,7 +42,8 @@ export const getIpWatchIpsIpGet = <ThrowOnError extends boolean = false>(options
  * List Providers
  *
  * Provider networks, newest first. Tens of thousands of rows in all
- * (the CIDR feeds), so filter by category or page with `offset`.
+ * (the CIDR feeds), so filter by category or page with `offset`. Only the
+ * rows their source lists now, unless `include_closed`.
  */
 export const listProvidersRefProvidersGet = <ThrowOnError extends boolean = false>(options?: Options<ListProvidersRefProvidersGetData, ThrowOnError>): RequestResult<ListProvidersRefProvidersGetResponses, ListProvidersRefProvidersGetErrors, ThrowOnError> => (options?.client ?? client).get<ListProvidersRefProvidersGetResponses, ListProvidersRefProvidersGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -187,7 +188,9 @@ export const webScanDomLookupWebScansWebScanIdDomGet = <ThrowOnError extends boo
  * List Scanners
  *
  * Scanner verdicts written in the window, newest first: why a peer is
- * excluded from the rollups. The table keeps 30 days.
+ * excluded. The table keeps 180 days as history; a verdict from the last 30
+ * excludes its IP from the rules (verdict__scanners_current), and -- until
+ * stabilization step 13 -- one from the last 180 from the rollups.
  */
 export const listScannersVerdictScannersGet = <ThrowOnError extends boolean = false>(options?: Options<ListScannersVerdictScannersGetData, ThrowOnError>): RequestResult<ListScannersVerdictScannersGetResponses, ListScannersVerdictScannersGetErrors, ThrowOnError> => (options?.client ?? client).get<ListScannersVerdictScannersGetResponses, ListScannersVerdictScannersGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -209,15 +212,16 @@ export const listFindingsVerdictFindingsGet = <ThrowOnError extends boolean = fa
 });
 
 /**
- * List Domain Pivots
+ * List Web Scan Pivots
  *
  * Resource-hash pivots detected in the window (on `detected_at`), newest
  * first, each with the watched IP and target the resource was found on:
- * which other domains serve the identical resource. The table is append-only.
+ * which other sites serve the identical resource. The table,
+ * verdict__web_scan_pivots, is append-only (renamed in step 21: docs/api.md).
  */
-export const listDomainPivotsVerdictDomainPivotsGet = <ThrowOnError extends boolean = false>(options?: Options<ListDomainPivotsVerdictDomainPivotsGetData, ThrowOnError>): RequestResult<ListDomainPivotsVerdictDomainPivotsGetResponses, ListDomainPivotsVerdictDomainPivotsGetErrors, ThrowOnError> => (options?.client ?? client).get<ListDomainPivotsVerdictDomainPivotsGetResponses, ListDomainPivotsVerdictDomainPivotsGetErrors, ThrowOnError>({
+export const listWebScanPivotsVerdictWebScanPivotsGet = <ThrowOnError extends boolean = false>(options?: Options<ListWebScanPivotsVerdictWebScanPivotsGetData, ThrowOnError>): RequestResult<ListWebScanPivotsVerdictWebScanPivotsGetResponses, ListWebScanPivotsVerdictWebScanPivotsGetErrors, ThrowOnError> => (options?.client ?? client).get<ListWebScanPivotsVerdictWebScanPivotsGetResponses, ListWebScanPivotsVerdictWebScanPivotsGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/verdict/domain-pivots',
+    url: '/verdict/web-scan-pivots',
     ...options
 });
 
@@ -236,8 +240,13 @@ export const listIpRolesReviewIpRolesGet = <ThrowOnError extends boolean = false
 /**
  * Peer Review Summary
  *
- * The regular-peers review's proposals by the day they were made and the
- * role proposed, with how many had a port scan in hand and their status now.
+ * The regular-peers review's proposals by the day they were made and the role
+ * proposed, with how many had a port scan in hand and their status now. A role-kind
+ * proposal (web_server, sip_server, ...) is a review__ip_roles row; a relation-kind one
+ * (operator, sip_trunk, sip_client, ...) is a review__ip_relations row naming `regular_of`
+ * (decision 0003, stabilization step 7) -- union both, grouped the same way, so a role
+ * column here still means "whatever peer_review proposed" regardless of which table holds
+ * it now.
  */
 export const peerReviewSummaryReviewIpRolesPeerReviewGet = <ThrowOnError extends boolean = false>(options?: Options<PeerReviewSummaryReviewIpRolesPeerReviewGetData, ThrowOnError>): RequestResult<PeerReviewSummaryReviewIpRolesPeerReviewGetResponses, PeerReviewSummaryReviewIpRolesPeerReviewGetErrors, ThrowOnError> => (options?.client ?? client).get<PeerReviewSummaryReviewIpRolesPeerReviewGetResponses, PeerReviewSummaryReviewIpRolesPeerReviewGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -257,9 +266,63 @@ export const getIpRolesReviewIpRolesIpGet = <ThrowOnError extends boolean = fals
 });
 
 /**
+ * Get Ip Role History
+ *
+ * The decision history of one IP's roles, oldest first: every suggestion, evaluation,
+ * re-check, confirmation and rejection with who did it and when (decision 0003). 404 when
+ * the IP has no history at all; a role with none yet is an empty list.
+ */
+export const getIpRoleHistoryReviewIpRolesIpHistoryGet = <ThrowOnError extends boolean = false>(options: Options<GetIpRoleHistoryReviewIpRolesIpHistoryGetData, ThrowOnError>): RequestResult<GetIpRoleHistoryReviewIpRolesIpHistoryGetResponses, GetIpRoleHistoryReviewIpRolesIpHistoryGetErrors, ThrowOnError> => (options.client ?? client).get<GetIpRoleHistoryReviewIpRolesIpHistoryGetResponses, GetIpRoleHistoryReviewIpRolesIpHistoryGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/review/ip-roles/{ip}/history',
+    ...options
+});
+
+/**
+ * List Ip Relations
+ *
+ * The relation rows, one per (ip, relation, other_ip), oldest first (decision 0003,
+ * stabilization step 7). sip_trunk/sip_client/sip_scanner here are the SIP pairs' own
+ * relations too -- /review/sip-pairs reads the same table shaped for that one review flow;
+ * this route is the general one, across every relation name.
+ */
+export const listIpRelationsReviewIpRelationsGet = <ThrowOnError extends boolean = false>(options?: Options<ListIpRelationsReviewIpRelationsGetData, ThrowOnError>): RequestResult<ListIpRelationsReviewIpRelationsGetResponses, ListIpRelationsReviewIpRelationsGetErrors, ThrowOnError> => (options?.client ?? client).get<ListIpRelationsReviewIpRelationsGetResponses, ListIpRelationsReviewIpRelationsGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/review/ip-relations',
+    ...options
+});
+
+/**
+ * Get Ip Relations
+ *
+ * Every relation row naming this IP, on either side (an operator's own page, and a
+ * watched IP's "who administers me" both need this); 404 when it has none.
+ */
+export const getIpRelationsReviewIpRelationsIpGet = <ThrowOnError extends boolean = false>(options: Options<GetIpRelationsReviewIpRelationsIpGetData, ThrowOnError>): RequestResult<GetIpRelationsReviewIpRelationsIpGetResponses, GetIpRelationsReviewIpRelationsIpGetErrors, ThrowOnError> => (options.client ?? client).get<GetIpRelationsReviewIpRelationsIpGetResponses, GetIpRelationsReviewIpRelationsIpGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/review/ip-relations/{ip}',
+    ...options
+});
+
+/**
+ * Get Ip Relation History
+ *
+ * The decision history of one IP's relations (decision 0003): `ip` is this route's own
+ * side, same as review__ip_relations.ip -- a watched IP's history (named as other_ip) is
+ * /ip-roles/{ip}/history's own SIP-pairs bridge, not here. Separate from
+ * /ip-roles/{ip}/history because a name can be both a role and a relation (sip_trunk, until
+ * step 7's migration); decisions.history keeps the two apart by subject_kind.
+ */
+export const getIpRelationHistoryReviewIpRelationsIpHistoryGet = <ThrowOnError extends boolean = false>(options: Options<GetIpRelationHistoryReviewIpRelationsIpHistoryGetData, ThrowOnError>): RequestResult<GetIpRelationHistoryReviewIpRelationsIpHistoryGetResponses, GetIpRelationHistoryReviewIpRelationsIpHistoryGetErrors, ThrowOnError> => (options.client ?? client).get<GetIpRelationHistoryReviewIpRelationsIpHistoryGetResponses, GetIpRelationHistoryReviewIpRelationsIpHistoryGetErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/review/ip-relations/{ip}/history',
+    ...options
+});
+
+/**
  * Queue
  *
- * What is waiting for a human, by queue (suggested roles, not IPs).
+ * What is waiting for a human, by queue (suggested roles and relations, not IPs).
  */
 export const queueReviewQueueGet = <ThrowOnError extends boolean = false>(options?: Options<QueueReviewQueueGetData, ThrowOnError>): RequestResult<QueueReviewQueueGetResponses, unknown, ThrowOnError> => (options?.client ?? client).get<QueueReviewQueueGetResponses, unknown, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
@@ -300,6 +363,25 @@ export const listAsnCandidatesReviewAsnCandidatesGet = <ThrowOnError extends boo
 export const decideIpRoleReviewIpRolesIpRoleDecisionPost = <ThrowOnError extends boolean = false>(options: Options<DecideIpRoleReviewIpRolesIpRoleDecisionPostData, ThrowOnError>): RequestResult<DecideIpRoleReviewIpRolesIpRoleDecisionPostResponses, DecideIpRoleReviewIpRolesIpRoleDecisionPostErrors, ThrowOnError> => (options.client ?? client).post<DecideIpRoleReviewIpRolesIpRoleDecisionPostResponses, DecideIpRoleReviewIpRolesIpRoleDecisionPostErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/review/ip-roles/{ip}/{role}/decision',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Decide Ip Relation
+ *
+ * Confirm or reject one relation between two IPs (decision 0003, stabilization step 7):
+ * operator, c2_victim, c2_operator, research, and the peer-vantage sip_trunk/sip_client/
+ * sip_scanner that /review/sip-pairs lists. Confirming a relation no rule suggested asserts
+ * it (the row is created by the decision) -- same shape as /ip-roles' own decide_ip_role, one
+ * IP simpler since a relation has no pairs of its own to bridge into.
+ */
+export const decideIpRelationReviewIpRelationsIpRelationOtherIpDecisionPost = <ThrowOnError extends boolean = false>(options: Options<DecideIpRelationReviewIpRelationsIpRelationOtherIpDecisionPostData, ThrowOnError>): RequestResult<DecideIpRelationReviewIpRelationsIpRelationOtherIpDecisionPostResponses, DecideIpRelationReviewIpRelationsIpRelationOtherIpDecisionPostErrors, ThrowOnError> => (options.client ?? client).post<DecideIpRelationReviewIpRelationsIpRelationOtherIpDecisionPostResponses, DecideIpRelationReviewIpRelationsIpRelationOtherIpDecisionPostErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/review/ip-relations/{ip}/{relation}/{other_ip}/decision',
     ...options,
     headers: {
         'Content-Type': 'application/json',

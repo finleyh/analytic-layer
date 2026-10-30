@@ -114,9 +114,9 @@ export type AsnDecisionResult = {
  */
 export type ConfirmedPair = {
     /**
-     * Monitored Ip
+     * Watched Ip
      */
-    monitored_ip: string;
+    watched_ip: string;
     /**
      * Peer Ip
      */
@@ -136,9 +136,9 @@ export type DailyBphContact = {
      */
     day: string;
     /**
-     * Monitored Ip
+     * Watched Ip
      */
-    monitored_ip: string;
+    watched_ip: string;
     /**
      * Bytes Sum
      */
@@ -152,7 +152,7 @@ export type DailyBphContact = {
 /**
  * DailyConfirmedContact
  *
- * rollup__confirmed_contacts_daily: every daily cell where either side
+ * rollup__confirmed_contacts(from, to) (migration 0115): every daily cell where either side
  * carries a human-accepted role or the pair is confirmed.
  */
 export type DailyConfirmedContact = {
@@ -161,9 +161,9 @@ export type DailyConfirmedContact = {
      */
     day: string;
     /**
-     * Monitored Ip
+     * Watched Ip
      */
-    monitored_ip: string;
+    watched_ip: string;
     /**
      * Peer Ip
      */
@@ -189,11 +189,11 @@ export type DailyConfirmedContact = {
      */
     port_family: string;
     /**
-     * Monitored Ip Roles
+     * Watched Ip Roles
      *
-     * every role a human had confirmed for the watched IP when the bucket was materialised; [] for none
+     * every role confirmed for the watched IP today, plus the relations confirmed between this pair with the watched IP as subject; [] for none
      */
-    monitored_ip_roles: Array<string>;
+    watched_ip_roles: Array<string>;
     /**
      * Peer Roles
      *
@@ -217,10 +217,11 @@ export type DailyConfirmedContact = {
 /**
  * DailyFlow
  *
- * One row of rollup__flow_daily: a (watched IP, peer, protocol, port
- * family) cell for one day, with the peer's categories and the roles a
- * human had confirmed when the bucket was materialised (lists since 0089:
- * an IP can be confirmed as several things).
+ * One row of rollup__flow_daily_classified(from, to): a (watched IP, peer,
+ * protocol, port family) cell for one day, scanner traffic hidden, with the
+ * peer's categories and each side's confirmed roles and relations as they
+ * stand today (read time since 0115/0119; lists since 0089: an IP can be
+ * confirmed as several things).
  */
 export type DailyFlow = {
     /**
@@ -228,9 +229,9 @@ export type DailyFlow = {
      */
     day: string;
     /**
-     * Monitored Ip
+     * Watched Ip
      */
-    monitored_ip: string;
+    watched_ip: string;
     /**
      * Peer Ip
      */
@@ -260,11 +261,11 @@ export type DailyFlow = {
      */
     peer_categories: Array<string>;
     /**
-     * Monitored Ip Roles
+     * Watched Ip Roles
      *
-     * every role a human had confirmed for the watched IP when the bucket was materialised; [] for none
+     * every role confirmed for the watched IP today, plus the relations confirmed between this pair with the watched IP as subject; [] for none
      */
-    monitored_ip_roles: Array<string>;
+    watched_ip_roles: Array<string>;
     /**
      * Peer Roles
      *
@@ -294,9 +295,9 @@ export type DailyPortFamilyMix = {
      */
     day: string;
     /**
-     * Monitored Ip
+     * Watched Ip
      */
-    monitored_ip: string;
+    watched_ip: string;
     /**
      * Port Family
      */
@@ -320,9 +321,9 @@ export type DailyProviderMix = {
      */
     day: string;
     /**
-     * Monitored Ip
+     * Watched Ip
      */
-    monitored_ip: string;
+    watched_ip: string;
     /**
      * Provider Category
      */
@@ -346,9 +347,9 @@ export type DailyUnclassifiedContact = {
      */
     day: string;
     /**
-     * Monitored Ip
+     * Watched Ip
      */
-    monitored_ip: string;
+    watched_ip: string;
     /**
      * Peer Ip
      */
@@ -369,57 +370,6 @@ export type DailyUnclassifiedContact = {
      * Flow Count
      */
     flow_count: number;
-};
-
-/**
- * DomainPivot
- *
- * One row of verdict__domain_pivots joined to its source scan: a resource
- * on a watched IP's page (the source target, found through urlscan) whose
- * hash a small number of other domains also serve -- the matched domain is
- * one of them. A pivot back to the source itself is not written (0097).
- */
-export type DomainPivot = {
-    /**
-     * Id
-     */
-    id: number;
-    /**
-     * Detected At
-     */
-    detected_at: string;
-    /**
-     * Monitored Ip
-     */
-    monitored_ip: string;
-    /**
-     * Source Target
-     */
-    source_target: string;
-    /**
-     * Source Scan Uuid
-     */
-    source_scan_uuid: string | null;
-    /**
-     * Hash
-     */
-    hash: string;
-    /**
-     * Matched Domain
-     */
-    matched_domain: string;
-    /**
-     * Matched Scan Uuid
-     */
-    matched_scan_uuid: string | null;
-    /**
-     * Distinct Domain Count At Detection
-     */
-    distinct_domain_count_at_detection: number;
-    /**
-     * Heuristic Version
-     */
-    heuristic_version: string;
 };
 
 /**
@@ -858,8 +808,8 @@ export type HostScan = {
 /**
  * HourlyFlow
  *
- * rollup__flow_hourly: the same cell as DailyFlow per hour, plus the
- * distinct ports seen.
+ * rollup__flow_hourly_classified(from, to): the same cell as DailyFlow
+ * per hour, plus the distinct ports seen.
  */
 export type HourlyFlow = {
     /**
@@ -867,9 +817,9 @@ export type HourlyFlow = {
      */
     hour: string;
     /**
-     * Monitored Ip
+     * Watched Ip
      */
-    monitored_ip: string;
+    watched_ip: string;
     /**
      * Peer Ip
      */
@@ -899,11 +849,11 @@ export type HourlyFlow = {
      */
     peer_categories: Array<string>;
     /**
-     * Monitored Ip Roles
+     * Watched Ip Roles
      *
-     * every role a human had confirmed for the watched IP when the bucket was materialised; [] for none
+     * every role confirmed for the watched IP today, plus the relations confirmed between this pair with the watched IP as subject; [] for none
      */
-    monitored_ip_roles: Array<string>;
+    watched_ip_roles: Array<string>;
     /**
      * Peer Roles
      *
@@ -987,6 +937,92 @@ export type IpIdentity = {
 };
 
 /**
+ * IpRelation
+ *
+ * One row of review__ip_relations: one (ip, relation, other_ip) -- a statement relative to
+ * another IP (decision 0003), where IpRole is a statement about the box alone. Operator, c2_
+ * victim, c2_operator, research and the peer-vantage sip_trunk/sip_client moved here at
+ * stabilization step 7 so a peer touching several unrelated watched IPs (or C2s) is several
+ * rows, not one that averages them away; sip_trunk/sip_client at watched vantage stay in
+ * IpRole (a watched box's own aggregate shape, not one specific peer's relation). Otherwise the
+ * same shape as IpRole.
+ */
+export type IpRelation = {
+    /**
+     * Ip
+     */
+    ip: string;
+    /**
+     * Relation
+     */
+    relation: string;
+    /**
+     * Other Ip
+     */
+    other_ip: string;
+    /**
+     * Vantage
+     *
+     * watched | peer
+     */
+    vantage: string;
+    /**
+     * Status
+     *
+     * suggested | agentic_evaluation | confirmed | rejected | expired (history only)
+     */
+    status: string;
+    /**
+     * Suggestions
+     *
+     * rule_name -> {reasoning, features, first_day, last_day, alarm}; {} for an asserted relation
+     */
+    suggestions: {
+        [key: string]: unknown;
+    };
+    /**
+     * First Day
+     */
+    first_day: string | null;
+    /**
+     * Last Day
+     */
+    last_day: string | null;
+    /**
+     * Decided By
+     *
+     * the path that decided (api, skill, ...); null until decided
+     */
+    decided_by: string | null;
+    /**
+     * Decided At
+     */
+    decided_at: string | null;
+    /**
+     * Note
+     *
+     * the analyst's note on the decision
+     */
+    note: string;
+    /**
+     * Evaluation
+     *
+     * the agent's pass, same shape as IpRole's; null until it has read the row
+     */
+    evaluation: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Discovered At
+     */
+    discovered_at: string;
+    /**
+     * Updated At
+     */
+    updated_at: string;
+};
+
+/**
  * IpRole
  *
  * One row of review__ip_roles: one (ip, role). `suggestions` is the
@@ -994,8 +1030,11 @@ export type IpIdentity = {
  * (`{rule_name: {reasoning, features, first_day, last_day, alarm}}`);
  * an IP can carry several roles, each its own row. `status` moves from
  * `suggested` (a rule's input) through an optional `agentic_evaluation`
- * to the analyst's `confirmed` or `rejected`, and a confirmed role
- * `expired` lapses. A confirmed row with an empty `suggestions` map is a
+ * to the analyst's `confirmed` or `rejected`. A confirmed role stays
+ * confirmed until the analyst changes it; every 30 days the agent re-reads
+ * it and records a doubt in `evaluation.doubt` when it disagrees or no rule
+ * has seen it for 30 days (2026-10-24). `expired` appears only on rows the
+ * old expiry wrote. A confirmed row with an empty `suggestions` map is a
  * role the analyst asserted with no rule behind it (since 0089).
  */
 export type IpRole = {
@@ -1016,7 +1055,7 @@ export type IpRole = {
     /**
      * Status
      *
-     * suggested | agentic_evaluation | confirmed | rejected | expired
+     * suggested | agentic_evaluation | confirmed | rejected | expired (history only, since 2026-10-24)
      */
     status: string;
     /**
@@ -1048,13 +1087,13 @@ export type IpRole = {
     /**
      * Note
      *
-     * the analyst's note on the decision, or the expiry reason
+     * the analyst's note on the decision; RE-OPENED ... when a weekly re-check re-opened a rejection
      */
     note: string;
     /**
      * Evaluation
      *
-     * the agent's pass (since 0091): {verdict agree|disagree|unsure, alternative, reasoning, model, evaluated_at}; null until it has read the row
+     * the agent's pass (since 0091): {verdict agree|disagree|unsure, alternative, reasoning, model, evaluated_at}; on a re-check also recheck_of_rejection or recheck_of_confirmation, and `doubt` (why a confirmed role is now in doubt); null until it has read the row
      */
     evaluation: {
         [key: string]: unknown;
@@ -1078,9 +1117,9 @@ export type NetflowWatermark = {
      */
     source: string;
     /**
-     * Monitored Ip
+     * Watched Ip
      */
-    monitored_ip: string;
+    watched_ip: string;
     /**
      * Last Pulled At
      */
@@ -1214,24 +1253,6 @@ export type PageDailyUnclassifiedContact = {
 };
 
 /**
- * Page[DomainPivot]
- */
-export type PageDomainPivot = {
-    /**
-     * Rows
-     */
-    rows: Array<DomainPivot>;
-    /**
-     * Count
-     */
-    count: number;
-    /**
-     * Newest Day
-     */
-    newest_day?: string | null;
-};
-
-/**
  * Page[Finding]
  */
 export type PageFinding = {
@@ -1340,6 +1361,24 @@ export type PageHourlyFlow = {
 };
 
 /**
+ * Page[IpRelation]
+ */
+export type PageIpRelation = {
+    /**
+     * Rows
+     */
+    rows: Array<IpRelation>;
+    /**
+     * Count
+     */
+    count: number;
+    /**
+     * Newest Day
+     */
+    newest_day?: string | null;
+};
+
+/**
  * Page[IpRole]
  */
 export type PageIpRole = {
@@ -1401,6 +1440,24 @@ export type PageProvider = {
      * Rows
      */
     rows: Array<Provider>;
+    /**
+     * Count
+     */
+    count: number;
+    /**
+     * Newest Day
+     */
+    newest_day?: string | null;
+};
+
+/**
+ * Page[RoleHistoryEntry]
+ */
+export type PageRoleHistoryEntry = {
+    /**
+     * Rows
+     */
+    rows: Array<RoleHistoryEntry>;
     /**
      * Count
      */
@@ -1502,6 +1559,24 @@ export type PageWatchedIp = {
 };
 
 /**
+ * Page[WebScanPivot]
+ */
+export type PageWebScanPivot = {
+    /**
+     * Rows
+     */
+    rows: Array<WebScanPivot>;
+    /**
+     * Count
+     */
+    count: number;
+    /**
+     * Newest Day
+     */
+    newest_day?: string | null;
+};
+
+/**
  * Page[WebScan]
  */
 export type PageWebScan = {
@@ -1524,9 +1599,9 @@ export type PageWebScan = {
  */
 export type PairRef = {
     /**
-     * Monitored Ip
+     * Watched Ip
      */
-    monitored_ip: string;
+    watched_ip: string;
     /**
      * Peer Ip
      */
@@ -1693,8 +1768,28 @@ export type Provider = {
     geo_looked_up_at: string | null;
     /**
      * Created At
+     *
+     * when the row was first inserted
      */
     created_at: string;
+    /**
+     * First Seen
+     *
+     * since 0110: the first sync that listed it (for rows older than 0110, the last sync before it -- earlier dates were overwritten)
+     */
+    first_seen: string;
+    /**
+     * Last Seen
+     *
+     * since 0110: the latest sync that listed it
+     */
+    last_seen: string;
+    /**
+     * Closed At
+     *
+     * since 0121: when its source stopped listing it; null while listed
+     */
+    closed_at?: string | null;
 };
 
 /**
@@ -1715,6 +1810,63 @@ export type ProviderCategory = {
      * Description
      */
     description: string;
+};
+
+/**
+ * RelationDecision
+ *
+ * The relation, the IP and the other IP are all in the path
+ * (`/review/ip-relations/{ip}/{relation}/{other_ip}/decision`). Simpler than RoleDecision: a
+ * relation has no pairs of its own to bridge into (decision 0003, step 7). confirm: a relation
+ * no rule suggested may be confirmed too (asserted). reject: nothing else.
+ */
+export type RelationDecision = {
+    /**
+     * Decision
+     */
+    decision: 'confirm' | 'reject';
+    /**
+     * Note
+     *
+     * the reviewer's reasoning; kept on the row
+     */
+    note?: string;
+};
+
+/**
+ * RelationDecisionResult
+ */
+export type RelationDecisionResult = {
+    /**
+     * Ip
+     */
+    ip: string;
+    /**
+     * Relation
+     */
+    relation: string;
+    /**
+     * Other Ip
+     */
+    other_ip: string;
+    /**
+     * Vantage
+     */
+    vantage: string;
+    /**
+     * Decision
+     */
+    decision: string;
+    /**
+     * Asserted
+     *
+     * confirm: true when no rule had suggested this relation, so the row was created by the decision
+     */
+    asserted?: boolean;
+    /**
+     * Rollups
+     */
+    rollups?: string;
 };
 
 /**
@@ -1739,6 +1891,18 @@ export type ReviewQueue = {
      * Watched Roles
      */
     watched_roles: number;
+    /**
+     * Peer Relations
+     *
+     * suggested relations (operator, c2_victim, c2_operator, research, peer-vantage sip_trunk/sip_client -- stabilization step 7); every relation today is peer vantage
+     */
+    peer_relations?: number;
+    /**
+     * Confirmed In Doubt
+     *
+     * confirmed roles the 30-day re-check flagged: the agent now disagrees, or no rule has seen it for 30 days; the role stands until you change it
+     */
+    confirmed_in_doubt?: number;
 };
 
 /**
@@ -1822,6 +1986,86 @@ export type RoleDoc = {
      * Meaning
      */
     meaning: string;
+    /**
+     * Kind
+     *
+     * role (a statement about the box alone) or relation (relative to another IP; decision 0003)
+     */
+    kind: string;
+};
+
+/**
+ * RoleHistoryEntry
+ *
+ * One entry of the decision history of a role (decision 0003): what happened, the status
+ * the role row had once it was written, and who or what did it. Oldest first. `seeded` marks
+ * entries rebuilt at migration 0107 from the rows' last values; earlier history was overwritten.
+ */
+export type RoleHistoryEntry = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Subject Kind
+     *
+     * role today; relation from step 6 of the stabilization
+     */
+    subject_kind: string;
+    /**
+     * Ip
+     */
+    ip: string;
+    /**
+     * Name
+     *
+     * the role
+     */
+    name: string;
+    /**
+     * Other Ip
+     *
+     * the other IP of a relation; null for a role
+     */
+    other_ip: string | null;
+    /**
+     * Decision
+     *
+     * suggested | revived | withdrawn (a rule), evaluated | reopened | kept | holds | doubted (the model), confirmed | asserted | rejected (the analyst), expired (retired expiry, seeded only)
+     */
+    decision: string;
+    /**
+     * Status After
+     *
+     * the row's status once the entry is written; null when the row was deleted (withdrawn)
+     */
+    status_after: string | null;
+    /**
+     * Decided By
+     *
+     * the path (api, review-ip-roles skill), rule:<name>, or model:<id>; legacy stamps verbatim when seeded
+     */
+    decided_by: string;
+    /**
+     * Note
+     */
+    note: string;
+    /**
+     * Evaluation
+     *
+     * the model's verdict, reasoning and model for its entries
+     */
+    evaluation: {
+        [key: string]: unknown;
+    } | null;
+    /**
+     * Seeded
+     */
+    seeded: boolean;
+    /**
+     * At
+     */
+    at: string;
 };
 
 /**
@@ -1923,11 +2167,11 @@ export type ScanRequest = {
      */
     target: string;
     /**
-     * Monitored Ip
+     * Watched Ip
      *
      * the watched IP the target belongs to
      */
-    monitored_ip: string;
+    watched_ip: string;
 };
 
 /**
@@ -1970,9 +2214,13 @@ export type ScannerVerdict = {
 /**
  * SipPair
  *
- * One measured (watched IP, peer) pair from review__sip_pairs: the
- * rule's `role` for the peer in that relationship beside the human's
- * `confirmed_role`, with the numbers the rule measured.
+ * One (watched IP, peer) relation from review__ip_relations (stabilization step 6;
+ * review__sip_pairs is its pre-migration, now read-only, shape): the rule's measured
+ * `role` for the peer in that relationship beside the human's `confirmed_role`, with
+ * the numbers the rule measured. The measured fields are null on a confirmed-only row
+ * with no suggestion evidence behind it -- a human confirmed a relation no rule
+ * currently sees, same as asserting a role with none (review/ip_relations/writer.py's
+ * confirm_relation).
  */
 export type SipPair = {
     /**
@@ -1980,9 +2228,9 @@ export type SipPair = {
      */
     id: number;
     /**
-     * Monitored Ip
+     * Watched Ip
      */
-    monitored_ip: string;
+    watched_ip: string;
     /**
      * Peer Ip
      */
@@ -1990,17 +2238,17 @@ export type SipPair = {
     /**
      * Role
      *
-     * sip_trunk | sip_client | sip_scanner | unclear, as measured
+     * sip_trunk | sip_client | sip_scanner, as measured (unclear pairs carry no row)
      */
     role: string;
     /**
      * Reasoning
      */
-    reasoning: string;
+    reasoning: string | null;
     /**
      * Window Days
      */
-    window_days: number;
+    window_days: number | null;
     /**
      * First Day
      */
@@ -2012,31 +2260,31 @@ export type SipPair = {
     /**
      * Sig Days
      */
-    sig_days: number;
+    sig_days: number | null;
     /**
      * Rtp Days
      */
-    rtp_days: number;
+    rtp_days: number | null;
     /**
      * Sip Packets
      */
-    sip_packets: number;
+    sip_packets: number | null;
     /**
      * Sip Per Day From Peer
      */
-    sip_per_day_from_peer: number;
+    sip_per_day_from_peer: number | null;
     /**
      * Sip Src Ports
      */
-    sip_src_ports: number;
+    sip_src_ports: number | null;
     /**
      * Media Records
      */
-    media_records: number;
+    media_records: number | null;
     /**
      * Media Bytes
      */
-    media_bytes: number;
+    media_bytes: number | null;
     /**
      * Media Per Sip
      */
@@ -2084,11 +2332,11 @@ export type SipPair = {
     /**
      * Peer Is Consumer
      */
-    peer_is_consumer: boolean;
+    peer_is_consumer: boolean | null;
     /**
      * Peer Is Hosting
      */
-    peer_is_hosting: boolean;
+    peer_is_hosting: boolean | null;
     /**
      * Confirmed Role
      */
@@ -2175,9 +2423,9 @@ export type TopAsn = {
      */
     days_seen: number;
     /**
-     * Monitored Ips
+     * Watched Ips
      */
-    monitored_ips: number;
+    watched_ips: number;
 };
 
 /**
@@ -2217,11 +2465,11 @@ export type TopPeer = {
      */
     days_seen: number;
     /**
-     * Monitored Ips
+     * Watched Ips
      *
      * how many watched IPs it talked to in the window
      */
-    monitored_ips: number;
+    watched_ips: number;
 };
 
 /**
@@ -2315,9 +2563,9 @@ export type WebScan = {
      */
     id: number;
     /**
-     * Monitored Ip
+     * Watched Ip
      */
-    monitored_ip: string;
+    watched_ip: string;
     /**
      * Target
      */
@@ -2394,6 +2642,57 @@ export type WebScanContent = {
     raw?: {
         [key: string]: unknown;
     } | null;
+};
+
+/**
+ * WebScanPivot
+ *
+ * One row of verdict__web_scan_pivots joined to its source scan: a resource
+ * on a watched IP's page (the source target, found through urlscan) whose
+ * hash a small number of other sites also serve -- the matched target is
+ * one of them (renamed in step 21: docs/api.md). A pivot back to the source itself is not written (0097).
+ */
+export type WebScanPivot = {
+    /**
+     * Id
+     */
+    id: number;
+    /**
+     * Detected At
+     */
+    detected_at: string;
+    /**
+     * Watched Ip
+     */
+    watched_ip: string;
+    /**
+     * Source Target
+     */
+    source_target: string;
+    /**
+     * Source Scan Uuid
+     */
+    source_scan_uuid: string | null;
+    /**
+     * Hash
+     */
+    hash: string;
+    /**
+     * Matched Target
+     */
+    matched_target: string;
+    /**
+     * Matched Scan Uuid
+     */
+    matched_scan_uuid: string | null;
+    /**
+     * Distinct Target Count At Detection
+     */
+    distinct_target_count_at_detection: number;
+    /**
+     * Heuristic Version
+     */
+    heuristic_version: string;
 };
 
 export type ListIpsWatchIpsGetData = {
@@ -2474,6 +2773,12 @@ export type ListProvidersRefProvidersGetData = {
          * the feed or review session the row came from
          */
         source?: string | null;
+        /**
+         * Include Closed
+         *
+         * also rows their source no longer lists (closed_at set; kept 180 days)
+         */
+        include_closed?: boolean;
         /**
          * Limit
          *
@@ -2817,9 +3122,9 @@ export type ListWebScansLookupWebScansGetData = {
     path?: never;
     query?: {
         /**
-         * Monitored Ip
+         * Watched Ip
          */
-        monitored_ip?: string | null;
+        watched_ip?: string | null;
         /**
          * Target
          *
@@ -3078,20 +3383,20 @@ export type ListFindingsVerdictFindingsGetResponses = {
 
 export type ListFindingsVerdictFindingsGetResponse = ListFindingsVerdictFindingsGetResponses[keyof ListFindingsVerdictFindingsGetResponses];
 
-export type ListDomainPivotsVerdictDomainPivotsGetData = {
+export type ListWebScanPivotsVerdictWebScanPivotsGetData = {
     body?: never;
     path?: never;
     query?: {
         /**
-         * Monitored Ip
+         * Watched Ip
          */
-        monitored_ip?: string | null;
+        watched_ip?: string | null;
         /**
-         * Matched Domain
+         * Matched Target
          *
-         * exact matched domain (the apex urlscan reported)
+         * exact matched target (the apex domain urlscan reported)
          */
-        matched_domain?: string | null;
+        matched_target?: string | null;
         /**
          * Hash
          *
@@ -3117,26 +3422,26 @@ export type ListDomainPivotsVerdictDomainPivotsGetData = {
          */
         to?: string | null;
     };
-    url: '/verdict/domain-pivots';
+    url: '/verdict/web-scan-pivots';
 };
 
-export type ListDomainPivotsVerdictDomainPivotsGetErrors = {
+export type ListWebScanPivotsVerdictWebScanPivotsGetErrors = {
     /**
      * Validation Error
      */
     422: HttpValidationError;
 };
 
-export type ListDomainPivotsVerdictDomainPivotsGetError = ListDomainPivotsVerdictDomainPivotsGetErrors[keyof ListDomainPivotsVerdictDomainPivotsGetErrors];
+export type ListWebScanPivotsVerdictWebScanPivotsGetError = ListWebScanPivotsVerdictWebScanPivotsGetErrors[keyof ListWebScanPivotsVerdictWebScanPivotsGetErrors];
 
-export type ListDomainPivotsVerdictDomainPivotsGetResponses = {
+export type ListWebScanPivotsVerdictWebScanPivotsGetResponses = {
     /**
      * Successful Response
      */
-    200: PageDomainPivot;
+    200: PageWebScanPivot;
 };
 
-export type ListDomainPivotsVerdictDomainPivotsGetResponse = ListDomainPivotsVerdictDomainPivotsGetResponses[keyof ListDomainPivotsVerdictDomainPivotsGetResponses];
+export type ListWebScanPivotsVerdictWebScanPivotsGetResponse = ListWebScanPivotsVerdictWebScanPivotsGetResponses[keyof ListWebScanPivotsVerdictWebScanPivotsGetResponses];
 
 export type ListIpRolesReviewIpRolesGetData = {
     body?: never;
@@ -3168,6 +3473,12 @@ export type ListIpRolesReviewIpRolesGetData = {
          * true: only rows where a rule raised an alarm (evidence changed on a reviewed row)
          */
         alarmed?: boolean | null;
+        /**
+         * In Doubt
+         *
+         * true: only confirmed rows the 30-day re-check flagged (evaluation.doubt says why)
+         */
+        in_doubt?: boolean | null;
         /**
          * Limit
          *
@@ -3264,6 +3575,174 @@ export type GetIpRolesReviewIpRolesIpGetResponses = {
 
 export type GetIpRolesReviewIpRolesIpGetResponse = GetIpRolesReviewIpRolesIpGetResponses[keyof GetIpRolesReviewIpRolesIpGetResponses];
 
+export type GetIpRoleHistoryReviewIpRolesIpHistoryGetData = {
+    body?: never;
+    path: {
+        /**
+         * Ip
+         */
+        ip: string;
+    };
+    query?: {
+        /**
+         * Role
+         *
+         * one role of the IP; default: all
+         */
+        role?: string | null;
+    };
+    url: '/review/ip-roles/{ip}/history';
+};
+
+export type GetIpRoleHistoryReviewIpRolesIpHistoryGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetIpRoleHistoryReviewIpRolesIpHistoryGetError = GetIpRoleHistoryReviewIpRolesIpHistoryGetErrors[keyof GetIpRoleHistoryReviewIpRolesIpHistoryGetErrors];
+
+export type GetIpRoleHistoryReviewIpRolesIpHistoryGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageRoleHistoryEntry;
+};
+
+export type GetIpRoleHistoryReviewIpRolesIpHistoryGetResponse = GetIpRoleHistoryReviewIpRolesIpHistoryGetResponses[keyof GetIpRoleHistoryReviewIpRolesIpHistoryGetResponses];
+
+export type ListIpRelationsReviewIpRelationsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Status
+         *
+         * suggested | agentic_evaluation | confirmed | rejected | expired
+         */
+        status?: string | null;
+        /**
+         * Vantage
+         *
+         * watched | peer (every relation today is peer)
+         */
+        vantage?: string | null;
+        /**
+         * Relation
+         *
+         * operator | c2_victim | c2_operator | research | sip_trunk | sip_client
+         */
+        relation?: string | null;
+        /**
+         * Ip
+         */
+        ip?: string | null;
+        /**
+         * Other Ip
+         */
+        other_ip?: string | null;
+        /**
+         * Limit
+         *
+         * rows to return, at most 1000
+         */
+        limit?: number;
+    };
+    url: '/review/ip-relations';
+};
+
+export type ListIpRelationsReviewIpRelationsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type ListIpRelationsReviewIpRelationsGetError = ListIpRelationsReviewIpRelationsGetErrors[keyof ListIpRelationsReviewIpRelationsGetErrors];
+
+export type ListIpRelationsReviewIpRelationsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageIpRelation;
+};
+
+export type ListIpRelationsReviewIpRelationsGetResponse = ListIpRelationsReviewIpRelationsGetResponses[keyof ListIpRelationsReviewIpRelationsGetResponses];
+
+export type GetIpRelationsReviewIpRelationsIpGetData = {
+    body?: never;
+    path: {
+        /**
+         * Ip
+         */
+        ip: string;
+    };
+    query?: never;
+    url: '/review/ip-relations/{ip}';
+};
+
+export type GetIpRelationsReviewIpRelationsIpGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetIpRelationsReviewIpRelationsIpGetError = GetIpRelationsReviewIpRelationsIpGetErrors[keyof GetIpRelationsReviewIpRelationsIpGetErrors];
+
+export type GetIpRelationsReviewIpRelationsIpGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageIpRelation;
+};
+
+export type GetIpRelationsReviewIpRelationsIpGetResponse = GetIpRelationsReviewIpRelationsIpGetResponses[keyof GetIpRelationsReviewIpRelationsIpGetResponses];
+
+export type GetIpRelationHistoryReviewIpRelationsIpHistoryGetData = {
+    body?: never;
+    path: {
+        /**
+         * Ip
+         */
+        ip: string;
+    };
+    query?: {
+        /**
+         * Relation
+         *
+         * one relation name; default: all
+         */
+        relation?: string | null;
+        /**
+         * Other Ip
+         *
+         * narrow to one specific pair
+         */
+        other_ip?: string | null;
+    };
+    url: '/review/ip-relations/{ip}/history';
+};
+
+export type GetIpRelationHistoryReviewIpRelationsIpHistoryGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type GetIpRelationHistoryReviewIpRelationsIpHistoryGetError = GetIpRelationHistoryReviewIpRelationsIpHistoryGetErrors[keyof GetIpRelationHistoryReviewIpRelationsIpHistoryGetErrors];
+
+export type GetIpRelationHistoryReviewIpRelationsIpHistoryGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageRoleHistoryEntry;
+};
+
+export type GetIpRelationHistoryReviewIpRelationsIpHistoryGetResponse = GetIpRelationHistoryReviewIpRelationsIpHistoryGetResponses[keyof GetIpRelationHistoryReviewIpRelationsIpHistoryGetResponses];
+
 export type QueueReviewQueueGetData = {
     body?: never;
     path?: never;
@@ -3285,9 +3764,9 @@ export type ListSipPairsReviewSipPairsGetData = {
     path?: never;
     query?: {
         /**
-         * Monitored Ip
+         * Watched Ip
          */
-        monitored_ip?: string | null;
+        watched_ip?: string | null;
         /**
          * Peer Ip
          */
@@ -3301,7 +3780,7 @@ export type ListSipPairsReviewSipPairsGetData = {
         /**
          * Role
          *
-         * the measured role: sip_trunk | sip_client | sip_scanner | unclear
+         * the measured role: sip_trunk | sip_client | sip_scanner
          */
         role?: string | null;
         /**
@@ -3404,6 +3883,44 @@ export type DecideIpRoleReviewIpRolesIpRoleDecisionPostResponses = {
 
 export type DecideIpRoleReviewIpRolesIpRoleDecisionPostResponse = DecideIpRoleReviewIpRolesIpRoleDecisionPostResponses[keyof DecideIpRoleReviewIpRolesIpRoleDecisionPostResponses];
 
+export type DecideIpRelationReviewIpRelationsIpRelationOtherIpDecisionPostData = {
+    body: RelationDecision;
+    path: {
+        /**
+         * Ip
+         */
+        ip: string;
+        /**
+         * Relation
+         */
+        relation: string;
+        /**
+         * Other Ip
+         */
+        other_ip: string;
+    };
+    query?: never;
+    url: '/review/ip-relations/{ip}/{relation}/{other_ip}/decision';
+};
+
+export type DecideIpRelationReviewIpRelationsIpRelationOtherIpDecisionPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DecideIpRelationReviewIpRelationsIpRelationOtherIpDecisionPostError = DecideIpRelationReviewIpRelationsIpRelationOtherIpDecisionPostErrors[keyof DecideIpRelationReviewIpRelationsIpRelationOtherIpDecisionPostErrors];
+
+export type DecideIpRelationReviewIpRelationsIpRelationOtherIpDecisionPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: RelationDecisionResult;
+};
+
+export type DecideIpRelationReviewIpRelationsIpRelationOtherIpDecisionPostResponse = DecideIpRelationReviewIpRelationsIpRelationOtherIpDecisionPostResponses[keyof DecideIpRelationReviewIpRelationsIpRelationOtherIpDecisionPostResponses];
+
 export type DecideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPostData = {
     body: AsnDecision;
     path: {
@@ -3439,9 +3956,9 @@ export type ProviderMixDailyRollupProviderMixDailyGetData = {
     path?: never;
     query?: {
         /**
-         * Monitored Ip
+         * Watched Ip
          */
-        monitored_ip?: string | null;
+        watched_ip?: string | null;
         /**
          * Limit
          *
@@ -3487,9 +4004,9 @@ export type PortFamilyMixDailyRollupPortFamilyMixDailyGetData = {
     path?: never;
     query?: {
         /**
-         * Monitored Ip
+         * Watched Ip
          */
-        monitored_ip?: string | null;
+        watched_ip?: string | null;
         /**
          * Limit
          *
@@ -3535,9 +4052,9 @@ export type BphContactDailyRollupBphContactDailyGetData = {
     path?: never;
     query?: {
         /**
-         * Monitored Ip
+         * Watched Ip
          */
-        monitored_ip?: string | null;
+        watched_ip?: string | null;
         /**
          * Limit
          *
@@ -3583,9 +4100,9 @@ export type UnclassifiedContactsDailyRollupUnclassifiedContactsDailyGetData = {
     path?: never;
     query?: {
         /**
-         * Monitored Ip
+         * Watched Ip
          */
-        monitored_ip?: string | null;
+        watched_ip?: string | null;
         /**
          * Limit
          *
@@ -3637,9 +4154,9 @@ export type TopPeersRollupFlowDailyTopPeersGetData = {
          */
         port_family?: string | null;
         /**
-         * Monitored Ip
+         * Watched Ip
          */
-        monitored_ip?: string | null;
+        watched_ip?: string | null;
         /**
          * Asn
          *
@@ -3715,9 +4232,9 @@ export type TopAsnsRollupFlowDailyTopAsnsGetData = {
          */
         port_family?: string | null;
         /**
-         * Monitored Ip
+         * Watched Ip
          */
-        monitored_ip?: string | null;
+        watched_ip?: string | null;
         /**
          * Exclude Confirmed
          *
@@ -3781,9 +4298,9 @@ export type FlowDailyRollupFlowDailyGetData = {
     path?: never;
     query?: {
         /**
-         * Monitored Ip
+         * Watched Ip
          */
-        monitored_ip?: string | null;
+        watched_ip?: string | null;
         /**
          * Peer Ip
          */
@@ -3843,9 +4360,9 @@ export type FlowHourlyRollupFlowHourlyGetData = {
     path?: never;
     query?: {
         /**
-         * Monitored Ip
+         * Watched Ip
          */
-        monitored_ip?: string | null;
+        watched_ip?: string | null;
         /**
          * Peer Ip
          */
@@ -3899,9 +4416,9 @@ export type ConfirmedContactsDailyRollupConfirmedContactsDailyGetData = {
     path?: never;
     query?: {
         /**
-         * Monitored Ip
+         * Watched Ip
          */
-        monitored_ip?: string | null;
+        watched_ip?: string | null;
         /**
          * Peer Ip
          */

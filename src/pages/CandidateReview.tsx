@@ -367,7 +367,7 @@ function AsnQueue({ onPendingCount }: { onPendingCount: (n: number) => void }) {
                 portFamilies: new Set(),
               };
               for (const r of flows.data.rows) {
-                ev.monitoredIps.add(r.monitored_ip);
+                ev.monitoredIps.add(r.watched_ip);
                 ev.bytes += r.bytes_sum;
                 ev.flows += r.flow_count;
                 ev.days.add(r.day);
@@ -923,7 +923,7 @@ function IpRoleCard({
     setExpanded(next);
     if (next && pairs === null && SIP_ROLES.has(row.role)) {
       try {
-        const query = vantage === "peer" ? { peer_ip: row.ip } : { monitored_ip: row.ip };
+        const query = vantage === "peer" ? { peer_ip: row.ip } : { watched_ip: row.ip };
         const result = await listSipPairsReviewSipPairsGet({
           query: { ...query, limit: 1000 },
           throwOnError: true,
@@ -948,7 +948,7 @@ function IpRoleCard({
   function handleDecide(decision: "confirm" | "reject") {
     const pairsPayload =
       decision === "confirm" && pairs
-        ? pairs.filter((p) => checked.has(p.id)).map((p) => ({ monitored_ip: p.monitored_ip, peer_ip: p.peer_ip }))
+        ? pairs.filter((p) => checked.has(p.id)).map((p) => ({ watched_ip: p.watched_ip, peer_ip: p.peer_ip }))
         : undefined;
     void onDecide(row, decision, pairsPayload);
   }
@@ -1193,9 +1193,9 @@ function IpRoleCard({
               </thead>
               <tbody>
                 {pairs.map((p) => {
-                  const otherIp = vantage === "peer" ? p.monitored_ip : p.peer_ip;
+                  const otherIp = vantage === "peer" ? p.watched_ip : p.peer_ip;
                   return (
-                    <tr key={p.id} title={p.reasoning}>
+                    <tr key={p.id} title={p.reasoning ?? undefined}>
                       <td>
                         <input
                           type="checkbox"
@@ -1223,7 +1223,7 @@ function IpRoleCard({
                         {p.rtp_days}
                       </td>
                       <td className="num mono" style={{ textAlign: "right" }}>
-                        {p.sip_per_day_from_peer.toFixed(1)}
+                        {p.sip_per_day_from_peer?.toFixed(1) ?? "—"}
                       </td>
                       <td className="num mono" style={{ textAlign: "right" }}>
                         {p.media_records}
