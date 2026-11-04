@@ -14,31 +14,12 @@ import {
 } from "../api/netflow-rollups-client";
 import { formatBytes, isoDate, daysAgo } from "../lib/format";
 import { categoryColors } from "../lib/categories";
+import { roleColor, familyColor } from "../lib/colors";
 import { ZoomableSvg } from "../components/ZoomableSvg";
 import { CopyButton } from "../components/CopyButton";
+import { errorMessage } from "../lib/errors";
 
 type Tab = "graph" | "sankey";
-
-// Deterministic, not a hand-picked palette: confirmed roles alone span 8
-// values today across ~20 possible ones, and traffic types span 20 distinct
-// port_family values on confirmed-contacts edges — too many to maintain by
-// hand, and a hardcoded map silently drops a new value into "unstyled"
-// forever (what happened here before: a 3-entry ROLE_COLORS map meant a
-// confirmed web_server or c2_server node looked identical to one with no
-// confirmed role at all). A hash of the string is cheap, stable across
-// reloads, and never missing an entry.
-function hueOf(key: string): number {
-  let hash = 0;
-  for (let i = 0; i < key.length; i++) hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
-  return hash % 360;
-}
-function roleColor(role: string): { bg: string; border: string } {
-  const hue = hueOf(`role:${role}`);
-  return { bg: `hsl(${hue}, 55%, 14%)`, border: `hsl(${hue}, 70%, 60%)` };
-}
-function familyColor(family: string): string {
-  return `hsl(${hueOf(`family:${family}`)}, 65%, 58%)`;
-}
 
 // Markers render in one fixed neutral color, never a hashed hue — the
 // point is that a marker always reads as "a marker", distinguishable at
@@ -221,12 +202,13 @@ export function FlowGraph() {
 
         <div style={{ fontSize: 13, color: "#6FA89E" }}>
           <b style={{ color: "#A6D8CD" }}>Every day of real traffic</b> a monitored IP and a peer
-          exchanged (<span className="mono">rollup__flow_daily</span>) draws an edge here — not just
+          exchanged (<span className="mono">/rollup/flow-daily</span>) draws an edge here — not just
           reviewed ones. A faint edge is unreviewed, real traffic; a full-brightness edge has cleared
-          the same bar <span className="mono">rollup__confirmed_contacts_daily</span> promotes rows on
-          — a confirmed role on either side, or the pair itself confirmed as a SIP peer. Edge color =
+          the same bar <span className="mono">/rollup/confirmed-contacts-daily</span> promotes rows on
+          — a confirmed role on either side, or a confirmed relationship between the two (a SIP trunk
+          or client, an operator, a C2 victim, ...). Edge color =
           dominant traffic type · peer color = peer_categories · monitored nodes are labeled by IP;
-          common roles and c2_* from <span className="mono">review__ip_roles</span> get an icon marker
+          common roles and c2_* from <span className="mono">/review/ip-roles</span> get an icon marker
           underneath — see the Legend for what's what, click any node for the rest
         </div>
       </div>
@@ -307,8 +289,8 @@ function buildGraph(
   // Dedup monitored<->monitored edges (stored once per side's pull); keep
   // the larger measured side rather than summing both.
   //
-  // Edges come from rollup__flow_daily itself now, not the pre-filtered
-  // rollup__confirmed_contacts_daily view — that view turned out to be the
+  // Edges come from /rollup/flow-daily itself now, not the pre-filtered
+  // /rollup/confirmed-contacts-daily route — that view turned out to be the
   // wrong scope for an exploration graph: it silently dropped every day of
   // real traffic that hadn't yet cleared its review bar, which is exactly
   // the traffic an analyst hunting for something new would want to see.
@@ -330,9 +312,11 @@ function buildGraph(
     const key = bIsWatched
       ? ["mm", ...[r.watched_ip, r.peer_ip].sort()].join("|")
       : `mp|${r.watched_ip}|${r.peer_ip}`;
-    // The same bar rollup__confirmed_contacts_daily itself promotes rows
-    // on: either side has a confirmed role, or this exact pair is itself a
-    // confirmed SIP peer. An edge is "confirmed" if ANY day/port-family
+    // The same bar /rollup/confirmed-contacts-daily itself promotes rows
+    // on: either side has a confirmed role, or this exact pair has a
+    // confirmed relation (any kind -- netflow-rollups step 7 folded
+    // operator, c2_victim, sip_trunk, ... into relations, and
+    // pair_confirmed is true for any of them). An edge is "confirmed" if ANY day/port-family
     // row backing it clears this — the same condition under which that
     // row would have appeared in confirmed-contacts at all.
     const rowConfirmed = r.watched_ip_roles.length > 0 || r.peer_roles.length > 0 || r.pair_confirmed;
@@ -495,7 +479,7 @@ function buildGraph(
   }
 
   // A monitored IP the analyst explicitly picked but that has zero rows
-  // in rollup__flow_daily at all (true silence, not just "nothing
+  // in /rollup/flow-daily at all (true silence, not just "nothing
   // reviewed yet") never got a node at all before this — monitoredNode()
   // only ever ran from inside the edge loop above, so picking it just
   // silently produced nothing, with no error and no "it's here, it just
@@ -575,7 +559,7 @@ function NodeGraph() {
         if (!cancelled) setWatchedIps(r.data.rows);
       })
       .catch((err) => {
-        if (!cancelled) setWatchError(err instanceof Error ? err.message : String(err));
+        if (!cancelled) setWatchError(errorMessage(err));
       });
     return () => {
       cancelled = true;
@@ -780,7 +764,7 @@ function NodeGraph() {
         setData({ nodes: simNodes as GNode[], links: graph.links });
         setPeerRoles(peerRoleMap);
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+        if (!cancelled) setError(errorMessage(err));
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -1515,7 +1499,7 @@ function NodeGraph() {
                   }}
                 >
                   <span style={{ width: 18, height: 2, background: "#A6D8CD", opacity: 1, display: "inline-block", flexShrink: 0 }} />
-                  confirmed — role on either side, or pair itself confirmed
+                  confirmed — role on either side, or a confirmed relationship between the two
                 </div>
                 <div
                   onClick={() => toggleHighlight({ kind: "confirmed", value: false })}
@@ -1785,7 +1769,7 @@ function NodeGraph() {
           <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 10, color: "#F5A623" }}>Data notes</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 9, fontSize: 12, color: "#A6D8CD", lineHeight: 1.5 }}>
             <div>① Every monitored↔monitored edge is stored twice (once per side's pull) — keyed on the unordered pair, keeping the larger side rather than summing.</div>
-            <div>② The edge view carries roles, not categories — peer color is joined back from <span className="mono">rollup__flow_daily</span>.</div>
+            <div>② The edge view carries roles, not categories — peer color is joined back from <span className="mono">/rollup/flow-daily</span>.</div>
             <div>③ ASN clustering: peers below 0.5% of total graph bytes sharing an ASN with 2+ others collapse into one node — this was blocked until <span className="mono">peer_asn</span> landed on the rollups.</div>
             <div>④ A peer that's itself on the watchlist is drawn as a monitored node, never a plain peer.</div>
             <div>⑤ Role and traffic-type colors are generated from the name, not a hand-picked palette — a new role or port family gets a stable color automatically, never falls back to looking like "no role yet."</div>
@@ -1793,8 +1777,8 @@ function NodeGraph() {
             <div>⑦ Markers (phone, envelope, warning triangle, …) render in one fixed color, never a hashed hue — only the roles with real confirmed volume (9 of them, as of forward_proxy's gate icon) plus c2_server/c2_operator/c2_victim get one; every other role is ring color + text only, deliberately, so adding icons per-role doesn't become hand-maintained mapping debt.</div>
             <div>⑧ Click an ASN cluster node to see the individual peer IPs it bucketed, with a copy-all button.</div>
             <div>⑨ The layout is stateful across selection changes: a node already on screen (including anything dragged by hand) keeps its position when you add or remove a monitored IP — only newly appearing nodes get freshly simulated into place.</div>
-            <div>⑩ A standalone peer with a role (from <span className="mono">review__ip_roles</span>, peer vantage) gets a marker icon outside its category circle if the role has one — no ring, no label; click the peer for the exact role. A role without a marker (most of them) shows nothing on a peer's glyph at all. Clustered peers never show a member's role on the glyph (one cluster, several peers, no single role to show) — their roles are in the cluster's own sidebar list instead.</div>
-            <div>⑪ Edges are built from every <span className="mono">rollup__flow_daily</span> row now, not a pre-filtered confirmed-contacts view — a faint edge is real traffic nobody's reviewed yet, not something hidden. An edge counts as confirmed if any day/port-family bucket behind it clears the bar (role on either side, or the pair itself a confirmed SIP peer); click "Review status" in the Legend to isolate either state.</div>
+            <div>⑩ A standalone peer with a role (from <span className="mono">/review/ip-roles</span>, peer vantage) gets a marker icon outside its category circle if the role has one — no ring, no label; click the peer for the exact role. A role without a marker (most of them) shows nothing on a peer's glyph at all. Clustered peers never show a member's role on the glyph (one cluster, several peers, no single role to show) — their roles are in the cluster's own sidebar list instead.</div>
+            <div>⑪ Edges are built from every <span className="mono">/rollup/flow-daily</span> row now, not a pre-filtered confirmed-contacts view — a faint edge is real traffic nobody's reviewed yet, not something hidden. An edge counts as confirmed if any day/port-family bucket behind it clears the bar (role on either side, or a confirmed relationship between the two); click "Review status" in the Legend to isolate either state.</div>
             <div>⑫ Compare mode (or shift-click) builds a set of 2+ nodes and shows what they share: direct edges between them, any other node that's a neighbor of more than one, and — the one thing an ASN cluster can't show on its own — which of a cluster's merged members actually trace back to more than one of the compared monitored IPs, since those members have no separate position on the canvas to click individually.</div>
           </div>
         </div>
@@ -1868,7 +1852,7 @@ function SankeyDiagram() {
         setRows(flowResult.data.rows.filter((r) => SIP_FAMILIES.includes(r.port_family)));
         setWatchedIps(new Set(watchResult.data.rows.map((w) => w.ip)));
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+        if (!cancelled) setError(errorMessage(err));
       }
     }
     void load();
@@ -2096,7 +2080,7 @@ function SankeyDiagram() {
       <div className="note">
         Width = bytes of <span className="mono">rtp_media</span> + <span className="mono">voip_signaling</span>{" "}
         + <span className="mono">voip_admin</span> over the last 30 days (
-        <span className="mono">rollup__flow_daily</span>). Left-to-right: peer class → peer host
+        <span className="mono">/rollup/flow-daily</span>). Left-to-right: peer class → peer host
         (top 28 by bytes individually, the rest collapsed per class) → monitored IP → port family.
         Hover any node or link for its numbers. Not built yet: the mockup's hover-trace highlighting,
         click-to-pin, and the min-link threshold slider.

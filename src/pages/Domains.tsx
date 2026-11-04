@@ -12,6 +12,7 @@ import {
 } from "../api/spoilerAlert";
 import { fetchOwner, type OpenCtiOwner } from "../api/opencti";
 import { formatShortDate, daysUntil, expiryColor, formatDaysUntil } from "../lib/format";
+import { errorMessage } from "../lib/errors";
 
 type View = "all" | "owner";
 
@@ -92,7 +93,7 @@ export function Domains() {
           expiryByOpenctiId: new Map(expiryEntries),
         });
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+        if (!cancelled) setError(errorMessage(err));
       }
     }
     void load();

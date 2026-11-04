@@ -2,19 +2,23 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   topPeersRollupFlowDailyTopPeersGet,
+  topAsnsRollupFlowDailyTopAsnsGet,
   unclassifiedContactsDailyRollupUnclassifiedContactsDailyGet,
   listAsnCandidatesReviewAsnCandidatesGet,
   type TopPeer,
+  type TopAsn,
   type DailyUnclassifiedContact,
   type AsnCandidate,
 } from "../api/netflow-rollups-client";
 import { formatBytes } from "../lib/format";
 import { categoryColors } from "../lib/categories";
+import { errorMessage } from "../lib/errors";
 
 type View = "ip" | "asn" | "uncl";
 
 type TalkersData = {
   topPeers: TopPeer[];
+  topAsns: TopAsn[];
   unclassified: DailyUnclassifiedContact[];
   asnCandidates: AsnCandidate[];
 };
@@ -38,8 +42,17 @@ export function TopTalkers() {
 
     async function load() {
       try {
-        const [topPeers, unclassified, asnCandidates] = await Promise.all([
+        const [topPeers, topAsns, unclassified, asnCandidates] = await Promise.all([
           topPeersRollupFlowDailyTopPeersGet({
+            query: {
+              port_family: "rtp_media",
+              exclude_confirmed: true,
+              exclude_watched: true,
+              limit: 20,
+            },
+            throwOnError: true,
+          }),
+          topAsnsRollupFlowDailyTopAsnsGet({
             query: {
               port_family: "rtp_media",
               exclude_confirmed: true,
@@ -57,11 +70,12 @@ export function TopTalkers() {
         if (cancelled) return;
         setData({
           topPeers: topPeers.data.rows,
+          topAsns: topAsns.data.rows,
           unclassified: unclassified.data.rows,
           asnCandidates: asnCandidates.data.rows,
         });
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+        if (!cancelled) setError(errorMessage(err));
       }
     }
 
@@ -95,25 +109,27 @@ export function TopTalkers() {
   const candidateByPeer = new Map(
     data?.asnCandidates.filter((c) => c.triggering_peer_ip).map((c) => [c.triggering_peer_ip!, c]) ?? [],
   );
+  const candidateByAsn = new Map(data?.asnCandidates.map((c) => [c.asn, c]) ?? []);
+  const asnOfPeer = new Map(data?.unclassified.filter((r) => r.peer_asn !== null).map((r) => [r.peer_ip, r.peer_asn!]) ?? []);
   const sortedUncl = [...unclByPeer.entries()].sort((a, b) => b[1].bytes - a[1].bytes).slice(0, 30);
   const totalUnclBytes = [...unclByPeer.values()].reduce((s, e) => s + e.bytes, 0);
 
   const SUBTITLES: Record<View, React.ReactNode> = {
     ip: (
       <>
-        port_family = rtp_media · tagged peers excluded · <span className="mono">rollup__flow_daily/top-peers</span>
+        port_family = rtp_media · confirmed and watched peers excluded · scanners hidden upstream · <span className="mono">/rollup/flow-daily/top-peers</span>
       </>
     ),
     asn: (
       <>
-        port_family = rtp_media · tagged peers excluded ·{" "}
-        <span style={{ color: "#F5A623" }}>needs ASN on a rollup — see note</span>
+        port_family = rtp_media · confirmed and watched peers excluded · scanners hidden upstream ·{" "}
+        <span className="mono">/rollup/flow-daily/top-asns</span>
       </>
     ),
     uncl: (
       <>
         all port families · peer_categories = {"{}"} and no accepted role · {unclByPeer.size} peers /{" "}
-        {formatBytes(totalUnclBytes)} in 7d · <span className="mono">rollup__unclassified_contacts_daily</span>
+        {formatBytes(totalUnclBytes)} in 7d · <span className="mono">/rollup/unclassified-contacts-daily</span>
       </>
     ),
   };
@@ -207,7 +223,7 @@ export function TopTalkers() {
             </tbody>
           </table>
           <div className="note">
-            Category comes from <span className="mono">rollup__flow_daily</span>, not the mix view
+            Category comes from <span className="mono">/rollup/flow-daily</span>, not the mix route
             — it's the only place a multi-flag peer (<span className="mono">cloud+bph</span>) shows
             both.
           </div>
@@ -216,31 +232,56 @@ export function TopTalkers() {
 
       {data && view === "asn" && (
         <div className="card">
-          <div style={{ padding: "16px 20px 0 20px" }}>
-            <div
-              style={{
-                display: "flex",
-                gap: 10,
-                alignItems: "flex-start",
-                fontSize: 12,
-                lineHeight: 1.5,
-                color: "#C6EBE2",
-                background: "#241A0F",
-                border: "1px solid #5A4423",
-                borderRadius: 8,
-                padding: "12px 14px",
-                marginBottom: 16,
-              }}
-            >
-              <span>⚠</span>
-              <span>
-                <b style={{ color: "#F5A623" }}>Blocked by the data, not the UI.</b> No rollup view
-                carries ASN — <span className="mono">rollup__flow_hourly</span>'s GROUP BY has no{" "}
-                <span className="mono">peer_asn</span>. Same blocker hits the Flow graph's ASN
-                cluster and this page's Candidate column, below. Waiting on an upstream column
-                before this view can show real rows.
-              </span>
-            </div>
+          <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 16 }}>
+            <thead>
+              <tr>
+                <th>ASN</th>
+                <th>Country</th>
+                <th style={{ textAlign: "right" }}>Peers</th>
+                <th style={{ textAlign: "right" }}>Bytes</th>
+                <th style={{ textAlign: "right" }}>Flows</th>
+                <th style={{ textAlign: "right" }}>Days seen</th>
+                <th style={{ textAlign: "right" }}>Monitored IPs</th>
+                <th>Candidate</th>
+              </tr>
+            </thead>
+            <tbody>
+              {data.topAsns.map((a) => {
+                const candidate = a.peer_asn !== null ? candidateByAsn.get(a.peer_asn) : undefined;
+                return (
+                  <tr key={a.peer_asn ?? "none"}>
+                    <td className="mono">{a.peer_asn !== null ? `AS${a.peer_asn}` : <span style={{ color: "#6FA89E" }}>no ASN in the feed</span>}</td>
+                    <td className="mono" style={{ color: "#A6D8CD" }}>{a.peer_country ?? "—"}</td>
+                    <td className="num mono" style={{ textAlign: "right" }}>{a.peers.toLocaleString()}</td>
+                    <td className="num mono" style={{ textAlign: "right" }}>{formatBytes(a.bytes_sum)}</td>
+                    <td className="num mono" style={{ textAlign: "right" }}>{a.flow_count.toLocaleString()}</td>
+                    <td className="num mono" style={{ textAlign: "right" }}>{a.days_seen}</td>
+                    <td className="num mono" style={{ textAlign: "right" }}>{a.watched_ips}</td>
+                    <td style={{ color: candidate ? undefined : "#6FA89E" }}>
+                      {candidate ? (
+                        <Link to="/candidates">
+                          {candidate.suggested_category} · {candidate.status}
+                        </Link>
+                      ) : (
+                        "—"
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+              {data.topAsns.length === 0 && (
+                <tr>
+                  <td colSpan={8} style={{ color: "#6FA89E" }}>
+                    No ASNs in this window.
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
+          <div className="note">
+            ASN and country are the feed's own values for the peer (netflow-rollups carries{" "}
+            <span className="mono">peer_asn</span> / <span className="mono">peer_country</span> since
+            its migration 0083); peers the feed gave no ASN are one row. Mode country per ASN.
           </div>
         </div>
       )}
@@ -261,7 +302,9 @@ export function TopTalkers() {
             </thead>
             <tbody>
               {sortedUncl.map(([peerIp, e]) => {
-                const candidate = candidateByPeer.get(peerIp);
+                const asnOfThisPeer = asnOfPeer.get(peerIp);
+                const byPeer = candidateByPeer.get(peerIp);
+                const candidate = byPeer ?? (asnOfThisPeer !== undefined ? candidateByAsn.get(asnOfThisPeer) : undefined);
                 return (
                   <tr key={peerIp}>
                     <td>
@@ -288,6 +331,7 @@ export function TopTalkers() {
                       {candidate ? (
                         <Link to="/candidates">
                           AS{candidate.asn} · {candidate.status}
+                          {!byPeer && " (via ASN)"}
                         </Link>
                       ) : (
                         "—"
@@ -306,10 +350,10 @@ export function TopTalkers() {
             </tbody>
           </table>
           <div className="note">
-            Candidate column matches this exact peer against{" "}
-            <span className="mono">review__asn_candidates.triggering_peer_ip</span> — it isn't an
-            ASN-grouped match (no rollup carries ASN yet), so a peer sharing an ASN with a
-            candidate but not the one that triggered it still shows "—".
+            Candidate column matches this peer against{" "}
+            <span className="mono">review__asn_candidates.triggering_peer_ip</span> first, then by
+            its ASN (<span className="mono">peer_asn</span> on the rollup row) — "(via ASN)" marks a
+            peer that shares an ASN with a candidate without being the peer that triggered it.
           </div>
         </div>
       )}

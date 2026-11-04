@@ -16,6 +16,7 @@ import {
   type PrefectFlowRun,
 } from "../api/prefect";
 import { daysAgo } from "../lib/format";
+import { errorMessage } from "../lib/errors";
 
 type PipelineData = {
   freshness: Freshness;
@@ -143,7 +144,7 @@ export function PipelineHealth() {
           peerReview: peerReviewResult.data.rows,
         });
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+        if (!cancelled) setError(errorMessage(err));
       }
     }
 

@@ -6,6 +6,7 @@ import {
   decideIpRoleReviewIpRolesIpRoleDecisionPost,
   listSipPairsReviewSipPairsGet,
   flowDailyRollupFlowDailyGet,
+  topPeersRollupFlowDailyTopPeersGet,
   queueReviewQueueGet,
   vocabularyRulesVocabularyGet,
   type AsnCandidate,
@@ -17,13 +18,16 @@ import {
 } from "../api/netflow-rollups-client";
 import { formatBytes, formatShortDate, isoDate, daysAgo } from "../lib/format";
 import { CopyButton } from "../components/CopyButton";
+import { BTN_APPROVE, BTN_REJECT, DecidedChip } from "../components/reviewControls";
+import { RelationQueue } from "../components/RelationQueue";
+import { errorMessage } from "../lib/errors";
 
-type Queue = "asn" | "peer" | "watched";
+type Queue = "asn" | "peer" | "watched" | "relations";
 
 type RoleSuggestion = { reasoning?: string; features?: Record<string, unknown>; first_day?: string; last_day?: string; alarm?: string | null };
 
 // netflow-rollups' own SIP_ROLES (review/ip_roles/writer.py) — the only
-// roles review__sip_pairs ever carries evidence for, and the only roles
+// roles /review/sip-pairs (review__ip_relations) ever carries evidence for, and the only roles
 // confirm_role() accepts a `pairs` argument for at all (any other role
 // with a non-empty pairs list raises "not a SIP role; it has no pairs to
 // confirm" server-side). A peer confirmed operator, research, web_server,
@@ -115,7 +119,7 @@ function useGlossary(): { glossary: Glossary; error: string | null } {
       .catch((err) => {
         // The page still works without it — every (?) icon just falls back
         // to its honest "no glossary entry" state.
-        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+        if (!cancelled) setError(errorMessage(err));
       });
     return () => {
       cancelled = true;
@@ -200,49 +204,13 @@ function NamesList({ domains, certs }: { domains: string[]; certs: string[] }) {
   );
 }
 
-const BTN_BASE: React.CSSProperties = {
-  all: "unset",
-  cursor: "pointer",
-  fontSize: 13,
-  fontWeight: 500,
-  padding: "9px 18px",
-  borderRadius: 6,
-  textAlign: "center",
-};
-const BTN_REJECT: React.CSSProperties = {
-  ...BTN_BASE,
-  background: "#241518",
-  color: "#E5484D",
-  border: "1px solid #442025",
-};
-const BTN_APPROVE: React.CSSProperties = {
-  ...BTN_BASE,
-  background: "#153226",
-  color: "#3DD68C",
-  border: "1px solid #1E4D37",
-};
-
-function DecidedChip({ label, kind }: { label: string; kind: "approve" | "reject" }) {
-  return (
-    <span
-      className="chip"
-      style={
-        kind === "approve"
-          ? { background: "#153226", color: "#3DD68C", borderColor: "#1E4D37" }
-          : { background: "#241518", color: "#E5484D", borderColor: "#442025" }
-      }
-    >
-      {label}
-    </span>
-  );
-}
-
 export function CandidateReview() {
   const [tab, setTab] = useState<Queue>("asn");
   const [queue, setQueue] = useState<ReviewQueue | null>(null);
   const [asnPending, setAsnPending] = useState<number | null>(null);
   const [peerPending, setPeerPending] = useState<number | null>(null);
   const [watchedPending, setWatchedPending] = useState<number | null>(null);
+  const [relationsPending, setRelationsPending] = useState<number | null>(null);
   const { glossary } = useGlossary();
 
   useEffect(() => {
@@ -259,6 +227,7 @@ export function CandidateReview() {
     { key: "asn", label: "ASN candidates", count: asnPending ?? queue?.asn_candidates ?? null },
     { key: "peer", label: "Peer roles", count: peerPending ?? queue?.peer_roles ?? null },
     { key: "watched", label: "Monitored IP roles", count: watchedPending ?? queue?.watched_roles ?? null },
+    { key: "relations", label: "Peer relationships", count: relationsPending ?? queue?.peer_relations ?? null },
   ];
 
   return (
@@ -266,8 +235,11 @@ export function CandidateReview() {
       <div style={{ marginBottom: 20 }}>
         <h1 style={{ margin: "0 0 4px 0", fontSize: 22, fontWeight: 600 }}>Candidate review</h1>
         <div style={{ fontSize: 13, color: "#6FA89E" }}>
-          Three review queues, each backed by its own table and decision endpoint. SIP pair
-          evidence for a role appears under its card — expand "Relationships" below.
+          Four review queues, each backed by its own table and decision endpoint. A peer's
+          operator, C2-victim, research and SIP trunk/client/scanner findings are{" "}
+          <em>relationships</em> (a statement about one IP relative to another), reviewed in the
+          Peer relationships queue; SIP pair evidence for a role also appears under its card —
+          expand "Relationships" below.
         </div>
       </div>
 
@@ -291,7 +263,7 @@ export function CandidateReview() {
         ))}
       </div>
 
-      {/* All three queues stay mounted so their real, filtered pending counts
+      {/* All four queues stay mounted so their real, filtered pending counts
           load immediately — the tab badges would otherwise show the raw
           /review/queue totals until each tab had actually been clicked once. */}
       <div style={{ display: tab === "asn" ? undefined : "none" }}>
@@ -302,6 +274,9 @@ export function CandidateReview() {
       </div>
       <div style={{ display: tab === "watched" ? undefined : "none" }}>
         <IpRoleQueue vantage="watched" onPendingCount={setWatchedPending} glossary={glossary} />
+      </div>
+      <div style={{ display: tab === "relations" ? undefined : "none" }}>
+        <RelationQueue onPendingCount={setRelationsPending} />
       </div>
     </>
   );
@@ -315,8 +290,15 @@ type Evidence = {
   flows: number;
   days: Set<string>;
   portFamilies: Set<string>;
+  // Other peer IPs of this candidate's ASN seen in the same window (top-peers
+  // takes an `asn` filter since netflow-rollups carries peer_asn on the rollups).
+  otherAsnPeers: number;
 };
-type AsnDecided = { decision: "approve" | "reject"; category?: string };
+// `rollups` is netflow-rollups' own statement of when the decision shows in the
+// /rollup reads: "applied" for a role or relation (joined at read time since its
+// migration 0119); "at the next peer classification, within 30 minutes" for an
+// ASN graduation. Shown verbatim, not paraphrased here.
+type AsnDecided = { decision: "approve" | "reject"; category?: string; rollups?: string };
 
 function AsnQueue({ onPendingCount }: { onPendingCount: (n: number) => void }) {
   const [candidates, setCandidates] = useState<AsnCandidate[] | null>(null);
@@ -355,16 +337,23 @@ function AsnQueue({ onPendingCount }: { onPendingCount: (n: number) => void }) {
           rows
             .filter((c) => c.triggering_peer_ip)
             .map(async (c) => {
-              const flows = await flowDailyRollupFlowDailyGet({
-                query: { peer_ip: c.triggering_peer_ip!, from: from30, to, limit: 20000 },
-                throwOnError: true,
-              });
+              const [flows, asnPeers] = await Promise.all([
+                flowDailyRollupFlowDailyGet({
+                  query: { peer_ip: c.triggering_peer_ip!, from: from30, to, limit: 20000 },
+                  throwOnError: true,
+                }),
+                topPeersRollupFlowDailyTopPeersGet({
+                  query: { asn: c.asn, from: from30, to, limit: 1000 },
+                  throwOnError: true,
+                }),
+              ]);
               const ev: Evidence = {
                 monitoredIps: new Set(),
                 bytes: 0,
                 flows: 0,
                 days: new Set(),
                 portFamilies: new Set(),
+                otherAsnPeers: asnPeers.data.rows.filter((r) => r.peer_ip !== c.triggering_peer_ip).length,
               };
               for (const r of flows.data.rows) {
                 ev.monitoredIps.add(r.watched_ip);
@@ -379,7 +368,7 @@ function AsnQueue({ onPendingCount }: { onPendingCount: (n: number) => void }) {
         if (cancelled) return;
         setEvidence(new Map(evidenceEntries));
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+        if (!cancelled) setError(errorMessage(err));
       }
     }
 
@@ -392,7 +381,7 @@ function AsnQueue({ onPendingCount }: { onPendingCount: (n: number) => void }) {
   async function decide(candidate: AsnCandidate, decision: "approve" | "reject") {
     setActionError(null);
     try {
-      await decideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPost({
+      const result = await decideAsnCandidateReviewAsnCandidatesCandidateIdDecisionPost({
         path: { candidate_id: candidate.id },
         body:
           decision === "approve"
@@ -404,12 +393,13 @@ function AsnQueue({ onPendingCount }: { onPendingCount: (n: number) => void }) {
         const next = new Map(prev).set(candidate.id, {
           decision,
           category: decision === "approve" ? candidate.suggested_category : undefined,
+          rollups: result.data.rollups,
         });
         onPendingCount((candidates ?? []).filter((c) => !next.has(c.id)).length);
         return next;
       });
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : String(err));
+      setActionError(errorMessage(err));
     }
   }
 
@@ -423,8 +413,9 @@ function AsnQueue({ onPendingCount }: { onPendingCount: (n: number) => void }) {
         <span>
           <b style={{ color: "#4C8DFF" }}>Approve writes to netflow-rollups.</b> It inserts the ASN
           into <span className="mono">ref__providers</span> under the chosen category and marks
-          the row reviewed. Rollup rows re-materialize on the next refresh; older rows for this
-          peer stay <em>unclassified</em> until then. Reject just marks the row.
+          the row reviewed. Its category then shows on every day of the rollups at the next peer
+          classification (netflow-rollups rebuilds it every 30 minutes); the decision's own
+          response says so once you click. Reject just marks the row.
         </span>
       </div>
 
@@ -516,6 +507,7 @@ function AsnQueue({ onPendingCount }: { onPendingCount: (n: number) => void }) {
                     <DecidedChip
                       kind={d.decision}
                       label={d.decision === "approve" ? `Approved → ref__providers · ${d.category}` : "Rejected"}
+                      detail={d.decision === "approve" && d.rollups ? `rollups: ${d.rollups}` : undefined}
                     />
                   ) : (
                     <>
@@ -558,7 +550,7 @@ function AsnQueue({ onPendingCount }: { onPendingCount: (n: number) => void }) {
                   <span style={{ fontSize: 11, fontWeight: 600, color: "#A6D8CD" }}>
                     Evidence — what the triggering peer actually did
                   </span>
-                  <span className="src">rollup__flow_daily · 30d</span>
+                  <span className="src">/rollup/flow-daily · 30d</span>
                 </div>
                 {ev ? (
                   <>
@@ -594,9 +586,9 @@ function AsnQueue({ onPendingCount }: { onPendingCount: (n: number) => void }) {
                     </div>
                     <div>
                       <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase" }}>
-                        Other IPs in ASN seen
+                        Other peer IPs in this ASN (30d)
                       </div>
-                      <div style={{ fontSize: 12, color: "#6FA89E", overflowWrap: "anywhere" }}>— needs ASN on a rollup</div>
+                      <div className="mono" style={{ fontSize: 13 }}>{ev.otherAsnPeers}</div>
                     </div>
                   </>
                 ) : (
@@ -625,7 +617,7 @@ function AsnQueue({ onPendingCount }: { onPendingCount: (n: number) => void }) {
 
 // ---------- Peer roles / Monitored IP roles (both review__ip_roles) ----------
 
-type RoleDecided = { decision: "confirm" | "reject" };
+type RoleDecided = { decision: "confirm" | "reject"; rollups?: string };
 
 function rowKey(row: IpRole): string {
   return `${row.ip}:${row.role}`;
@@ -714,7 +706,7 @@ function IpRoleQueue({
         onPendingCount(actionable.length);
       })
       .catch((err) => {
-        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+        if (!cancelled) setError(errorMessage(err));
       });
     return () => {
       cancelled = true;
@@ -724,18 +716,18 @@ function IpRoleQueue({
   async function decide(row: IpRole, decision: "confirm" | "reject", pairs?: PairRef[]) {
     setActionError(null);
     try {
-      await decideIpRoleReviewIpRolesIpRoleDecisionPost({
+      const result = await decideIpRoleReviewIpRolesIpRoleDecisionPost({
         path: { ip: row.ip, role: row.role },
         body: decision === "confirm" ? { decision: "confirm", pairs: pairs ?? null } : { decision: "reject" },
         throwOnError: true,
       });
       setDecided((prev) => {
-        const next = new Map(prev).set(rowKey(row), { decision });
+        const next = new Map(prev).set(rowKey(row), { decision, rollups: result.data.rollups });
         onPendingCount((rows ?? []).filter((r) => !next.has(rowKey(r))).length);
         return next;
       });
     } catch (err) {
-      setActionError(err instanceof Error ? err.message : String(err));
+      setActionError(errorMessage(err));
     }
   }
 
@@ -931,7 +923,7 @@ function IpRoleCard({
         setPairs(result.data.rows);
         setChecked(new Set(result.data.rows.filter((p) => p.role === row.role).map((p) => p.id)));
       } catch (err) {
-        setPairsError(err instanceof Error ? err.message : String(err));
+        setPairsError(errorMessage(err));
       }
     }
   }
@@ -996,6 +988,7 @@ function IpRoleCard({
             <DecidedChip
               kind={decided.decision === "confirm" ? "approve" : "reject"}
               label={decided.decision === "confirm" ? `Confirmed · ${row.role}` : "Rejected"}
+              detail={decided.rollups ? `rollups: ${decided.rollups}` : undefined}
             />
           ) : (
             <>
@@ -1156,11 +1149,13 @@ function IpRoleCard({
 
       {expanded && !SIP_ROLES.has(row.role) && (
         <div style={{ marginTop: 10, fontSize: 13, color: "#6FA89E", lineHeight: 1.5 }}>
-          Relationships only tracks measured SIP pairs (
-          <span className="mono">review__sip_pairs</span>) — sip_client, sip_trunk, and sip_server
-          evidence, confirmable pair-by-pair. <span className="mono">{row.role}</span> isn't a SIP
-          role, so it has none here and never will — that's not "nothing found," this table simply
-          doesn't model it. Its evidence is the context and feature grid above instead.
+          This section lists measured SIP pairs (<span className="mono">/review/sip-pairs</span>) —
+          sip_client, sip_trunk, and sip_server evidence, confirmable pair-by-pair.{" "}
+          <span className="mono">{row.role}</span> isn't a SIP role, so it has no pairs here — that's
+          not "nothing found," this section simply doesn't model it. Its evidence is the context and
+          feature grid above instead. Statements about this IP <em>relative to another</em> (operator,
+          c2_victim, research, a peer's SIP trunk/client) are relationships, reviewed in the Peer
+          relationships queue.
         </div>
       )}
       {expanded && SIP_ROLES.has(row.role) && (
@@ -1217,16 +1212,16 @@ function IpRoleCard({
                         {p.confirmed_role ?? "—"}
                       </td>
                       <td className="num mono" style={{ textAlign: "right" }}>
-                        {p.sig_days}
+                        {p.sig_days ?? "—"}
                       </td>
                       <td className="num mono" style={{ textAlign: "right" }}>
-                        {p.rtp_days}
+                        {p.rtp_days ?? "—"}
                       </td>
                       <td className="num mono" style={{ textAlign: "right" }}>
                         {p.sip_per_day_from_peer?.toFixed(1) ?? "—"}
                       </td>
                       <td className="num mono" style={{ textAlign: "right" }}>
-                        {p.media_records}
+                        {p.media_records ?? "—"}
                       </td>
                       <td className="num mono" style={{ textAlign: "right" }}>
                         {p.media_per_sip?.toFixed(1) ?? "—"}
@@ -1262,7 +1257,7 @@ function IpRoleCard({
                           // usually suggested from an exposure heuristic
                           // (serves-few-peers) or passive scan evidence
                           // (an open SIP port, a PBX fingerprint) — neither
-                          // writes a review__sip_pairs row, so this table is
+                          // writes a measured pair, so this table is
                           // routinely empty for a real, well-evidenced
                           // sip_server suggestion. Checked live across every
                           // sip_server candidate in this dataset (2026-10-28):

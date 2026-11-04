@@ -15,6 +15,7 @@ import {
 import { formatBytes, isoDate, daysAgo } from "../lib/format";
 import { categoryColors } from "../lib/categories";
 import { CopyButton } from "../components/CopyButton";
+import { errorMessage } from "../lib/errors";
 
 type Tab = "daily" | "hourly" | "raw";
 
@@ -156,7 +157,7 @@ export function Netflow() {
         setIpIdentity(identityResult?.data ?? null);
       })
       .catch((err) => {
-        if (!cancelled) setIpContextError(err instanceof Error ? err.message : String(err));
+        if (!cancelled) setIpContextError(errorMessage(err));
       })
       .finally(() => {
         if (!cancelled) setIpContextLoading(false);
@@ -211,7 +212,7 @@ export function Netflow() {
             if (!cancelled) setRawRows(result.data.rows);
           }
         } catch (err) {
-          if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+          if (!cancelled) setError(errorMessage(err));
         } finally {
           if (!cancelled) setLoading(false);
         }
@@ -254,7 +255,7 @@ export function Netflow() {
         <h1 style={{ margin: "0 0 4px 0", fontSize: 22, fontWeight: 600 }}>Netflow</h1>
         <div style={{ fontSize: 13, color: "#6FA89E" }}>
           Rollup rows, filtered by monitored IP, peer IP, port family and protocol —{" "}
-          <span className="mono">rollup__flow_daily</span> / <span className="mono">rollup__flow_hourly</span>
+          <span className="mono">/rollup/flow-daily</span> / <span className="mono">/rollup/flow-hourly</span>
         </div>
       </div>
 
@@ -464,7 +465,7 @@ export function Netflow() {
               }}
             >
               <span className="src">
-                {tab === "daily" ? "rollup__flow_daily" : "rollup__flow_hourly"} ·{" "}
+                {tab === "daily" ? "/rollup/flow-daily" : "/rollup/flow-hourly"} ·{" "}
                 {loading ? "loading…" : `${filteredRows.length.toLocaleString()} rows · ${formatBytes(totalBytes)}`}
                 {!loading && filteredRows.length >= LIMIT && (
                   <span style={{ color: "#F5A623" }}> · capped at {LIMIT.toLocaleString()}, narrow the filters</span>

@@ -16,6 +16,11 @@ screen says "illustrative"). §1–§5 below describe the 2026-10-08
 draft; the revision section at the end describes what changed and why,
 and supersedes §1–§5 where they conflict.
 
+**Revised 2026-11-04** — netflow-rollups finished a stabilization pass (steps 7 to 23) that
+renamed and dropped most of the objects the sections below name, and the app now reads the new
+API. Every older section is kept as written; the last section, "Revision 2026-11-04", has the
+rename key and what changed per screen, and supersedes them where they conflict.
+
 Global pattern across every screen: left sidebar nav (Overview / Flow
 graph / Top talkers / Candidates), a 24h/7d/30d range toggle in the
 header (not wired in the mock — what "range" means against hourly vs.
@@ -734,3 +739,82 @@ relationships** (the OpenCTI graph: Infrastructure → domain → IP). Assessmen
   textbook analysis-pillar table (`CLAUDE.md` §2 #3), it answers "what does this belong to" on
   Entity detail too, and it keeps OpenCTI labels in their place: the nebula is drawn from
   relationships, which are structure, not from labels, which are suggestions.
+
+## Revision 2026-11-04 — the app on netflow-rollups' stabilized API
+
+Plan and reasoning: [`plans/2026-11-04_api_currency_and_watchlist.md`](plans/2026-11-04_api_currency_and_watchlist.md).
+Source of truth for what changed upstream: `netflow-rollups/docs/dashboard_notes/` (one note per
+batch of API changes; read the newest before front-end work) and its `docs/api.md`.
+
+### Rename key (old name in this doc → what it is now)
+
+Source badges in the UI now name the **API route**, not the database object behind it, because the
+objects were renamed or dropped twice.
+
+| old | now |
+|---|---|
+| `monitored_ip`, `monitored_ips`, `monitored_ip_roles` (field and parameter) | `watched_ip`, `watched_ips`, `watched_ip_roles` (netflow-rollups step 21) |
+| `rollup__provider_mix_daily` | `GET /rollup/provider-mix-daily` |
+| `rollup__bph_contact_daily` | `GET /rollup/bph-contact-daily` (the provider mix filtered to `bph`) |
+| `rollup__port_family_mix_daily` | `GET /rollup/port-family-mix-daily` |
+| `rollup__unclassified_contacts_daily` | `GET /rollup/unclassified-contacts-daily` |
+| `rollup__confirmed_contacts_daily` | `GET /rollup/confirmed-contacts-daily` |
+| `rollup__flow_daily` / `rollup__flow_hourly` | `GET /rollup/flow-daily` / `/flow-hourly` (the read functions over the traffic-only rollups) |
+| `review__sip_pairs` | `GET /review/sip-pairs`, rebuilt from `review__ip_relations`; its measurement fields can be null |
+| a peer's `sip_trunk` / `sip_client`, and `operator`, `c2_victim`, `c2_operator`, `research` as *roles* | **relationships**: `GET /review/ip-relations` (ip, relation, other_ip) |
+
+### What the values mean now
+
+- The rollups hold traffic only. Categories, roles, relations and scanner hiding are applied when
+  read, so a decision or a reference-list change reaches every past day at once (provider
+  categories within 30 minutes). Scanner traffic is hidden **by date**: a verdict on day D hides
+  that IP's traffic from D to D+30; an IP on a feed or curated list is hidden every day. Totals
+  stepped about 1% when this switched on (2026-10-29 16:31 UTC).
+- `peer_roles` and `pair_confirmed` include relations. `pair_confirmed` is true for any confirmed
+  relation between the pair, not only SIP.
+- A decision response's `rollups` field says when the decision shows (`"applied"`, or `"at the
+  next peer classification, within 30 minutes"` for an ASN graduation); the UI shows it verbatim.
+- A reference-list row its source dropped is closed, not deleted (`closed_at`); `/ref/providers`
+  hides closed rows unless `include_closed=true`.
+
+### What changed per screen
+
+- **Watchlist** — redesigned. A **History** selector (7 days / 30 days / 90 days / all history)
+  drives the port-scan and traffic columns; scan history exists from the first sweep
+  (2026-10-02) and the rollups for 180 days, and the API's default of six days back was the only
+  reason the page showed a week. "Call activity" (an RTP-only share) became **Traffic by port
+  family**: a stacked bar over every family, hover a segment for its bytes and share, click the
+  row for the per-family table (bytes, share, flows, days) — and the page sorts by total or by any
+  one family. The **Port scans** column shows each source's latest fingerprint as a chip; hover
+  for the services that hash stood for, click for the full facts, what appeared or disappeared
+  against the run before it, and the source's raw record. BPH stays 30 days and unclassified
+  peers 7 days (that route's rows run to tens of thousands over longer windows).
+- **Entity detail** — the same window selector and fingerprint runs (the 10-day cap on the grid is
+  gone), a **Review history** table (every suggestion, evaluation and decision on the IP's roles
+  and relationships; `/review/ip-roles/{ip}/history`, `/review/ip-relations/{ip}/history`), and a
+  **Scanner verdicts** card when the IP has any. An IP that is not on the watchlist (a peer, as
+  Top talkers and the relationship cards link them) now gets a peer page — identity, scanner
+  tiers and verdicts, roles and relationships, port scans, history — instead of an error.
+- **Candidates** — a fourth queue, **Peer relationships** (`/review/ip-relations` and its
+  decision route; 308 pending at the time). Since netflow-rollups step 7 these are no longer
+  roles, so the Peer roles queue (which still holds the roles that stayed roles — 84 at the time,
+  mostly reverse_proxy / forward_proxy / web_server) never listed them and nothing in the app could
+  review them. Each card shows the rules' reasoning,
+  the agent's verdict, the measured evidence, an optional note, and Confirm / Reject. ASN
+  candidate evidence now shows the real count of other peers in the ASN (30 days).
+- **Top talkers** — the By ASN view is built (`/rollup/flow-daily/top-asns`); it was blocked on a
+  `peer_asn` column that has existed since netflow-rollups migration 0083. The Unclassified view
+  matches candidates by ASN as well as by the triggering peer.
+- **Overview, Flow graph, Geo, Netflow** — copy and badges only: "confirmed" means a role on
+  either side or a confirmed relationship; Geo's role legend lists the relationship names an arc
+  carries instead of lumping them into "unclear".
+
+### Still open
+
+- Pipeline health says scanner verdict counts and roles/providers last-write times are not
+  available; `/verdict/scanners`, `updated_at` on the review rows and `last_seen` on
+  `/ref/providers` now carry them. Not built.
+- The Watchlist's "last record per IP" is still not servable (the raw flow records are not on
+  the API).
+- Watchlist identity lookups are one request per IP (404 for IPs with no identity row yet); a
+  bulk route would remove the console noise.

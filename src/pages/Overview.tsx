@@ -22,6 +22,7 @@ import {
   type Freshness,
 } from "../api/netflow-rollups-client";
 import { formatBytes, formatShortDate, isoDate, daysAgo } from "../lib/format";
+import { errorMessage } from "../lib/errors";
 
 type OverviewData = {
   watchedIps: WatchedIp[];
@@ -119,7 +120,7 @@ export function Overview() {
           freshness: freshness.data,
         });
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+        if (!cancelled) setError(errorMessage(err));
       }
     }
 
@@ -320,7 +321,7 @@ function OverviewContent({ data }: { data: OverviewData }) {
           }
         >
           <span>
-            + {queue.peer_roles} peer roles · {queue.watched_roles} watched roles
+            + {queue.peer_roles} peer roles · {queue.watched_roles} watched roles · {queue.peer_relations ?? 0} peer relationships
           </span>
         </Tile>
 
@@ -372,7 +373,7 @@ function OverviewContent({ data }: { data: OverviewData }) {
             }}
           >
             <div style={{ fontSize: 13, fontWeight: 600 }}>Traffic touching each peer category — 7d</div>
-            <span className="src">rollup__provider_mix_daily · all port families</span>
+            <span className="src">/rollup/provider-mix-daily · all port families</span>
           </div>
           <div style={{ display: "flex", flexDirection: "column", gap: 9 }}>
             {sortedCategories.map(([category, bytes], i) => {
@@ -411,7 +412,7 @@ function OverviewContent({ data }: { data: OverviewData }) {
             }}
           >
             <div style={{ fontSize: 13, fontWeight: 600 }}>Bulletproof-hosting contact — 30d</div>
-            <span className="src">rollup__bph_contact_daily</span>
+            <span className="src">/rollup/bph-contact-daily</span>
           </div>
           <div style={{ fontSize: 12, color: "#6FA89E", marginBottom: 16 }}>
             <span className="mono" style={{ color: "#E5484D", fontWeight: 600 }}>
@@ -454,7 +455,7 @@ function OverviewContent({ data }: { data: OverviewData }) {
             }}
           >
             <div style={{ fontSize: 13, fontWeight: 600 }}>Top RTP talkers (7d)</div>
-            <span className="src">rollup__flow_daily/top-peers · rtp_media · tagged peers excluded</span>
+            <span className="src">/rollup/flow-daily/top-peers · rtp_media · confirmed and watched peers excluded · scanners hidden upstream</span>
           </div>
           <table style={{ width: "100%", borderCollapse: "collapse", marginTop: 8 }}>
             <thead>

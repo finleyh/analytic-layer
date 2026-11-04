@@ -31,6 +31,13 @@ import { fetchMonitored } from "../api/spoilerAlert";
 import { formatBytes, isoDate, daysAgo, darkToGreen } from "../lib/format";
 import { looksLikeHostname } from "../lib/hostNames";
 import { CopyButton } from "../components/CopyButton";
+import { FingerprintHistory } from "../components/FingerprintHistory";
+import { WindowSelect, windowRange, type WindowKey } from "../components/WindowSelect";
+import { PeerEntity } from "../components/PeerEntity";
+import { IpReviewHistory } from "../components/IpReviewHistory";
+import { ScannerVerdicts } from "../components/ScannerVerdicts";
+import { buildFingerprintGrid, diffFacts, factLabel, type GridCell } from "../lib/fingerprints";
+import { errorMessage } from "../lib/errors";
 
 type EntityData = {
   watchedIp: WatchedIp;
@@ -47,83 +54,6 @@ type EntityData = {
   rtpBytes7d: number;
 };
 
-function factLabel(fact: Record<string, unknown>): string {
-  const port = fact.port;
-  const transport = fact.transport_protocol;
-  const service = fact.service_protocol;
-  const software = fact.software_name;
-  const version = fact.software_version;
-  const parts = [`${port}/${transport}`];
-  if (service) parts.push(String(service));
-  if (software) parts.push(`${software}${version ? " " + version : ""}`);
-  return parts.join(" · ");
-}
-
-function factKey(fact: Record<string, unknown>): string {
-  return `${fact.port}/${fact.transport_protocol}`;
-}
-
-function dayOf(iso: string | null): string | null {
-  return iso ? iso.slice(0, 10) : null;
-}
-
-type GridCell = { day: string; status: "first" | "same" | "changed" | "miss"; scan?: HostScan };
-type Transition = { source: string; fromDay: string; toDay: string; fromScan: HostScan; toScan: HostScan };
-
-function buildFingerprintGrid(scans: HostScan[]) {
-  const allDays = [...new Set(scans.map((s) => dayOf(s.scan_time)).filter((d): d is string => d !== null))].sort();
-  const gridDays = allDays.slice(-10);
-
-  const scanByDaySource = new Map<string, Map<string, HostScan>>();
-  for (const s of scans) {
-    const day = dayOf(s.scan_time);
-    if (!day) continue;
-    const bySource = scanByDaySource.get(s.source) ?? new Map<string, HostScan>();
-    const existing = bySource.get(day);
-    if (!existing || (s.scan_time ?? "") > (existing.scan_time ?? "")) bySource.set(day, s);
-    scanByDaySource.set(s.source, bySource);
-  }
-
-  const gridBySource = new Map<string, GridCell[]>();
-  const transitions: Transition[] = [];
-
-  for (const [source, bySource] of scanByDaySource) {
-    let lastHash: string | null = null;
-    let lastDay: string | null = null;
-    let lastScan: HostScan | null = null;
-    const cells: GridCell[] = [];
-    for (const day of gridDays) {
-      const scan = bySource.get(day);
-      if (!scan) {
-        cells.push({ day, status: "miss" });
-        continue;
-      }
-      if (lastHash === null) {
-        cells.push({ day, status: "first", scan });
-      } else if (scan.fingerprint_hash === lastHash) {
-        cells.push({ day, status: "same", scan });
-      } else {
-        cells.push({ day, status: "changed", scan });
-        transitions.push({ source, fromDay: lastDay!, toDay: day, fromScan: lastScan!, toScan: scan });
-      }
-      lastHash = scan.fingerprint_hash;
-      lastDay = day;
-      lastScan = scan;
-    }
-    gridBySource.set(source, cells);
-  }
-
-  return { gridDays, gridBySource, transitions };
-}
-
-function diffFacts(from: HostScan, to: HostScan) {
-  const fromMap = new Map(from.fingerprint_facts.map((f) => [factKey(f as Record<string, unknown>), f]));
-  const toMap = new Map(to.fingerprint_facts.map((f) => [factKey(f as Record<string, unknown>), f]));
-  const removed = [...fromMap.keys()].filter((k) => !toMap.has(k)).map((k) => fromMap.get(k)!);
-  const added = [...toMap.keys()].filter((k) => !fromMap.has(k)).map((k) => toMap.get(k)!);
-  return { added, removed };
-}
-
 const CELL_COLORS: Record<GridCell["status"], { bg: string; border: string; color: string }> = {
   first: { bg: "#0F3133", border: "#2B7266", color: "#A6D8CD" },
   same: { bg: "#153226", border: "#1E4D37", color: "#3DD68C" },
@@ -135,15 +65,22 @@ export function EntityDetail() {
   const { ip } = useParams<{ ip: string }>();
   const [data, setData] = useState<EntityData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  // Port-scan history window (default 30 days, what this page always showed); the scans
+  // and the per-source change summary follow it, everything else keeps its own window.
+  const [scanWindow, setScanWindow] = useState<WindowKey>("30d");
+  // An IP with no /watch/ips row is a peer: Top talkers and the relationship cards link them here.
+  const [isPeer, setIsPeer] = useState(false);
 
   useEffect(() => {
     if (!ip) return;
     let cancelled = false;
+    setIsPeer(false);
 
     async function load() {
       try {
         const to = isoDate(new Date());
         const from30 = isoDate(daysAgo(29));
+        const scanRange = windowRange(scanWindow);
 
         const [
           watchedIp,
@@ -162,11 +99,11 @@ export function EntityDetail() {
           getIpRolesReviewIpRolesIpGet({ path: { ip: ip! }, throwOnError: true }).catch(() => null),
           getIpIdentityLookupIpIdentitiesIpGet({ path: { ip: ip! } }),
           listHostScansLookupHostScansGet({
-            query: { ip: ip!, from: from30, to, limit: 200 },
+            query: { ip: ip!, from: scanRange.from, to: scanRange.to, limit: 1000 },
             throwOnError: true,
           }),
           hostScanChangesLookupHostScansChangesGet({
-            query: { ip: ip!, from: from30, to },
+            query: { ip: ip!, from: scanRange.from, to: scanRange.to },
             throwOnError: true,
           }),
           hostNameSummaryLookupHostNamesSummaryGet({
@@ -216,7 +153,9 @@ export function EntityDetail() {
           rtpBytes7d,
         });
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+        if (cancelled) return;
+        if (/not on the watch set/.test(errorMessage(err))) setIsPeer(true);
+        else setError(errorMessage(err));
       }
     }
 
@@ -224,7 +163,9 @@ export function EntityDetail() {
     return () => {
       cancelled = true;
     };
-  }, [ip]);
+  }, [ip, scanWindow]);
+
+  if (isPeer && ip) return <PeerEntity ip={ip} />;
 
   return (
     <>
@@ -238,12 +179,23 @@ export function EntityDetail() {
         </div>
       )}
       {!data && !error && <div style={{ color: "#6FA89E" }}>Loading…</div>}
-      {data && <EntityContent ip={ip!} data={data} />}
+      {data && <EntityContent ip={ip!} data={data} scanWindow={scanWindow} onScanWindow={setScanWindow} />}
     </>
   );
 }
 
-function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
+function EntityContent({
+  ip,
+  data,
+  scanWindow,
+  onScanWindow,
+}: {
+  ip: string;
+  data: EntityData;
+  scanWindow: WindowKey;
+  onScanWindow: (k: WindowKey) => void;
+}) {
+  const scanLabel = windowRange(scanWindow).label;
   const {
     watchedIp,
     roles,
@@ -274,7 +226,7 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
       });
       setScanRows((prev) => [result.data.scan, ...prev.filter((s) => s.id !== result.data.scan.id)]);
     } catch (err) {
-      setScanError(err instanceof Error ? err.message : String(err));
+      setScanError(errorMessage(err));
     } finally {
       setScanning((prev) => {
         const next = new Set(prev);
@@ -298,7 +250,7 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
     list.sort((a, b) => (b.scan_time ?? "").localeCompare(a.scan_time ?? ""));
   }
   const changesBySource = new Map(changes.map((c) => [c.source, c]));
-  const { gridDays, gridBySource, transitions } = buildFingerprintGrid(scans);
+  const { gridDays, gridBySource, transitions } = buildFingerprintGrid(scans);   // every day in the window, no 10-day cap
 
   return (
     <>
@@ -407,7 +359,14 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
 
       <ActivityHeatmap ip={ip} />
 
-      <div style={{ fontSize: 15, fontWeight: 600, marginBottom: 14 }}>Device fingerprint</div>
+      <ScannerVerdicts ip={ip} tiers={identity?.scanner_tiers ?? []} />
+
+      <IpReviewHistory ip={ip} />
+
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 16, flexWrap: "wrap", marginBottom: 14 }}>
+        <div style={{ fontSize: 15, fontWeight: 600 }}>Device fingerprint</div>
+        <WindowSelect value={scanWindow} onChange={onScanWindow} label="Scan history" />
+      </div>
 
       <div
         style={{
@@ -446,10 +405,20 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
         })}
         {scansBySource.size === 0 && (
           <div className="card" style={{ padding: "16px 20px", color: "#6FA89E" }}>
-            No scans in the last 30 days.
+            No scans in the last {scanLabel}.
           </div>
         )}
       </div>
+
+      {scans.length > 0 && (
+        <div className="card" style={{ padding: "22px 24px", marginBottom: 24 }}>
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12, gap: 12, flexWrap: "wrap" }}>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>Fingerprint runs — consecutive scans with one hash</div>
+            <span className="src">/lookup/host-scans · {scanLabel}</span>
+          </div>
+          <FingerprintHistory ip={ip} scans={scans} />
+        </div>
+      )}
 
       {gridDays.length > 0 && (
         <div className="card" style={{ padding: "22px 24px", marginBottom: 24 }}>
@@ -467,13 +436,20 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
               Fingerprint history — one cell per daily scan
             </div>
             <span className="src">
-              lookup__host_scans.fingerprint_hash · {gridDays[0]} → {gridDays[gridDays.length - 1]}
+              /lookup/host-scans fingerprint_hash · {gridDays[0]} → {gridDays[gridDays.length - 1]}
             </span>
           </div>
           <div
             style={{
+              overflowX: "auto",
+              paddingBottom: 6,
+            }}
+          >
+          <div
+            style={{
               display: "grid",
-              gridTemplateColumns: `64px repeat(${gridDays.length}, 1fr)`,
+              gridTemplateColumns: `64px repeat(${gridDays.length}, minmax(46px, 1fr))`,
+              minWidth: 64 + gridDays.length * 52,
               gap: 6,
               alignItems: "center",
             }}
@@ -521,6 +497,7 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
               </Fragment>
             ))}
           </div>
+          </div>
           <div className="note">
             Same hash = identical extracted facts (port, protocol, software name/version — banner
             text and scan time excluded by design, so a changed hash is a real service change).
@@ -545,7 +522,7 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
             <span className="src">diff of consecutive fingerprint_facts</span>
           </div>
           {transitions.map((t, i) => {
-            const { added, removed } = diffFacts(t.fromScan, t.toScan);
+            const { added, removed } = diffFacts(t.fromScan.fingerprint_facts as Record<string, unknown>[], t.toScan.fingerprint_facts as Record<string, unknown>[]);
             return (
               <div key={i} style={{ padding: "10px 0", borderBottom: "1px solid #133A3C" }}>
                 <div style={{ fontSize: 12, color: "#A6D8CD", marginBottom: 4 }}>
@@ -628,7 +605,7 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
       </div>
 
       <div className="card" style={{ padding: "22px 24px" }}>
-        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 14 }}>Scan history (30d)</div>
+        <div style={{ fontSize: 13, fontWeight: 600, marginBottom: 14 }}>Scan history ({scanLabel})</div>
         <table style={{ width: "100%", borderCollapse: "collapse" }}>
           <thead>
             <tr>
@@ -643,7 +620,7 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
             {scans
               .slice()
               .sort((a, b) => (b.scan_time ?? "").localeCompare(a.scan_time ?? ""))
-              .slice(0, 30)
+              .slice(0, 200)
               .map((s) => (
                 <tr key={s.id}>
                   <td className="mono" style={{ fontSize: 12 }}>
@@ -674,7 +651,7 @@ function EntityContent({ ip, data }: { ip: string; data: EntityData }) {
             {scans.length === 0 && (
               <tr>
                 <td colSpan={5} style={{ color: "#6FA89E" }}>
-                  No scans in the last 30 days.
+                  No scans in the last {scanLabel}.
                 </td>
               </tr>
             )}
@@ -1418,7 +1395,7 @@ function ActivityHeatmap({ ip }: { ip: string }) {
         }
         setGrids(next);
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+        if (!cancelled) setError(errorMessage(err));
       }
     }
 
@@ -1463,7 +1440,7 @@ function ActivityHeatmap({ ip }: { ip: string }) {
       >
         <div style={{ fontSize: 15, fontWeight: 600 }}>Call activity by hour — 7d</div>
         <span className="src">
-          rollup__flow_hourly ·{" "}
+          /rollup/flow-hourly ·{" "}
           {selected.size === HEATMAP_FAMILIES.length ? "all 3 port families" : [...selected].join(" + ")}
         </span>
       </div>

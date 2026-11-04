@@ -5,6 +5,7 @@ import { fetchMonitoredDetail, type MonitoredDomainDetail, type HistoryRun } fro
 import { fetchOwner, type OpenCtiOwner } from "../api/opencti";
 import { flowDailyRollupFlowDailyGet } from "../api/netflow-rollups-client";
 import { formatBytes, daysAgo, isoDate, daysUntil, expiryColor } from "../lib/format";
+import { errorMessage } from "../lib/errors";
 
 const STATE_COLOR: Record<string, string> = {
   active: "#3DD68C",
@@ -294,7 +295,7 @@ export function DomainDetail() {
         if (cancelled) return;
         setPeerHits(new Map(hits.filter(([, bytes]) => bytes > 0)));
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+        if (!cancelled) setError(errorMessage(err));
       }
     }
     void load();
@@ -468,7 +469,7 @@ export function DomainDetail() {
           A bar's left edge is the check that first saw that value; its right edge is the check
           that first saw it gone, or the dashed "now" line if it's still current. Bytes-labeled
           blue annotation (A records only) = that IP also shows up as a peer in{" "}
-          <span className="mono">rollup__flow_daily</span> (90d). SOA is excluded — its serial
+          <span className="mono">/rollup/flow-daily</span> (90d). SOA is excluded — its serial
           changes on nearly every check, so it has no meaningful timeline. Hover a bar or its
           label for exact values/timestamps.
         </div>

@@ -13,10 +13,16 @@ import {
 } from "../api/netflow-rollups-client";
 import { formatBytes } from "../lib/format";
 import { ZoomableSvg } from "../components/ZoomableSvg";
+import { hueOf } from "../lib/colors";
+import { errorMessage } from "../lib/errors";
 
 const W = 900;
 const H = 520;
 
+// The three SIP roles keep their hand-picked colours; any other role or
+// relationship name (peer_roles carries relations too since netflow-rollups
+// step 7: operator, c2_victim, c2_operator, ...) gets a stable hashed hue, so
+// it is told apart instead of falling into the grey "unclear" bucket.
 const ROLE_COLOR: Record<string, string> = {
   sip_trunk: "#F5A623",
   sip_client: "#2DD4BF",
@@ -24,6 +30,9 @@ const ROLE_COLOR: Record<string, string> = {
   unclear: "#6FA89E",
   mixed: "#A6D8CD",
 };
+function roleStroke(role: string): string {
+  return ROLE_COLOR[role] ?? `hsl(${hueOf(`role:${role}`)}, 70%, 60%)`;
+}
 
 // Topology ids and i18n-iso-countries' numeric codes both represent
 // ISO 3166-1 numeric, but one zero-pads and the other doesn't — normalize
@@ -103,7 +112,7 @@ export function Geo() {
           originByIp: new Map(identityEntries),
         });
       } catch (err) {
-        if (!cancelled) setError(err instanceof Error ? err.message : String(err));
+        if (!cancelled) setError(errorMessage(err));
       }
     }
     void load();
@@ -165,6 +174,13 @@ export function Geo() {
     return entries[0][0];
   }
 
+  // The fixed colours first, then every other role or relationship name an
+  // arc actually carries, in name order.
+  const legendRoles = [
+    ...Object.keys(ROLE_COLOR),
+    ...[...new Set(arcs.map(dominantRole))].filter((r) => !(r in ROLE_COLOR)).sort(),
+  ];
+
   const peersInSelectedCountry = selectedCountry
     ? arcs.filter((a) => a.peerCountry === selectedCountry)
     : [];
@@ -175,7 +191,7 @@ export function Geo() {
         <h1 style={{ margin: "0 0 4px 0", fontSize: 22, fontWeight: 600 }}>Geo</h1>
         <div style={{ fontSize: 13, color: "#6FA89E" }}>
           Where each monitored IP's SIP media (<span className="mono">rtp_media</span>) goes, by
-          country · <span className="mono">rollup__flow_daily</span>.peer_country · arcs from{" "}
+          country · <span className="mono">/rollup/flow-daily</span>.peer_country · arcs from{" "}
           <span className="mono">lookup__ip_identities</span>.country (jittered via country
           centroids, not exact geolocation)
         </div>
@@ -243,7 +259,7 @@ export function Geo() {
                   key={i}
                   d={`M${x1},${y1} Q${mx},${my} ${x2},${y2}`}
                   fill="none"
-                  stroke={ROLE_COLOR[role] ?? ROLE_COLOR.unclear}
+                  stroke={roleStroke(role)}
                   strokeWidth={width}
                   opacity={0.65}
                 >
@@ -264,9 +280,9 @@ export function Geo() {
           <div className="card" style={{ padding: "16px 18px" }}>
             <div style={{ fontSize: 12, fontWeight: 600, marginBottom: 10, color: "#A6D8CD" }}>Legend</div>
             <div style={{ display: "flex", flexDirection: "column", gap: 7, fontSize: 12 }}>
-              {Object.entries(ROLE_COLOR).map(([role, color]) => (
+              {legendRoles.map((role) => (
                 <div key={role} style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ width: 18, height: 3, background: color, display: "inline-block", flexShrink: 0 }} />
+                  <span style={{ width: 18, height: 3, background: roleStroke(role), display: "inline-block", flexShrink: 0 }} />
                   {role === "mixed" ? "mixed roles" : role}
                 </div>
               ))}
