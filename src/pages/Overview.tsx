@@ -45,7 +45,9 @@ const CATEGORY_COLORS: Record<string, string> = {
   residential_isp: "#2DD4BF",
   educational: "#60A5FA",
   wholesale_voip: "#EC4899",
+  // reverse_proxy becomes cdn at netflow-rollups migration 0125; drop the old key after.
   reverse_proxy: "#A3A3A3",
+  cdn: "#A3A3A3",
   unclassified: "#6FA89E",
 };
 const FALLBACK_COLORS = ["#4C8DFF", "#8B5CF6", "#F59E0B", "#2DD4BF", "#EC4899", "#60A5FA"];

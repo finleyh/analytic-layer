@@ -1613,9 +1613,12 @@ export type PairRef = {
  *
  * One (day, role) of the regular-peers review's proposals: how many, how
  * many were made with a port scan in hand, and where they stand now. The
- * first-week measurement (docs/proposals/peer_recommendation_chain.md, step
- * 4): agreement is confirmed against rejected; a judgement of none writes
- * nothing, so it is not here -- the sweep's log carries that count.
+ * first-week measurement (docs/proposals/peer_roles_and_derived_relations.md):
+ * agreement is confirmed against rejected; a judgement of none writes
+ * nothing, so it is not here -- the sweep's log carries that count. The
+ * model names every role the evidence supports, so `proposals` counts roles
+ * and `peers` the distinct peers proposed that day (the same on each role's
+ * row of the day).
  */
 export type PeerReviewDay = {
     /**
@@ -1630,6 +1633,10 @@ export type PeerReviewDay = {
      * Proposals
      */
     proposals: number;
+    /**
+     * Peers
+     */
+    peers: number;
     /**
      * With Scan
      */

@@ -241,12 +241,10 @@ export const listIpRolesReviewIpRolesGet = <ThrowOnError extends boolean = false
  * Peer Review Summary
  *
  * The regular-peers review's proposals by the day they were made and the role
- * proposed, with how many had a port scan in hand and their status now. A role-kind
- * proposal (web_server, sip_server, ...) is a review__ip_roles row; a relation-kind one
- * (operator, sip_trunk, sip_client, ...) is a review__ip_relations row naming `regular_of`
- * (decision 0003, stabilization step 7) -- union both, grouped the same way, so a role
- * column here still means "whatever peer_review proposed" regardless of which table holds
- * it now.
+ * proposed, with how many had a port scan in hand and their status now. The model
+ * proposes roles only (decision 0009), so these are review__ip_roles rows; what it wrote
+ * to review__ip_relations before is not counted. It names every role the evidence
+ * supports, so `proposals` counts roles and `peers` the distinct peers proposed that day.
  */
 export const peerReviewSummaryReviewIpRolesPeerReviewGet = <ThrowOnError extends boolean = false>(options?: Options<PeerReviewSummaryReviewIpRolesPeerReviewGetData, ThrowOnError>): RequestResult<PeerReviewSummaryReviewIpRolesPeerReviewGetResponses, PeerReviewSummaryReviewIpRolesPeerReviewGetErrors, ThrowOnError> => (options?.client ?? client).get<PeerReviewSummaryReviewIpRolesPeerReviewGetResponses, PeerReviewSummaryReviewIpRolesPeerReviewGetErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],

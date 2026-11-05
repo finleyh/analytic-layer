@@ -6,7 +6,11 @@ export const CATEGORY_COLORS: Record<string, [string, string]> = {
   wholesale_voip: ["#2A1322", "#EC4899"],
   mobile: ["#2A2013", "#F59E0B"],
   bph: ["#2A1316", "#E5484D"],
+  // netflow-rollups migration 0125 renames the provider category reverse_proxy to cdn
+  // (docs/plans/2026-11-05_cdn_rename_execution.md there). Both keys until it is applied;
+  // drop reverse_proxy after.
   reverse_proxy: ["#1E2023", "#A3A3A3"],
+  cdn: ["#1E2023", "#A3A3A3"],
   unclassified: ["#0F3133", "#6FA89E"],
 };
 

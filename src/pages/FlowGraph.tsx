@@ -1801,7 +1801,9 @@ const categoryColorsLegend: Record<string, true> = {
 // ---------- Sankey ----------
 
 const SIP_FAMILIES = ["rtp_media", "voip_signaling", "voip_admin"];
-const CLASS_ORDER = ["monitored", "bph", "cloud", "satellite", "mobile", "residential_isp", "wholesale_voip", "reverse_proxy", "unclassified"];
+// reverse_proxy becomes cdn at netflow-rollups migration 0125; both until it is applied, then
+// drop reverse_proxy here and in CLASS_COLOR.
+const CLASS_ORDER = ["monitored", "bph", "cloud", "satellite", "mobile", "residential_isp", "wholesale_voip", "reverse_proxy", "cdn", "unclassified"];
 const CLASS_COLOR: Record<string, string> = {
   monitored: "#E5484D",
   bph: "#E5484D",
@@ -1811,6 +1813,7 @@ const CLASS_COLOR: Record<string, string> = {
   residential_isp: "#2DD4BF",
   wholesale_voip: "#EC4899",
   reverse_proxy: "#A3A3A3",
+  cdn: "#A3A3A3",
   unclassified: "#6FA89E",
 };
 const FAMILY_COLOR: Record<string, string> = {

@@ -441,12 +441,22 @@ function PipelineContent({ data }: { data: PipelineData }) {
 }
 
 // "Regular peers" (netflow-rollups, landed 2026-10-20): nightly, peers that
-// talk steadily to a watched IP get admitted, scanned, and judged by a new
-// agentic process ("peer_review") that proposes a role straight into the
+// talk steadily to a watched IP get admitted, scanned, and judged by an
+// agentic process ("peer_review") that proposes roles straight into the
 // same review__ip_roles queue Candidate review shows. The owner asked for
 // its first week measured through this dashboard (proposals a night,
 // agreement with the human, how many had no scan in hand) — this is that.
+//
+// Since netflow-rollups peer review step 1 (dd23978, deployed 2026-11-05) the
+// model names every role the evidence supports and never a relation, so one
+// row is one (day, role): `proposals` counts roles, and `peers` is the distinct
+// peers proposed that day, repeated on each role's row of the day. Sum it once
+// per day, never per row. Relation proposals it wrote before are no longer
+// counted, so days before 2026-11-05 show fewer proposals than they used to.
 function PeerReviewStats({ rows }: { rows: PeerReviewDay[] }) {
+  const peersByDay = new Map<string, number>();
+  for (const r of rows) peersByDay.set(r.day, r.peers);
+  const totalPeers = [...peersByDay.values()].reduce((a, b) => a + b, 0);
   const totals = rows.reduce(
     (acc, r) => ({
       proposals: acc.proposals + r.proposals,
@@ -466,13 +476,16 @@ function PeerReviewStats({ rows }: { rows: PeerReviewDay[] }) {
     <div className="card" style={{ padding: "22px 24px", marginBottom: 24 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 4, gap: 12, flexWrap: "wrap" }}>
         <div style={{ fontSize: 13, fontWeight: 600 }}>Regular peers — first week</div>
-        <span className="src">review__ip_roles/peer-review</span>
+        <span className="src">/review/ip-roles/peer-review</span>
       </div>
       <div style={{ fontSize: 11, color: "#6FA89E", marginBottom: 16, lineHeight: 1.5 }}>
         A newer, separate pipeline from the rule-based queues on Candidate review: peers that talk
         steadily to a watched IP are admitted, scanned, and judged by their own agentic process,
-        landing suggestions in the same queue. A peer judged "none" writes nothing, so it isn't
-        counted here — the sweep's own log carries that count, not this API.
+        landing suggestions in the same queue. Since 2026-11-05 it names every role the evidence
+        supports for a peer and never a relationship, so a peer can be several proposals; the
+        relationship proposals it made before are no longer counted, which lowers the earlier days.
+        A peer judged "none" writes nothing, so it isn't counted here — the sweep's own log carries
+        that count, not this API.
       </div>
 
       {rows.length === 0 ? (
@@ -489,10 +502,21 @@ function PeerReviewStats({ rows }: { rows: PeerReviewDay[] }) {
           >
             <div>
               <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase" }}>
-                Proposals · {days.length} day{days.length === 1 ? "" : "s"}
+                Peers proposed · {days.length} day{days.length === 1 ? "" : "s"}
               </div>
               <div className="mono" style={{ fontSize: 20, fontWeight: 600 }}>
-                {totals.proposals}
+                {totalPeers}
+              </div>
+            </div>
+            <div>
+              <div style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase" }}>Role proposals</div>
+              <div className="mono" style={{ fontSize: 20, fontWeight: 600 }}>
+                {totals.proposals}{" "}
+                {totalPeers > 0 && (
+                  <span style={{ fontSize: 12, color: "#6FA89E", fontWeight: 500 }}>
+                    {(totals.proposals / totalPeers).toFixed(2)} per peer
+                  </span>
+                )}
               </div>
             </div>
             <div>
@@ -525,6 +549,7 @@ function PeerReviewStats({ rows }: { rows: PeerReviewDay[] }) {
             <thead>
               <tr>
                 <th>Day</th>
+                <th style={{ textAlign: "right" }}>Peers</th>
                 <th>Role</th>
                 <th style={{ textAlign: "right" }}>Proposals</th>
                 <th style={{ textAlign: "right" }}>With scan</th>
@@ -536,10 +561,16 @@ function PeerReviewStats({ rows }: { rows: PeerReviewDay[] }) {
               </tr>
             </thead>
             <tbody>
-              {sorted.map((r) => (
-                <tr key={`${r.day}:${r.role}`}>
+              {sorted.map((r, i) => {
+                // The day and its peer count once, on the day's first row.
+                const firstOfDay = i === 0 || sorted[i - 1].day !== r.day;
+                return (
+                <tr key={`${r.day}:${r.role}`} style={firstOfDay && i > 0 ? { borderTop: "1px solid #2B7266" } : undefined}>
                   <td className="mono" style={{ fontSize: 12 }}>
-                    {r.day}
+                    {firstOfDay ? r.day : ""}
+                  </td>
+                  <td className="num mono" style={{ textAlign: "right" }}>
+                    {firstOfDay ? r.peers : ""}
                   </td>
                   <td className="mono">{r.role}</td>
                   <td className="num mono" style={{ textAlign: "right" }}>
@@ -564,7 +595,8 @@ function PeerReviewStats({ rows }: { rows: PeerReviewDay[] }) {
                     {r.expired}
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </>
