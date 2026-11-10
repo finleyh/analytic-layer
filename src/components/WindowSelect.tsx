@@ -23,12 +23,24 @@ export function windowRange(key: WindowKey): { from: string; to: string; days: n
   };
 }
 
-export function WindowSelect({ value, onChange, label = "Window" }: { value: WindowKey; onChange: (k: WindowKey) => void; label?: string }) {
+export function WindowSelect({
+  value,
+  onChange,
+  label = "Window",
+  keys,
+}: {
+  value: WindowKey;
+  onChange: (k: WindowKey) => void;
+  label?: string;
+  /** The windows to offer; default all four. The hourly heatmap leaves out "all". */
+  keys?: readonly WindowKey[];
+}) {
+  const windows = keys ? WINDOWS.filter((w) => keys.includes(w.key)) : WINDOWS;
   return (
     <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
       <span style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase" }}>{label}</span>
       <div style={{ display: "inline-flex" }}>
-        {WINDOWS.map((w, i) => (
+        {windows.map((w, i) => (
           <button
             key={w.key}
             onClick={() => onChange(w.key)}
@@ -42,7 +54,7 @@ export function WindowSelect({ value, onChange, label = "Window" }: { value: Win
               borderStyle: "solid",
               borderColor: value === w.key ? "#3F9C8A" : "#2B7266",
               borderWidth: i === 0 ? "1px" : "1px 1px 1px 0",
-              borderRadius: i === 0 ? "6px 0 0 6px" : i === WINDOWS.length - 1 ? "0 6px 6px 0" : 0,
+              borderRadius: i === 0 ? "6px 0 0 6px" : i === windows.length - 1 ? "0 6px 6px 0" : 0,
             }}
           >
             {w.label}

@@ -30,6 +30,7 @@ import {
 import { fetchMonitored } from "../api/spoilerAlert";
 import { formatBytes, isoDate, daysAgo, darkToGreen } from "../lib/format";
 import { looksLikeHostname } from "../lib/hostNames";
+import { familyColor } from "../lib/colors";
 import { CopyButton } from "../components/CopyButton";
 import { FingerprintHistory } from "../components/FingerprintHistory";
 import { WindowSelect, windowRange, type WindowKey } from "../components/WindowSelect";
@@ -1351,49 +1352,89 @@ function SharesContentWith({ pivots }: { pivots: WebScanPivot[] }) {
   );
 }
 
-const HEATMAP_FAMILIES: { key: string; label: string; dot: string }[] = [
-  { key: "rtp_media", label: "rtp_media", dot: "#4C8DFF" },
-  { key: "voip_signaling", label: "voip_signaling", dot: "#D946EF" },
-  { key: "voip_admin", label: "voip_admin", dot: "#F5A623" },
-];
 const HEATMAP_DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+// The hourly rollup keeps 180 days, but "all history" would be 180 days of per-peer hourly
+// rows, far past the route's 20,000-row cap; 90 days of the busiest watched IP is ~18,000.
+const HEATMAP_WINDOWS: readonly WindowKey[] = ["7d", "30d", "90d"];
+const HOURLY_ROW_CAP = 20000;
+const CHUNK_DAYS = 30;
+type HeatMeasure = "bytes" | "flows";
 
 function emptyGrid(): number[][] {
   return Array.from({ length: 7 }, () => Array(24).fill(0));
 }
 
+type HeatGrids = {
+  // family -> measure -> dow x hour totals over the window
+  families: { key: string; bytes: number; flows: number; grid: Record<HeatMeasure, number[][]> }[];
+  // how many dates of each weekday the window covers, so a cell can be an average per hour
+  occurrences: number[];
+  truncated: boolean;
+};
+
 function ActivityHeatmap({ ip }: { ip: string }) {
-  const [grids, setGrids] = useState<Record<string, number[][]> | null>(null);
+  const [grids, setGrids] = useState<HeatGrids | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [selected, setSelected] = useState<Set<string>>(
-    () => new Set(HEATMAP_FAMILIES.map((f) => f.key)),
-  );
+  const [windowKey, setWindowKey] = useState<WindowKey>("7d");
+  const [measure, setMeasure] = useState<HeatMeasure>("bytes");
+  // null = every family present (the default); a set once the analyst switches one off
+  const [selected, setSelected] = useState<Set<string> | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setGrids(null);
     setError(null);
+    setSelected(null);
 
     async function load() {
       try {
+        const days = windowRange(windowKey).days ?? 90;
         const to = new Date();
-        const from = daysAgo(6);
+        const from = daysAgo(days - 1);
         from.setUTCHours(0, 0, 0, 0);
-        const result = await flowHourlyRollupFlowHourlyGet({
-          query: { watched_ip: ip, from: from.toISOString(), to: to.toISOString(), limit: 20000 },
-          throwOnError: true,
-        });
+        // One call per 30 days, so a 90-day read of a busy IP stays under the row cap.
+        const chunks: { from: Date; to: Date }[] = [];
+        for (let start = new Date(from); start < to; ) {
+          const end = new Date(start);
+          end.setUTCDate(end.getUTCDate() + CHUNK_DAYS);
+          chunks.push({ from: new Date(start), to: end < to ? new Date(end.getTime() - 1) : to });
+          start = end;
+        }
+        const results = await Promise.all(
+          chunks.map((c) =>
+            flowHourlyRollupFlowHourlyGet({
+              query: { watched_ip: ip, from: c.from.toISOString(), to: c.to.toISOString(), limit: HOURLY_ROW_CAP },
+              throwOnError: true,
+            }),
+          ),
+        );
         if (cancelled) return;
 
-        const next: Record<string, number[][]> = {};
-        for (const f of HEATMAP_FAMILIES) next[f.key] = emptyGrid();
-        for (const r of result.data.rows) {
-          if (!(r.port_family in next)) continue;
-          const t = new Date(r.hour);
-          const dow = (t.getUTCDay() + 6) % 7; // Monday-first
-          next[r.port_family][dow][t.getUTCHours()] += r.bytes_sum;
+        const byFamily = new Map<string, { bytes: number; flows: number; grid: Record<HeatMeasure, number[][]> }>();
+        let truncated = false;
+        for (const result of results) {
+          if (result.data.rows.length >= HOURLY_ROW_CAP) truncated = true;
+          for (const r of result.data.rows) {
+            let f = byFamily.get(r.port_family);
+            if (!f) {
+              f = { bytes: 0, flows: 0, grid: { bytes: emptyGrid(), flows: emptyGrid() } };
+              byFamily.set(r.port_family, f);
+            }
+            const t = new Date(r.hour);
+            const dow = (t.getUTCDay() + 6) % 7; // Monday-first
+            f.grid.bytes[dow][t.getUTCHours()] += r.bytes_sum;
+            f.grid.flows[dow][t.getUTCHours()] += r.flow_count;
+            f.bytes += r.bytes_sum;
+            f.flows += r.flow_count;
+          }
         }
-        setGrids(next);
+        const occurrences = Array(7).fill(0);
+        for (const d = new Date(from); d <= to; d.setUTCDate(d.getUTCDate() + 1)) occurrences[(d.getUTCDay() + 6) % 7] += 1;
+        setGrids({
+          families: [...byFamily.entries()].map(([key, f]) => ({ key, ...f })).sort((a, b) => b.bytes - a.bytes),
+          occurrences,
+          truncated,
+        });
       } catch (err) {
         if (!cancelled) setError(errorMessage(err));
       }
@@ -1403,28 +1444,38 @@ function ActivityHeatmap({ ip }: { ip: string }) {
     return () => {
       cancelled = true;
     };
-  }, [ip]);
+  }, [ip, windowKey]);
+
+  const allKeys = grids?.families.map((f) => f.key) ?? [];
+  const active = selected ?? new Set(allKeys);
 
   function toggle(key: string) {
     setSelected((prev) => {
-      if (prev.has(key) && prev.size === 1) return prev;
-      const next = new Set(prev);
-      if (next.has(key)) next.delete(key);
-      else next.add(key);
-      return next;
+      const next = new Set(prev ?? allKeys);
+      if (next.has(key)) {
+        if (next.size === 1) return prev;
+        next.delete(key);
+      } else next.add(key);
+      return next.size === allKeys.length ? null : next;
     });
   }
 
+  // Cells are the average per hour slot: the window's total divided by how many dates of
+  // that weekday it covers, so 7d and 90d read on the same footing.
   const combined = emptyGrid();
   if (grids) {
-    for (const key of selected) {
-      const g = grids[key];
+    for (const f of grids.families) {
+      if (!active.has(f.key)) continue;
+      const g = f.grid[measure];
       for (let d = 0; d < 7; d++) {
-        for (let h = 0; h < 24; h++) combined[d][h] += g[d][h];
+        const n = grids.occurrences[d] || 1;
+        for (let h = 0; h < 24; h++) combined[d][h] += g[d][h] / n;
       }
     }
   }
   const max = Math.max(0, ...combined.flat());
+  const fmt = (v: number) => (measure === "bytes" ? formatBytes(v) : `${Math.round(v).toLocaleString()} flows`);
+  const windowLabel = windowRange(windowKey).label;
 
   return (
     <div className="card" style={{ padding: "22px 24px", marginBottom: 28 }}>
@@ -1438,11 +1489,43 @@ function ActivityHeatmap({ ip }: { ip: string }) {
           flexWrap: "wrap",
         }}
       >
-        <div style={{ fontSize: 15, fontWeight: 600 }}>Call activity by hour — 7d</div>
-        <span className="src">
-          /rollup/flow-hourly ·{" "}
-          {selected.size === HEATMAP_FAMILIES.length ? "all 3 port families" : [...selected].join(" + ")}
-        </span>
+        <div style={{ fontSize: 15, fontWeight: 600 }}>Traffic by hour — {windowLabel}</div>
+        <div style={{ display: "flex", gap: 16, alignItems: "center", flexWrap: "wrap" }}>
+          <WindowSelect value={windowKey} onChange={setWindowKey} label="Window" keys={HEATMAP_WINDOWS} />
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+            <span style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase" }}>Measure</span>
+            <div style={{ display: "inline-flex" }}>
+              {(["bytes", "flows"] as const).map((m, i) => (
+                <button
+                  key={m}
+                  onClick={() => setMeasure(m)}
+                  style={{
+                    all: "unset",
+                    cursor: "pointer",
+                    fontSize: 12,
+                    padding: "5px 12px",
+                    color: measure === m ? "#E8FFF8" : "#A6D8CD",
+                    background: measure === m ? "#133A3C" : "transparent",
+                    borderStyle: "solid",
+                    borderColor: measure === m ? "#3F9C8A" : "#2B7266",
+                    borderWidth: i === 0 ? "1px" : "1px 1px 1px 0",
+                    borderRadius: i === 0 ? "6px 0 0 6px" : "0 6px 6px 0",
+                  }}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
+          </div>
+          <span className="src">
+            /rollup/flow-hourly ·{" "}
+            {grids
+              ? active.size === allKeys.length
+                ? `all ${allKeys.length} port families`
+                : `${active.size} of ${allKeys.length} port families`
+              : "…"}
+          </span>
+        </div>
       </div>
 
       {error && (
@@ -1450,15 +1533,27 @@ function ActivityHeatmap({ ip }: { ip: string }) {
       )}
       {!grids && !error && <div style={{ color: "#6FA89E", fontSize: 13 }}>Loading…</div>}
 
-      {grids && (
+      {grids && grids.truncated && (
+        <div style={{ color: "#F5A623", fontSize: 12, marginBottom: 12 }}>
+          A 30-day chunk hit the route's {HOURLY_ROW_CAP.toLocaleString()}-row cap; the quietest hours of that chunk
+          may be missing. Pick a shorter window for the full picture.
+        </div>
+      )}
+
+      {grids && grids.families.length === 0 && (
+        <div style={{ color: "#6FA89E", fontSize: 13 }}>No traffic in this window.</div>
+      )}
+
+      {grids && grids.families.length > 0 && (
         <>
-          <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
-            {HEATMAP_FAMILIES.map((f) => {
-              const checked = selected.has(f.key);
+          <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap", alignItems: "center" }}>
+            {grids.families.map((f) => {
+              const checked = active.has(f.key);
               return (
                 <button
                   key={f.key}
                   onClick={() => toggle(f.key)}
+                  title={`${f.key} · ${formatBytes(f.bytes)} · ${f.flows.toLocaleString()} flows over ${windowLabel}`}
                   style={{
                     all: "unset",
                     cursor: "pointer",
@@ -1497,17 +1592,26 @@ function ActivityHeatmap({ ip }: { ip: string }) {
                       </svg>
                     )}
                   </span>
-                  <span style={{ width: 8, height: 8, borderRadius: 2, background: f.dot, flexShrink: 0 }} />
+                  <span style={{ width: 8, height: 8, borderRadius: 2, background: familyColor(f.key), flexShrink: 0 }} />
                   <span className="mono" style={{ fontSize: 12, color: checked ? "#E8FFF8" : "#6FA89E" }}>
-                    {f.label}
+                    {f.key}
                   </span>
                 </button>
               );
             })}
+            {selected !== null && (
+              <button
+                onClick={() => setSelected(null)}
+                style={{ all: "unset", cursor: "pointer", fontSize: 12, color: "#A6D8CD", textDecoration: "underline", marginLeft: 4 }}
+              >
+                all families
+              </button>
+            )}
           </div>
 
           <div style={{ fontSize: 11, color: "#6FA89E", marginBottom: 16 }}>
-            UTC hours · Mon → Sun, oldest to newest
+            UTC hours · Mon → Sun · each cell is the average for that weekday and hour over {windowLabel}
+            {windowKey !== "7d" ? ` (${Math.min(...grids.occurrences)} to ${Math.max(...grids.occurrences)} dates per weekday)` : ""}
           </div>
 
           <div style={{ display: "grid", gridTemplateColumns: "44px repeat(24,1fr)", gap: 3, alignItems: "center" }}>
@@ -1522,12 +1626,12 @@ function ActivityHeatmap({ ip }: { ip: string }) {
                 <div className="mono" style={{ fontSize: 11, color: "#A6D8CD" }}>
                   {HEATMAP_DAYS[dayIdx]}
                 </div>
-                {hours.map((bytes, hour) => {
-                  const t = max > 0 ? Math.sqrt(bytes) / Math.sqrt(max) : 0;
+                {hours.map((value, hour) => {
+                  const t = max > 0 ? Math.sqrt(value) / Math.sqrt(max) : 0;
                   return (
                     <div
                       key={hour}
-                      title={`${HEATMAP_DAYS[dayIdx]} ${String(hour).padStart(2, "0")}:00 UTC · ${formatBytes(bytes)}`}
+                      title={`${HEATMAP_DAYS[dayIdx]} ${String(hour).padStart(2, "0")}:00 UTC · ${fmt(value)} per hour`}
                       style={{
                         height: 22,
                         borderRadius: 3,
@@ -1543,7 +1647,7 @@ function ActivityHeatmap({ ip }: { ip: string }) {
 
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16 }}>
             <span className="mono" style={{ fontSize: 10, color: "#6FA89E" }}>
-              {formatBytes(0)}/h
+              {fmt(0)}/h
             </span>
             <div style={{ display: "flex", gap: 2 }}>
               {Array.from({ length: 8 }, (_, i) => (
@@ -1551,7 +1655,7 @@ function ActivityHeatmap({ ip }: { ip: string }) {
               ))}
             </div>
             <span className="mono" style={{ fontSize: 10, color: "#6FA89E" }}>
-              {formatBytes(max)}/h
+              {fmt(max)}/h
             </span>
           </div>
         </>
