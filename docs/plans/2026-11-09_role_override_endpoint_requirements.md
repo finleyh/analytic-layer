@@ -1,6 +1,7 @@
 # Requirements, 2026-11-09: deciding several roles of one IP in one request
 
-**Status: draft for the owner, not yet sent to netflow-rollups.** This is analysis-layer's ask as
+**Status: shipped upstream on 2026-11-10** (netflow-rollups commit `b7f09e7`, note at
+`docs/dashboard_notes/2026-11-10_role_decisions_route.md`); the dashboard side was built the same day. This is analysis-layer's ask as
 the caller. It says what the dashboard needs and why; how netflow-rollups builds it is its own
 design. Four choices are the owner's (last section); each has the default this page assumes.
 

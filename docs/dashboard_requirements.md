@@ -831,6 +831,31 @@ it among those the IP filter leaves. Several selected means the IP must carry al
 are OpenCTI labels: the chips filter on them, nothing is coloured or decided by them (the label
 provenance rule above).
 
+### Candidate review, 2026-11-10 — "not that; it is this, and this"
+
+The review page had two answers for a proposed role, Confirm and Reject. netflow-rollups shipped
+the third today (`POST /review/ip-roles/{ip}/decisions`, note `2026-11-10_role_decisions_route.md`),
+and the Peer roles and Monitored IP roles cards now use it. One-click Confirm and Reject stay as
+they were, on the single-role route. Each card gains **Decide several / add a role**: opened, it
+lists every role of that IP still waiting for a human (confirm, reject or leave, default leave) and
+an **Add a role** picker, and sends nothing until Submit, one request, all or nothing. The rules it
+follows: a confirm on a role the IP has no row for in any status is an *assert*, and any assert makes
+the one note required (Submit stays disabled and says why); the picker offers the vocabulary roles
+whose `assertable` flag for the card's vantage is true and that are not `retired`, minus the ones
+already confirmed or already listed, never `kind`; Reject is offered only where a row exists; `pairs`
+is never sent and no role goes twice. **The model's alternative only stages.** Where the vocabulary
+accepts it on this vantage, a button opens the panel with the card's role as reject and the
+alternative as confirm; it is a proposal until the analyst submits, and nothing is coloured by it.
+Where it cannot be asserted (`sip_client`, `sip_trunk` on a peer) or is not in the vocabulary
+(`dependency`) it stays text with a one-line reason. A refusal is a 422 in either shape, a `detail`
+string with one line per entry or a list of `{msg}` objects; the panel shows each line, says nothing
+was written, and keeps the staged choices.
+
+**Review history** shows "rejected in favour of `web_server`, `mail_server`" under a rejected entry
+whose `replaced_by` is non-empty; nothing is grouped on this side. **ASN candidates** now have a
+category select (from `/ref/provider-categories`, defaulting to the suggestion, flagged when it
+differs) and Approve sends the selected one, closing the gap the 2026-11-09 plan named.
+
 ### Still open
 
 - Pipeline health says scanner verdict counts and roles/providers last-write times are not
