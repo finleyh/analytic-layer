@@ -809,6 +809,28 @@ objects were renamed or dropped twice.
   either side or a confirmed relationship; Geo's role legend lists the relationship names an arc
   carries instead of lumping them into "unclear".
 
+### Entity detail, 2026-11-10 — the hourly heatmap shows every port family
+
+The 2026-11-04 request ("show all traffic, not just VoIP") reached the Watchlist column but not
+the Entity detail heatmap, which kept a hard-coded three (`rtp_media`, `voip_signaling`,
+`voip_admin`) out of what `/rollup/flow-hourly` already returned. Now "Call activity by hour —
+7d" is **Traffic by hour**: one toggle per port family present for the IP in the window (all on
+by default; a busy switch has 9 in a week, 20 over 90 days), a **Window** selector (7 / 30 /
+90 days; not "all history", because the hourly rows are per peer and 180 days of them would pass
+the route's 20,000-row cap), and a **Measure** switch, bytes or flows — bytes shows media and
+bulk, flows makes ssh, telnet and signaling visible where one family is 99% of bytes. A cell is
+the **average for that weekday and hour over the window** (the total divided by how many dates of
+that weekday the window covers), so 7d and 90d read on one scale and the legend stays per hour.
+30-day windows are fetched in 30-day chunks (90 days of the busiest IP is ~18,000 rows); a chunk
+that fills the cap shows a warning. Owner's choices, 2026-11-10: every family, all on, switchable
+bytes/flows, rename plus a window selector.
+
+**Watchlist, same day — filter by tag.** A row of chips under the filter bar, one per tag on any
+watched IP (`/watch/ips` `tags`; six today), `msk:*` first, each with the count of IPs that carry
+it among those the IP filter leaves. Several selected means the IP must carry all of them. Tags
+are OpenCTI labels: the chips filter on them, nothing is coloured or decided by them (the label
+provenance rule above).
+
 ### Still open
 
 - Pipeline health says scanner verdict counts and roles/providers last-write times are not
