@@ -316,6 +316,7 @@ function TrafficBar({ families, total }: { families: [string, number][]; total: 
 
 function WatchlistTable({ data }: { data: WatchlistData }) {
   const [search, setSearch] = useState("");
+  const [tagFilter, setTagFilter] = useState<Set<string>>(new Set());
   const [windowKey, setWindowKey] = useState<WindowKey>("7d");
   const [windowed, setWindowed] = useState<Windowed | null>(null);
   const [windowError, setWindowError] = useState<string | null>(null);
@@ -441,9 +442,28 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
 
   const sortValue = (ip: string) =>
     sortKey === "total" ? (bytesByIp.get(ip) ?? 0) : (familiesByIp.get(ip)?.get(sortKey)?.bytes ?? 0);
-  const sortedIps = [...watchedIps]
-    .sort((a, b) => sortValue(b.ip) - sortValue(a.ip))
-    .filter((ip) => ip.ip.includes(search.trim()));
+  // Tag filter: every selected tag must be on the IP. Counts are over the IPs the text filter
+  // leaves, so a chip says how many rows picking it would keep.
+  const searched = watchedIps.filter((ip) => ip.ip.includes(search.trim()));
+  const tagCounts = new Map<string, number>();
+  for (const ip of searched) for (const t of ip.tags) tagCounts.set(t, (tagCounts.get(t) ?? 0) + 1);
+  const allTags = [...tagCounts.keys()].sort((a, b) => {
+    // msk:* (the watch labels) first, then the rest alphabetically
+    const am = a.startsWith("msk:"), bm = b.startsWith("msk:");
+    return am === bm ? a.localeCompare(b) : am ? -1 : 1;
+  });
+  const sortedIps = searched
+    .filter((ip) => [...tagFilter].every((t) => ip.tags.includes(t)))
+    .sort((a, b) => sortValue(b.ip) - sortValue(a.ip));
+
+  function toggleTag(tag: string) {
+    setTagFilter((prev) => {
+      const next = new Set(prev);
+      if (next.has(tag)) next.delete(tag);
+      else next.add(tag);
+      return next;
+    });
+  }
 
   function toggle(ip: string, selectedKey?: string | null) {
     setExpanded((prev) => {
@@ -493,6 +513,49 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
           </select>
         </label>
         {loadingWindow && !windowError && <span style={{ fontSize: 12, color: "#6FA89E" }}>loading {range.label}…</span>}
+      </div>
+
+      <div style={{ marginBottom: 16, display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <span style={{ fontSize: 10, color: "#6FA89E", textTransform: "uppercase" }}>Tags</span>
+        {allTags.map((tag) => {
+          const on = tagFilter.has(tag);
+          const n = tagCounts.get(tag) ?? 0;
+          return (
+            <button
+              key={tag}
+              onClick={() => toggleTag(tag)}
+              title={on ? `Stop requiring ${tag}` : `Only IPs tagged ${tag} (${n} of ${searched.length})`}
+              className="mono"
+              style={{
+                all: "unset",
+                cursor: "pointer",
+                fontSize: 11,
+                padding: "4px 10px",
+                borderRadius: 999,
+                border: `1px solid ${on ? "#3F9C8A" : "#2B7266"}`,
+                background: on ? "rgba(72,196,170,0.16)" : "transparent",
+                color: on ? "#E8FFF8" : "#A6D8CD",
+                display: "inline-flex",
+                gap: 6,
+                alignItems: "center",
+              }}
+            >
+              {tag}
+              <span style={{ color: on ? "#5FE3C7" : "#6FA89E" }}>{n}</span>
+            </button>
+          );
+        })}
+        {tagFilter.size > 0 && (
+          <button
+            onClick={() => setTagFilter(new Set())}
+            style={{ all: "unset", cursor: "pointer", fontSize: 12, color: "#A6D8CD", textDecoration: "underline", marginLeft: 4 }}
+          >
+            clear
+          </button>
+        )}
+        {tagFilter.size > 1 && (
+          <span style={{ fontSize: 11, color: "#6FA89E" }}>IPs carrying all {tagFilter.size} selected tags</span>
+        )}
       </div>
 
       {windowError && (
@@ -709,7 +772,9 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
             {sortedIps.length === 0 && (
               <tr>
                 <td colSpan={7} style={{ color: "#6FA89E" }}>
-                  No monitored IPs match "{search}".
+                  No monitored IPs match
+                  {search.trim() ? ` "${search}"` : ""}
+                  {tagFilter.size > 0 ? ` with ${[...tagFilter].join(" + ")}` : ""}.
                 </td>
               </tr>
             )}
