@@ -110,6 +110,20 @@ export type AsnDecisionResult = {
 };
 
 /**
+ * Assertable
+ */
+export type Assertable = {
+    /**
+     * Watched
+     */
+    watched: boolean;
+    /**
+     * Peer
+     */
+    peer: boolean;
+};
+
+/**
  * ConfirmedPair
  */
 export type ConfirmedPair = {
@@ -1913,6 +1927,60 @@ export type ReviewQueue = {
 };
 
 /**
+ * RoleChoiceIn
+ *
+ * One entry of RoleDecisions: a role of the IP in the path and what to decide about it.
+ */
+export type RoleChoiceIn = {
+    /**
+     * Role
+     */
+    role: string;
+    /**
+     * Decision
+     */
+    decision: 'confirm' | 'reject';
+    /**
+     * Note
+     *
+     * this role's own reasoning; replaces the request's note for this role when not empty
+     */
+    note?: string | null;
+};
+
+/**
+ * RoleChoiceResult
+ */
+export type RoleChoiceResult = {
+    /**
+     * Role
+     */
+    role: string;
+    /**
+     * Decision
+     */
+    decision: string;
+    /**
+     * Asserted
+     *
+     * confirm: true when no rule had suggested this role, so the row was created by the decision
+     */
+    asserted?: boolean;
+    /**
+     * Pairs
+     *
+     * confirm: the relationships confirmed
+     */
+    pairs?: Array<ConfirmedPair>;
+    /**
+     * Pairs Unconfirmed
+     *
+     * reject: how many confirmed pairs were cleared
+     */
+    pairs_unconfirmed?: number | null;
+};
+
+/**
  * RoleDecision
  *
  * The role is in the path (`/review/ip-roles/{ip}/{role}/decision`).
@@ -1932,7 +2000,7 @@ export type RoleDecision = {
     /**
      * Note
      *
-     * the reviewer's reasoning; kept on the row and in the pairs' source stamp
+     * the reviewer's reasoning; kept on the row and in the pairs' source stamp; required (not empty) when the confirm asserts a role, that is when no row exists for it
      */
     note?: string;
 };
@@ -1982,6 +2050,56 @@ export type RoleDecisionResult = {
 };
 
 /**
+ * RoleDecisions
+ *
+ * `/review/ip-roles/{ip}/decisions`: several roles of one IP decided in one request, all or
+ * nothing. No `pairs`: a SIP confirm takes the single route's default. The list may be empty
+ * here so the writer refuses it in its own words (422).
+ */
+export type RoleDecisions = {
+    /**
+     * Decisions
+     */
+    decisions: Array<RoleChoiceIn>;
+    /**
+     * Note
+     *
+     * the reviewer's reasoning, kept on every row and history entry the request touches; an entry's own note replaces it for that row; an entry that asserts a role (no row yet) needs one or the other
+     */
+    note?: string;
+};
+
+/**
+ * RoleDecisionsResult
+ */
+export type RoleDecisionsResult = {
+    /**
+     * Ip
+     */
+    ip: string;
+    /**
+     * Vantage
+     */
+    vantage: string;
+    /**
+     * Action Id
+     *
+     * the uuid every history entry of this request carries
+     */
+    action_id: string;
+    /**
+     * Results
+     *
+     * one per entry, in the request's order
+     */
+    results: Array<RoleChoiceResult>;
+    /**
+     * Rollups
+     */
+    rollups?: string;
+};
+
+/**
  * RoleDoc
  */
 export type RoleDoc = {
@@ -1999,6 +2117,16 @@ export type RoleDoc = {
      * role (a statement about the box alone) or relation (relative to another IP; decision 0003)
      */
     kind: string;
+    /**
+     * whether an analyst may assert this role (confirm it where no row exists) on a watched or a peer IP; false on both for a relation-only name
+     */
+    assertable: Assertable;
+    /**
+     * Retired
+     *
+     * true once a role is retired: no longer assertable anew (none is marked yet)
+     */
+    retired?: boolean;
 };
 
 /**
@@ -2073,6 +2201,18 @@ export type RoleHistoryEntry = {
      * At
      */
     at: string;
+    /**
+     * Action Id
+     *
+     * one uuid shared by every entry one POST /review/ip-roles/{ip}/decisions request wrote; null for every other entry (and for every relation entry for now)
+     */
+    action_id?: string | null;
+    /**
+     * Replaced By
+     *
+     * on a rejected entry that has an action_id: the roles the same request confirmed or asserted, oldest first (an empty list when it only rejected); null on every other entry
+     */
+    replaced_by?: Array<string> | null;
 };
 
 /**
@@ -3889,6 +4029,36 @@ export type DecideIpRoleReviewIpRolesIpRoleDecisionPostResponses = {
 };
 
 export type DecideIpRoleReviewIpRolesIpRoleDecisionPostResponse = DecideIpRoleReviewIpRolesIpRoleDecisionPostResponses[keyof DecideIpRoleReviewIpRolesIpRoleDecisionPostResponses];
+
+export type DecideIpRolesReviewIpRolesIpDecisionsPostData = {
+    body: RoleDecisions;
+    path: {
+        /**
+         * Ip
+         */
+        ip: string;
+    };
+    query?: never;
+    url: '/review/ip-roles/{ip}/decisions';
+};
+
+export type DecideIpRolesReviewIpRolesIpDecisionsPostErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type DecideIpRolesReviewIpRolesIpDecisionsPostError = DecideIpRolesReviewIpRolesIpDecisionsPostErrors[keyof DecideIpRolesReviewIpRolesIpDecisionsPostErrors];
+
+export type DecideIpRolesReviewIpRolesIpDecisionsPostResponses = {
+    /**
+     * Successful Response
+     */
+    200: RoleDecisionsResult;
+};
+
+export type DecideIpRolesReviewIpRolesIpDecisionsPostResponse = DecideIpRolesReviewIpRolesIpDecisionsPostResponses[keyof DecideIpRolesReviewIpRolesIpDecisionsPostResponses];
 
 export type DecideIpRelationReviewIpRelationsIpRelationOtherIpDecisionPostData = {
     body: RelationDecision;

@@ -92,7 +92,20 @@ export function IpReviewHistory({ ip }: { ip: string }) {
                       </>
                     )}
                   </td>
-                  <td style={{ color: DECISION_COLOR[r.decision] }}>{r.decision}</td>
+                  <td style={{ color: DECISION_COLOR[r.decision] }}>
+                    {r.decision}
+                    {r.replaced_by && r.replaced_by.length > 0 && (
+                      <div style={{ fontSize: 11, color: "#6FA89E" }}>
+                        rejected in favour of{" "}
+                        {r.replaced_by.map((name, i) => (
+                          <span key={name}>
+                            {i > 0 && ", "}
+                            <span className="mono">{name}</span>
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </td>
                   <td>{r.status_after ?? "—"}</td>
                   <td style={{ maxWidth: 260, overflowWrap: "anywhere", color: "#A6D8CD" }} title={r.decided_by}>
                     {r.decided_by.length > 48 ? r.decided_by.slice(0, 48) + "…" : r.decided_by}

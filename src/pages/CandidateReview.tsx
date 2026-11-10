@@ -9,6 +9,10 @@ import {
   topPeersRollupFlowDailyTopPeersGet,
   queueReviewQueueGet,
   vocabularyRulesVocabularyGet,
+  listProviderCategoriesRefProviderCategoriesGet,
+  type ProviderCategory,
+  type RoleDoc,
+  type RoleDecisionsResult,
   type AsnCandidate,
   type IpRole,
   type SipPair,
@@ -20,6 +24,7 @@ import { formatBytes, formatShortDate, isoDate, daysAgo } from "../lib/format";
 import { CopyButton } from "../components/CopyButton";
 import { BTN_APPROVE, BTN_REJECT, DecidedChip } from "../components/reviewControls";
 import { RelationQueue } from "../components/RelationQueue";
+import { RoleDecisionsPanel, type RolePreset } from "../components/RoleDecisionsPanel";
 import { errorMessage } from "../lib/errors";
 
 type Queue = "asn" | "peer" | "watched" | "relations";
@@ -76,6 +81,9 @@ type Glossary = {
   // "unknown" dot, which is accurate: netflow-rollups doesn't describe a
   // process's features field-by-field yet, only its named inputs/outputs.
   nameDescription: Map<string, string>;
+  // The vocabulary's roles by name, with `assertable` (watched / peer) and `retired`:
+  // what the "add a role" picker and the alternative button offer. Empty until loaded.
+  roles: Map<string, RoleDoc>;
 };
 
 const EMPTY_GLOSSARY: Glossary = {
@@ -83,6 +91,7 @@ const EMPTY_GLOSSARY: Glossary = {
   familyFeatures: new Map(),
   roleMeaning: new Map(),
   nameDescription: new Map(),
+  roles: new Map(),
 };
 
 function buildGlossary(vocabulary: Vocabulary): Glossary {
@@ -103,7 +112,9 @@ function buildGlossary(vocabulary: Vocabulary): Glossary {
   }
   const roleMeaning = new Map<string, string>();
   for (const role of vocabulary.roles) roleMeaning.set(role.name, role.meaning);
-  return { ruleFamily, familyFeatures, roleMeaning, nameDescription };
+  const roles = new Map<string, RoleDoc>();
+  for (const role of vocabulary.roles) roles.set(role.name, role);
+  return { ruleFamily, familyFeatures, roleMeaning, nameDescription, roles };
 }
 
 function useGlossary(): { glossary: Glossary; error: string | null } {
@@ -307,6 +318,23 @@ function AsnQueue({ onPendingCount }: { onPendingCount: (n: number) => void }) {
   const [error, setError] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [asnFilter, setAsnFilter] = useState<string>("");
+  const [categories, setCategories] = useState<ProviderCategory[]>([]);
+  // The category the analyst picked per candidate; absent means the suggestion.
+  const [chosenCategory, setChosenCategory] = useState<Map<number, string>>(new Map());
+
+  useEffect(() => {
+    let cancelled = false;
+    listProviderCategoriesRefProviderCategoriesGet({ throwOnError: true })
+      .then((r) => {
+        if (!cancelled) setCategories(r.data.rows);
+      })
+      .catch(() => {
+        // The select then offers only the suggested category; Approve still works.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const asnOptions = useMemo(
     () => [...new Set((candidates ?? []).map((c) => c.asn))].sort((a, b) => a - b),
@@ -385,14 +413,14 @@ function AsnQueue({ onPendingCount }: { onPendingCount: (n: number) => void }) {
         path: { candidate_id: candidate.id },
         body:
           decision === "approve"
-            ? { decision: "approve", category: candidate.suggested_category }
+            ? { decision: "approve", category: chosenCategory.get(candidate.id) ?? candidate.suggested_category }
             : { decision: "reject" },
         throwOnError: true,
       });
       setDecided((prev) => {
         const next = new Map(prev).set(candidate.id, {
           decision,
-          category: decision === "approve" ? candidate.suggested_category : undefined,
+          category: decision === "approve" ? (chosenCategory.get(candidate.id) ?? candidate.suggested_category) : undefined,
           rollups: result.data.rollups,
         });
         onPendingCount((candidates ?? []).filter((c) => !next.has(c.id)).length);
@@ -469,6 +497,8 @@ function AsnQueue({ onPendingCount }: { onPendingCount: (n: number) => void }) {
         {visibleCandidates.map((c) => {
           const ev = evidence.get(c.id);
           const d = decided.get(c.id);
+          const category = chosenCategory.get(c.id) ?? c.suggested_category;
+          const categoryNames = categories.some((k) => k.category === c.suggested_category) ? categories : [...categories, { category: c.suggested_category, llm_classifiable: false, description: "" }];
           return (
             <div className="card" style={{ padding: "22px 24px", opacity: d ? 0.55 : 1 }} key={c.id}>
               <div
@@ -502,7 +532,28 @@ function AsnQueue({ onPendingCount }: { onPendingCount: (n: number) => void }) {
                     {formatShortDate(c.discovered_at)}
                   </div>
                 </div>
-                <div style={{ display: "flex", gap: 8, flexShrink: 0 }}>
+                <div style={{ display: "flex", gap: 8, flexShrink: 0, alignItems: "center", flexWrap: "wrap" }}>
+                  {!d && (
+                    <span style={{ display: "inline-flex", flexDirection: "column", gap: 2 }}>
+                      <select
+                        value={category}
+                        onChange={(e) => setChosenCategory((prev) => new Map(prev).set(c.id, e.target.value))}
+                        className="mono"
+                        aria-label={`Category to approve AS${c.asn} into`}
+                        style={{ background: "#0A2224", color: "#E8FFF8", border: "1px solid #2B7266", borderRadius: 6, padding: "6px 8px", fontSize: 12 }}
+                      >
+                        {categoryNames.map((k) => (
+                          <option key={k.category} value={k.category} title={k.description}>
+                            {k.category}
+                            {k.category === c.suggested_category ? " (suggested)" : ""}
+                          </option>
+                        ))}
+                      </select>
+                      {category !== c.suggested_category && (
+                        <span style={{ fontSize: 11, color: "#F5A623" }}>differs from the suggested {c.suggested_category}</span>
+                      )}
+                    </span>
+                  )}
                   {d ? (
                     <DecidedChip
                       kind={d.decision}
@@ -731,6 +782,19 @@ function IpRoleQueue({
     }
   }
 
+  // The several-roles panel decided a set of this IP's roles in one request: mark each of
+  // those that has a card here as decided, the same way a single decision does.
+  function decidedMany(result: RoleDecisionsResult) {
+    setDecided((prev) => {
+      const next = new Map(prev);
+      for (const r of result.results) {
+        next.set(`${result.ip}:${r.role}`, { decision: r.decision === "reject" ? "reject" : "confirm", rollups: result.rollups });
+      }
+      onPendingCount((rows ?? []).filter((r) => !next.has(rowKey(r))).length);
+      return next;
+    });
+  }
+
   return (
     <>
       <div
@@ -745,7 +809,9 @@ function IpRoleQueue({
           matches — expand "Relationships" to see and veto which ones. Reject marks the row{" "}
           <span className="mono">rejected</span> — a reviewer may still correct it later (unlike
           ASN candidates, a role row isn't locked after a decision). Confirming or rejecting one
-          role leaves this IP's other roles untouched.
+          role leaves this IP's other roles untouched. To decide several of an IP's roles at
+          once, or to record a role nobody proposed, open "Decide several / add a role" on its
+          card: that sends one request, and writes all of it or none.
         </span>
       </div>
 
@@ -866,6 +932,7 @@ function IpRoleQueue({
             vantage={vantage}
             decided={decided.get(rowKey(row))}
             onDecide={decide}
+            onDecidedMany={decidedMany}
             glossary={glossary}
           />
         ))}
@@ -893,18 +960,25 @@ function IpRoleCard({
   vantage,
   decided,
   onDecide,
+  onDecidedMany,
   glossary,
 }: {
   row: IpRole;
   vantage: "peer" | "watched";
   decided: RoleDecided | undefined;
   onDecide: (row: IpRole, decision: "confirm" | "reject", pairs?: PairRef[]) => Promise<void>;
+  onDecidedMany: (result: RoleDecisionsResult) => void;
   glossary: Glossary;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [pairs, setPairs] = useState<SipPair[] | null>(null);
   const [pairsError, setPairsError] = useState<string | null>(null);
   const [checked, setChecked] = useState<Set<number>>(new Set());
+  // The several-roles panel; `preset` stages the model's alternative (reject this role,
+  // confirm that one) and `presetKey` remounts the panel so a click always restages.
+  const [panelOpen, setPanelOpen] = useState(false);
+  const [preset, setPreset] = useState<RolePreset | null>(null);
+  const [presetKey, setPresetKey] = useState(0);
 
   const suggestions = row.suggestions as Record<string, RoleSuggestion>;
   const evaluation = row.evaluation as Evaluation | null;
@@ -1128,7 +1202,63 @@ function IpRoleCard({
             {evaluation.alternative && <> — alternative: {evaluation.alternative}</>}
             {evaluation.model && <span style={{ color: "#6FA89E", fontSize: 11 }}> · {evaluation.model}</span>}
           </div>
+          {evaluation.alternative && !decided && (() => {
+            const alt = evaluation.alternative;
+            if (alt === row.role) return null;
+            if (glossary.roles.size === 0) return null; // vocabulary not loaded yet: say nothing rather than guess
+            const info = glossary.roles.get(alt);
+            const why = !info
+              ? "is not a role in netflow-rollups' vocabulary, so it cannot be recorded"
+              : info.retired
+                ? "is a retired role, so it cannot be newly recorded"
+                : !info.assertable[vantage]
+                  ? `cannot be recorded on a ${vantage === "peer" ? "peer" : "monitored"} IP`
+                  : null;
+            if (why) {
+              return <div style={{ marginTop: 6, fontSize: 11, color: "#6FA89E" }}>No button: {alt} {why}.</div>;
+            }
+            return (
+              <button
+                type="button"
+                onClick={() => {
+                  setPreset({ reject: row.role, confirm: alt });
+                  setPresetKey((n) => n + 1);
+                  setPanelOpen(true);
+                }}
+                title={`Stages: reject ${row.role}, confirm ${alt}. Nothing is sent until you submit.`}
+                style={{ all: "unset", cursor: "pointer", marginTop: 8, fontSize: 12, color: "#7FEFD6", border: "1px solid #2B7266", borderRadius: 6, padding: "4px 10px" }}
+              >
+                Use the model's alternative ({alt})
+              </button>
+            );
+          })()}
           {evaluation.reasoning && <div style={{ marginTop: 4 }}>{evaluation.reasoning}</div>}
+        </div>
+      )}
+
+      {!decided && (
+        <div style={{ marginTop: 12 }}>
+          <button
+            type="button"
+            onClick={() => {
+              if (!panelOpen) setPreset(null); // opened by hand: nothing staged
+              setPanelOpen((o) => !o);
+            }}
+            style={{ all: "unset", cursor: "pointer", fontSize: 13, color: "#7FEFD6", display: "inline-block" }}
+          >
+            {panelOpen ? "▾" : "▸"} Decide several / add a role
+          </button>
+          {panelOpen && (
+            <RoleDecisionsPanel
+              key={presetKey}
+              ip={row.ip}
+              vantage={vantage}
+              ownRole={row.role}
+              roles={glossary.roles}
+              preset={preset}
+              onDecided={onDecidedMany}
+            />
+          )}
         </div>
       )}
 
