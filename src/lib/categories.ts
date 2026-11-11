@@ -1,5 +1,8 @@
 export const CATEGORY_COLORS: Record<string, [string, string]> = {
   cloud: ["#132033", "#4C8DFF"],
+  // Split out of cloud at netflow-rollups migration 0128 (rented servers: DigitalOcean,
+  // Hetzner, OVHcloud and the like); most of what read cloud before reads hosting after.
+  hosting: ["#1F2A13", "#A3E635"],
   satellite: ["#1C1530", "#8B5CF6"],
   educational: ["#13233A", "#60A5FA"],
   residential_isp: ["#0F2A27", "#2DD4BF"],

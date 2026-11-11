@@ -856,6 +856,60 @@ whose `replaced_by` is non-empty; nothing is grouped on this side. **ASN candida
 category select (from `/ref/provider-categories`, defaulting to the suggestion, flagged when it
 differs) and Approve sends the selected one, closing the gap the 2026-11-09 plan named.
 
+### Provider category `hosting`, 2026-11-10
+
+netflow-rollups migration `0128` (commit `3734ffa`, built, **not deployed** when this was written)
+splits `hosting` out of `cloud`. `cloud` becomes a short list of very large platforms (Amazon,
+Microsoft, Google, Oracle, Alibaba, Tencent, Huawei); `hosting` is every company that rents out
+servers (DigitalOcean, Hetzner, OVHcloud and 69 other networks). Upstream measured about 69% of
+the peers that read `cloud` over 30 days, with 94% of their connections, moving to `hosting`, on
+past days too, because categories are joined when the data is read. No route, field or parameter
+changes.
+
+**What the dashboard has for it.** A colour, lime `#A3E635` (the analyst's to change), in the
+three places categories are coloured or ordered by name:
+
+- `src/lib/categories.ts` `CATEGORY_COLORS`: the chips on the Watchlist, Netflow and Top talkers
+  pages and the Flow graph's node colours and legend swatches.
+- `src/pages/Overview.tsx` `CATEGORY_COLORS`: the "traffic by peer category" bars.
+- `src/pages/FlowGraph.tsx`: the legend list, `CLASS_ORDER` (right after `cloud`) and
+  `CLASS_COLOR`, which drive the Sankey tab. Without the `CLASS_ORDER` entry the Sankey would file
+  every `hosting` peer under unclassified.
+
+**Everything else was checked and needs nothing** (2026-11-11). No page filters, sorts or
+special-cases `cloud` by name; the only category named in logic is `unclassified`.
+
+- The ASN candidate picker builds its options from `/ref/provider-categories` and adds the
+  suggested category when the list lacks it, so `hosting` is choosable the moment upstream lists it.
+- A peer in two categories: upstream sorts `peer_categories` alphabetically, the Flow graph's node
+  graph colours a peer by the first and the Sankey by `CLASS_ORDER`. `bph` wins over `hosting` in
+  both, as it did over `cloud`; a peer in both `cloud` and `hosting` draws as `cloud` in both.
+- Freshness: the pages list whatever checks `/ops/freshness` returns, by name, so the new
+  `providers_hosting` check shows without a change.
+- Wording: the Top talkers footnote gave `cloud+bph` as its two-category example; it now reads
+  "`bph` with `hosting` or `cloud`", true before and after.
+- Left alone on purpose: "Bulletproof-hosting contact" on the Overview is the `bph` category, and
+  `peer_is_hosting` on Candidate review is a flag on SIP pairs (upstream keeps it covering the
+  same networks).
+
+**How it was checked.** Before the migration (the live API, 2026-11-11 00:10 UTC:
+`/ref/provider-categories` has no `hosting`, no row carries it): the Overview and the Flow graph
+load and draw as before, and the Flow graph legend shows `hosting` with its lime swatch. After the
+migration, simulated in the browser only by rewriting the API's answers on the way in (69% of
+`cloud` peers renamed `hosting`, each `cloud` mix row split 94/6, `hosting` added to the category
+list): the Watchlist's category chip, the Overview's bars, the Flow graph's nodes and Sankey bands
+and the Top talkers chips all draw `hosting` in lime, `cloud` stays blue, and the candidate picker
+offers `hosting`. Not seen on real rows; that waits for the deploy.
+
+**Noticed, not part of this:** `government`, `vpn` and `cellular_iot` have no colour of their own
+(a grey chip, and on the Overview a fallback colour that repeats another category's), and none of
+those three nor `educational` is in the Flow graph's legend or `CLASS_ORDER`, so the Sankey files
+those peers under unclassified. The `reverse_proxy` keys are still there from the `cdn` rename.
+
+**When `0128` is deployed:** look at the Overview's provider mix and the Flow graph with real
+rows, confirm `hosting` shows in its colour on past days as well as today, and replace "not
+deployed" above with the date.
+
 ### Still open
 
 - Pipeline health says scanner verdict counts and roles/providers last-write times are not

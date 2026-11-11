@@ -39,6 +39,7 @@ type OverviewData = {
 
 const CATEGORY_COLORS: Record<string, string> = {
   cloud: "#4C8DFF",
+  hosting: "#A3E635",
   bph: "#E5484D",
   satellite: "#8B5CF6",
   mobile: "#F59E0B",

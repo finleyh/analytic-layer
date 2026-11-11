@@ -224,8 +224,8 @@ export function TopTalkers() {
           </table>
           <div className="note">
             Category comes from <span className="mono">/rollup/flow-daily</span>, not the mix route
-            — it's the only place a multi-flag peer (<span className="mono">cloud+bph</span>) shows
-            both.
+            — it's the only place a peer in two categories (<span className="mono">bph</span> with{" "}
+            <span className="mono">hosting</span> or <span className="mono">cloud</span>) shows both.
           </div>
         </div>
       )}

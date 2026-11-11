@@ -1790,6 +1790,7 @@ function NodeGraph() {
 
 const categoryColorsLegend: Record<string, true> = {
   cloud: true,
+  hosting: true,
   satellite: true,
   mobile: true,
   residential_isp: true,
@@ -1803,11 +1804,12 @@ const categoryColorsLegend: Record<string, true> = {
 const SIP_FAMILIES = ["rtp_media", "voip_signaling", "voip_admin"];
 // reverse_proxy becomes cdn at netflow-rollups migration 0125; both until it is applied, then
 // drop reverse_proxy here and in CLASS_COLOR.
-const CLASS_ORDER = ["monitored", "bph", "cloud", "satellite", "mobile", "residential_isp", "wholesale_voip", "reverse_proxy", "cdn", "unclassified"];
+const CLASS_ORDER = ["monitored", "bph", "cloud", "hosting", "satellite", "mobile", "residential_isp", "wholesale_voip", "reverse_proxy", "cdn", "unclassified"];
 const CLASS_COLOR: Record<string, string> = {
   monitored: "#E5484D",
   bph: "#E5484D",
   cloud: "#4C8DFF",
+  hosting: "#A3E635",
   satellite: "#8B5CF6",
   mobile: "#F59E0B",
   residential_isp: "#2DD4BF",
