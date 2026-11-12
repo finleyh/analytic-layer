@@ -2759,7 +2759,9 @@ export type Vocabulary = {
  *
  * One row of watch__ips. `tags` mirrors every OpenCTI label on the
  * entity and is served verbatim for display; the API never filters or
- * joins on it (CLAUDE.md, "OpenCTI labels").
+ * joins on it (CLAUDE.md, "OpenCTI labels"). `description` mirrors the
+ * observable's OpenCTI description, served for display, never filtered or
+ * joined on.
  */
 export type WatchedIp = {
     /**
@@ -2782,6 +2784,10 @@ export type WatchedIp = {
      * Tags
      */
     tags: Array<string>;
+    /**
+     * Description
+     */
+    description: string | null;
 };
 
 /**
