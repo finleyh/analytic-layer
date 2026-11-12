@@ -1501,6 +1501,42 @@ export type PageScannerVerdict = {
 };
 
 /**
+ * Page[SharedPeerPair]
+ */
+export type PageSharedPeerPair = {
+    /**
+     * Rows
+     */
+    rows: Array<SharedPeerPair>;
+    /**
+     * Count
+     */
+    count: number;
+    /**
+     * Newest Day
+     */
+    newest_day?: string | null;
+};
+
+/**
+ * Page[SharedPeers]
+ */
+export type PageSharedPeers = {
+    /**
+     * Rows
+     */
+    rows: Array<SharedPeers>;
+    /**
+     * Count
+     */
+    count: number;
+    /**
+     * Newest Day
+     */
+    newest_day?: string | null;
+};
+
+/**
  * Page[SipPair]
  */
 export type PageSipPair = {
@@ -2356,6 +2392,55 @@ export type ScannerVerdict = {
      * Reason
      */
     reason: string;
+};
+
+/**
+ * SharedPeerPair
+ *
+ * Two watched IPs and the peers both talked to in the window. Each unordered pair once,
+ * `watched_ip` the lower address; a pair sharing no peer has no row.
+ */
+export type SharedPeerPair = {
+    /**
+     * Watched Ip
+     */
+    watched_ip: string;
+    /**
+     * Other Watched Ip
+     */
+    other_watched_ip: string;
+    /**
+     * Shared Peers
+     *
+     * distinct peers with a visible row against both watched IPs in the window
+     */
+    shared_peers: number;
+};
+
+/**
+ * SharedPeers
+ *
+ * One watched IP's peers over the window, and how many of them at least one other watched
+ * IP also talked to in the window (any day). Only watched IPs with visible traffic in the
+ * window have a row.
+ */
+export type SharedPeers = {
+    /**
+     * Watched Ip
+     */
+    watched_ip: string;
+    /**
+     * Peers
+     *
+     * distinct peers with at least one visible row against this watched IP in the window
+     */
+    peers: number;
+    /**
+     * Shared Peers
+     *
+     * of `peers`, those with a row against at least one other watched IP in the window
+     */
+    shared_peers: number;
 };
 
 /**
@@ -4469,6 +4554,124 @@ export type TopAsnsRollupFlowDailyTopAsnsGetResponses = {
 };
 
 export type TopAsnsRollupFlowDailyTopAsnsGetResponse = TopAsnsRollupFlowDailyTopAsnsGetResponses[keyof TopAsnsRollupFlowDailyTopAsnsGetResponses];
+
+export type SharedPeersRollupFlowDailySharedPeersGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Port Family
+         *
+         * one port family, e.g. voip_signaling; default: all
+         */
+        port_family?: string | null;
+        /**
+         * Exclude Watched
+         *
+         * drop peers that are themselves on the watch set
+         */
+        exclude_watched?: boolean;
+        /**
+         * Min Flows
+         *
+         * keep a contact only when its flows over the window reach this; 1 is no threshold
+         */
+        min_flows?: number;
+        /**
+         * From
+         *
+         * first day, inclusive; default: six days before `to`
+         */
+        from?: string | null;
+        /**
+         * To
+         *
+         * last day, inclusive; default: today (UTC)
+         */
+        to?: string | null;
+    };
+    url: '/rollup/flow-daily/shared-peers';
+};
+
+export type SharedPeersRollupFlowDailySharedPeersGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SharedPeersRollupFlowDailySharedPeersGetError = SharedPeersRollupFlowDailySharedPeersGetErrors[keyof SharedPeersRollupFlowDailySharedPeersGetErrors];
+
+export type SharedPeersRollupFlowDailySharedPeersGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageSharedPeers;
+};
+
+export type SharedPeersRollupFlowDailySharedPeersGetResponse = SharedPeersRollupFlowDailySharedPeersGetResponses[keyof SharedPeersRollupFlowDailySharedPeersGetResponses];
+
+export type SharedPeerPairsRollupFlowDailySharedPeerPairsGetData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Port Family
+         *
+         * one port family, e.g. voip_signaling; default: all
+         */
+        port_family?: string | null;
+        /**
+         * Exclude Watched
+         *
+         * drop peers that are themselves on the watch set
+         */
+        exclude_watched?: boolean;
+        /**
+         * Min Flows
+         *
+         * keep a contact only when its flows over the window reach this; 1 is no threshold
+         */
+        min_flows?: number;
+        /**
+         * Limit
+         *
+         * rows to return, at most 20000
+         */
+        limit?: number;
+        /**
+         * From
+         *
+         * first day, inclusive; default: six days before `to`
+         */
+        from?: string | null;
+        /**
+         * To
+         *
+         * last day, inclusive; default: today (UTC)
+         */
+        to?: string | null;
+    };
+    url: '/rollup/flow-daily/shared-peer-pairs';
+};
+
+export type SharedPeerPairsRollupFlowDailySharedPeerPairsGetErrors = {
+    /**
+     * Validation Error
+     */
+    422: HttpValidationError;
+};
+
+export type SharedPeerPairsRollupFlowDailySharedPeerPairsGetError = SharedPeerPairsRollupFlowDailySharedPeerPairsGetErrors[keyof SharedPeerPairsRollupFlowDailySharedPeerPairsGetErrors];
+
+export type SharedPeerPairsRollupFlowDailySharedPeerPairsGetResponses = {
+    /**
+     * Successful Response
+     */
+    200: PageSharedPeerPair;
+};
+
+export type SharedPeerPairsRollupFlowDailySharedPeerPairsGetResponse = SharedPeerPairsRollupFlowDailySharedPeerPairsGetResponses[keyof SharedPeerPairsRollupFlowDailySharedPeerPairsGetResponses];
 
 export type FlowDailyRollupFlowDailyGetData = {
     body?: never;

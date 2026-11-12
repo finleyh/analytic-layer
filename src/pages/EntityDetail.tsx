@@ -826,6 +826,10 @@ function looksLikeUrl(s: string): boolean {
   return /^https?:\/\//i.test(s);
 }
 
+function looksLikeIp(s: string): boolean {
+  return /^\d{1,3}(\.\d{1,3}){3}$/.test(s) || (s.includes(":") && /^[0-9a-f:]+$/i.test(s));
+}
+
 function FindingsList({
   findings,
   onScan,
@@ -838,6 +842,9 @@ function FindingsList({
   if (findings.length === 0) return null;
 
   const sorted = [...findings].sort((a, b) => b.day.localeCompare(a.day));
+  // The subjects that are bare IP addresses (a beacon finding's other end),
+  // each once, newest finding first: what the copy button puts on the clipboard.
+  const subjectIps = [...new Set(sorted.map((f) => f.subject.trim()).filter(looksLikeIp))];
 
   return (
     <div className="card" style={{ padding: "22px 24px", marginBottom: 24 }}>
@@ -851,7 +858,18 @@ function FindingsList({
           flexWrap: "wrap",
         }}
       >
-        <div style={{ fontSize: 13, fontWeight: 600 }}>Findings (90d)</div>
+        <div style={{ fontSize: 13, fontWeight: 600 }}>
+          Findings (90d)
+          {subjectIps.length > 0 && (
+            <span style={{ fontWeight: 400, fontSize: 12, color: "#6FA89E", marginLeft: 12 }}>
+              {subjectIps.length} {subjectIps.length === 1 ? "IP" : "IPs"}
+              <CopyButton
+                text={subjectIps.join("\n")}
+                label={`Copy the ${subjectIps.length === 1 ? "IP" : `${subjectIps.length} IPs`} named in these findings, one per line`}
+              />
+            </span>
+          )}
+        </div>
         <span className="src">verdict__findings — no effect on the rollups</span>
       </div>
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>

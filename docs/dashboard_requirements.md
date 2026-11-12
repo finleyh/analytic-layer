@@ -856,6 +856,64 @@ whose `replaced_by` is non-empty; nothing is grouped on this side. **ASN candida
 category select (from `/ref/provider-categories`, defaulting to the suggestion, flagged when it
 differs) and Approve sends the selected one, closing the gap the 2026-11-09 plan named.
 
+### Entity detail, 2026-11-10 — copy the IPs named in the findings
+
+The Findings card's heading carries a count and a copy button ("3 IPs ⧉") when any finding's
+`subject` is a bare IP address (on a monitored IP's page today that is `interactsh_polling`, whose
+subject is the server polled; a `peer_regular_v1` row is filed under the peer with the monitored IP
+as its subject, so it shows here only when the monitored IP is itself another one's regular peer; a
+URL subject, even one whose host is an IP, is not counted). It copies those addresses one per line,
+each once, newest finding first, from the same `/verdict/findings` rows the card lists. No count
+and no button when no subject is an IP. One list for all rules together; not split per rule.
+
+Noticed, not changed: the card is headed "Findings (90d)" but the page asks `/verdict/findings`
+for the last 30 days (`from30`), limit 200.
+
+### Watchlist, 2026-11-10 — ASN under the tags
+
+Each row's first cell ends with a line under the tags: `AS14061 DIGITALOCEAN-ASN - DigitalOcean,
+LLC · US`, from the `asn`, `asn_holder` and `country` of `/lookup/ip-identities/{ip}`, the call the
+page already makes per monitored IP for reverse DNS. No new request.
+
+**Measured 2026-11-10: 7 of 57 monitored IPs have it** (7 of 50 that morning; the watch set grew
+by seven during the day). The others answer 404 ("no identity looked up"), and their rows say "ASN
+not looked up". The cause was upstream's design, not an outage: the identity lookup
+(`lookup/ip_identity_enrichment.py`) ran on the peers the role process recommends, so a monitored
+IP had a row only when it was also looked up as another monitored IP's peer.
+
+**Upstream built the fix the same day (netflow-rollups commit `4467389`), not yet deployed:** the
+nightly port-scan sweep writes an identity row for each monitored IP it scans. Once it is deployed
+and a sweep has run, this line fills in with no change here. The hover and the footnote were
+reworded so they stay true after that: "no identity row for this IP yet", with no claim about
+which lookups write one. No dashboard note covers this change upstream; the commit message is the
+source.
+
+### Watchlist, 2026-11-10 — shared peers
+
+A column, "Shared peers (7d)", following the history selector like the traffic columns. A cell
+reads `10 of 36`: 36 peers exchanged at least 2 flows with this monitored IP over the window, and
+10 of them also exchanged at least 2 flows with another monitored IP, on any day of the window.
+The hover gives the same pair with no minimum ("35 of 134"). The sort select gained "shared
+peers".
+
+- **Source:** `/rollup/flow-daily/shared-peers`, asked twice per window: `min_flows=2` for the
+  cell, no `min_flows` for the hover. One row per monitored IP, so no cap applies and "All
+  history" is as complete as 7 days (the route was added for this on 2026-11-10; before it the
+  count was only computable in the browser from `/rollup/flow-daily`, and only at 7 days).
+- **Why a minimum, and why 2:** with none, the count is mostly single-flow sweeps of the
+  provider's address space (73% of shared contacts over 7 days, upstream's note of 2026-11-10).
+  2 was the analyst's choice, 2026-11-10. It is one constant, `SHARED_MIN_FLOWS` in
+  `Watchlist.tsx`.
+- **A monitored IP with no counted contact has no row** in the answer; the page reads that as 0
+  of 0.
+- **What it counts that might surprise:** a peer that is itself monitored counts (the route's
+  `exclude_watched` is left off); paused monitored IPs count; scanner traffic is hidden, as on
+  every rollup route. Per-IP counts do not add up to pair counts.
+- **Measured 2026-11-10, 7 days, `min_flows=2`:** 26 of 57 monitored IPs share at least one peer.
+- **Not built:** which monitored IPs share peers with which (`/rollup/flow-daily/shared-peer-pairs`
+  serves it; a candidate for clustering on the Flow graph), and a port-family filter (the route
+  takes `port_family`, e.g. `voip_signaling`).
+
 ### Provider category `hosting`, 2026-11-10
 
 netflow-rollups migration `0128` (commit `3734ffa`; built 2026-11-10, **deployed 2026-11-12**: the
@@ -947,15 +1005,6 @@ to the one in the tree.
   sits a few degrees of hue from the `sip_server` role swatch and the `icmp` edge colour, both of
   which get their colour from a hash of the name (`src/lib/colors.ts`).
 
-### Still open
-
-- Pipeline health says scanner verdict counts and roles/providers last-write times are not
-  available; `/verdict/scanners`, `updated_at` on the review rows and `last_seen` on
-  `/ref/providers` now carry them. Not built.
-- The Watchlist's "last record per IP" is still not servable (the raw flow records are not on
-  the API).
-- Watchlist identity lookups are one request per IP (404 for IPs with no identity row yet); a
-  bulk route would remove the console noise.
 ### Candidate review, 2026-11-12 — tags and port scans of the IP under review
 
 Finley's request: on the candidate review page, show the port scan data and every tag of the IP
@@ -1034,3 +1083,12 @@ tags" when there are none. Checked: the chips of all 57 Watchlist rows equal the
   description of the `trigger` filter does not list `recommended`. The page prints whatever value
   it gets, so nothing breaks; the note is for netflow-rollups' documentation.
 
+### Still open
+
+- Pipeline health says scanner verdict counts and roles/providers last-write times are not
+  available; `/verdict/scanners`, `updated_at` on the review rows and `last_seen` on
+  `/ref/providers` now carry them. Not built.
+- The Watchlist's "last record per IP" is still not servable (the raw flow records are not on
+  the API).
+- Watchlist identity lookups are one request per IP (404 for IPs with no identity row yet); a
+  bulk route would remove the console noise.

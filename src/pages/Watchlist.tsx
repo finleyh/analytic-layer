@@ -9,6 +9,7 @@ import {
   portFamilyMixDailyRollupPortFamilyMixDailyGet,
   providerMixDailyRollupProviderMixDailyGet,
   bphContactDailyRollupBphContactDailyGet,
+  sharedPeersRollupFlowDailySharedPeersGet,
   unclassifiedContactsDailyRollupUnclassifiedContactsDailyGet,
   hostScanChangesLookupHostScansChangesGet,
   listHostScansLookupHostScansGet,
@@ -21,6 +22,7 @@ import {
   type DailyPortFamilyMix,
   type DailyProviderMix,
   type DailyBphContact,
+  type SharedPeers,
   type DailyUnclassifiedContact,
   type FingerprintChange,
   type Freshness,
@@ -56,11 +58,20 @@ type Windowed = {
   providerMix: DailyProviderMix[];
   fingerprintChanges: FingerprintChange[];
   scansByIp: Map<string, HostScan[]>;
+  /** Peers shared with other monitored IPs, counting contacts of at least SHARED_MIN_FLOWS flows. */
+  sharedRepeat: SharedPeers[];
+  /** The same with no minimum: every contact, single flows included. */
+  sharedAny: SharedPeers[];
   /** A rollup route returned its row cap, so totals may be short. */
   capped: boolean;
 };
 
 const ROLLUP_ROW_CAP = 20000;
+// A contact counts toward "shared peers" only with at least this many flows over the window.
+// Without a minimum the count is mostly single-flow sweeps from the provider's neighbourhood
+// (73% of shared contacts over seven days, netflow-rollups' note of 2026-11-10); 2 was the
+// analyst's choice that day.
+const SHARED_MIN_FLOWS = 2;
 
 function groupSum<T>(rows: T[], keyFn: (r: T) => string, valFn: (r: T) => number): Map<string, number> {
   const m = new Map<string, number>();
@@ -295,6 +306,28 @@ function IdentityCell({
           {t}
         </span>
       ))}
+      <br />
+      {identity?.asn ? (
+        <span
+          style={{ fontSize: 11, color: "#A6D8CD" }}
+          title="ASN, holder and country as netflow-rollups looked them up (/lookup/ip-identities)"
+        >
+          <span className="mono">AS{identity.asn}</span>
+          {identity.asn_holder ? ` ${identity.asn_holder}` : ""}
+          {identity.country && <span style={{ color: "#6FA89E" }}> · {identity.country}</span>}
+        </span>
+      ) : (
+        <span
+          style={{ fontSize: 11, color: "#6FA89E" }}
+          title={
+            identity
+              ? "netflow-rollups looked this IP up and its netflow gave no ASN (/lookup/ip-identities)"
+              : "netflow-rollups has no identity row for this IP yet (/lookup/ip-identities): none has been stored by a port-scan sweep or by a peer lookup"
+          }
+        >
+          {identity ? "no ASN on record" : "ASN not looked up"}
+        </span>
+      )}
     </td>
   );
 }
@@ -338,10 +371,12 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
 
     async function load() {
       try {
-        const [portFamilyMix, providerMix, fingerprintChanges] = await Promise.all([
+        const [portFamilyMix, providerMix, fingerprintChanges, sharedRepeat, sharedAny] = await Promise.all([
           portFamilyMixDailyRollupPortFamilyMixDailyGet({ query: { from, to, limit: ROLLUP_ROW_CAP }, throwOnError: true }),
           providerMixDailyRollupProviderMixDailyGet({ query: { from, to, limit: ROLLUP_ROW_CAP }, throwOnError: true }),
           hostScanChangesLookupHostScansChangesGet({ query: { subject: "watched", from, to }, throwOnError: true }),
+          sharedPeersRollupFlowDailySharedPeersGet({ query: { from, to, min_flows: SHARED_MIN_FLOWS }, throwOnError: true }),
+          sharedPeersRollupFlowDailySharedPeersGet({ query: { from, to }, throwOnError: true }),
         ]);
         // The scans themselves, per IP: there is no bulk route that is not capped at 1000 rows,
         // and the chips need the hashes and facts, not just the counts /changes gives.
@@ -365,6 +400,8 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
           providerMix: providerMix.data.rows,
           fingerprintChanges: fingerprintChanges.data.rows,
           scansByIp: new Map(scanEntries),
+          sharedRepeat: sharedRepeat.data.rows,
+          sharedAny: sharedAny.data.rows,
           capped: portFamilyMix.data.count >= ROLLUP_ROW_CAP || providerMix.data.count >= ROLLUP_ROW_CAP,
         });
       } catch (err) {
@@ -444,8 +481,16 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
     fpByIp.set(r.ip, list);
   }
 
+  // A monitored IP with no counted contact in the window has no row: absent means 0 and 0.
+  const sharedRepeatByIp = new Map((windowed?.sharedRepeat ?? []).map((r) => [r.watched_ip, r]));
+  const sharedAnyByIp = new Map((windowed?.sharedAny ?? []).map((r) => [r.watched_ip, r]));
+
   const sortValue = (ip: string) =>
-    sortKey === "total" ? (bytesByIp.get(ip) ?? 0) : (familiesByIp.get(ip)?.get(sortKey)?.bytes ?? 0);
+    sortKey === "total"
+      ? (bytesByIp.get(ip) ?? 0)
+      : sortKey === "shared"
+        ? (sharedRepeatByIp.get(ip)?.shared_peers ?? 0)
+        : (familiesByIp.get(ip)?.get(sortKey)?.bytes ?? 0);
   // Tag filter: every selected tag must be on the IP. Counts are over the IPs the text filter
   // leaves, so a chip says how many rows picking it would keep.
   const searched = watchedIps.filter((ip) => ip.ip.includes(search.trim()));
@@ -509,6 +554,7 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
             style={{ background: "#0A2224", color: "#E8FFF8", border: "1px solid #2B7266", borderRadius: 6, padding: "5px 8px", fontSize: 12 }}
           >
             <option value="total">total bytes</option>
+            <option value="shared">shared peers</option>
             {allFamilies.map((f) => (
               <option key={f} value={f}>
                 {f} bytes
@@ -589,7 +635,7 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
       )}
 
       <div className="card" style={{ overflowX: "auto", opacity: loadingWindow ? 0.6 : 1 }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 980 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 1080 }}>
           <thead>
             <tr>
               <th>
@@ -601,6 +647,12 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
               <th>Peer category</th>
               <th style={{ textAlign: "right" }}>BPH 30d</th>
               <th style={{ textAlign: "right" }}>Uncl. peers 7d</th>
+              <th
+                style={{ textAlign: "right" }}
+                title={`Of this IP's peers with at least ${SHARED_MIN_FLOWS} flows in the window, how many also had at least ${SHARED_MIN_FLOWS} flows with another monitored IP`}
+              >
+                Shared peers ({range.label})
+              </th>
               <th>Port scans ({range.label})</th>
             </tr>
           </thead>
@@ -616,6 +668,8 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
               const category = dominantCategory(ip.ip);
               const bph = bphByIp.get(ip.ip) ?? 0;
               const unclCount = unclPeersByIp.get(ip.ip)?.size ?? 0;
+              const sharedRepeat = sharedRepeatByIp.get(ip.ip) ?? { peers: 0, shared_peers: 0 };
+              const sharedAny = sharedAnyByIp.get(ip.ip) ?? { peers: 0, shared_peers: 0 };
               const fpRows = fpByIp.get(ip.ip) ?? [];
               const fpScans = fpRows.reduce((s, r) => s + r.scans, 0);
               const fpHashes = fpRows.reduce((s, r) => s + r.distinct_fingerprints, 0);
@@ -684,6 +738,20 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
                     >
                       {unclCount}
                     </td>
+                    <td
+                      className="num mono"
+                      style={{ textAlign: "right", whiteSpace: "nowrap" }}
+                      title={
+                        `${sharedRepeat.shared_peers} of this IP's ${sharedRepeat.peers} peers with at least ${SHARED_MIN_FLOWS} flows over ${range.label} ` +
+                        `also had at least ${SHARED_MIN_FLOWS} flows with another monitored IP.\n` +
+                        `Counting every contact, single flows included: ${sharedAny.shared_peers} of ${sharedAny.peers}.`
+                      }
+                    >
+                      <span style={{ color: sharedRepeat.shared_peers > 0 ? undefined : "#6FA89E" }}>
+                        {sharedRepeat.shared_peers}
+                      </span>
+                      <span style={{ color: "#6FA89E", fontSize: 11 }}> of {sharedRepeat.peers}</span>
+                    </td>
                     <td className="fp" style={{ fontSize: 12, lineHeight: 1.4 }}>
                       {fpRows.length === 0 ? (
                         <span style={{ color: "#6FA89E" }}>no scans</span>
@@ -713,7 +781,7 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
                   </tr>
                   {isExpanded && (
                     <tr>
-                      <td colSpan={7} style={{ background: "#071B1D", padding: "14px 18px" }}>
+                      <td colSpan={8} style={{ background: "#071B1D", padding: "14px 18px" }}>
                         <div style={{ display: "flex", gap: 28, flexWrap: "wrap", alignItems: "flex-start" }}>
                           <div style={{ flex: "0 1 420px", minWidth: 300 }}>
                             <div style={{ fontSize: 12, fontWeight: 600, color: "#A6D8CD", marginBottom: 8 }}>
@@ -775,7 +843,7 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
             })}
             {sortedIps.length === 0 && (
               <tr>
-                <td colSpan={7} style={{ color: "#6FA89E" }}>
+                <td colSpan={8} style={{ color: "#6FA89E" }}>
                   No monitored IPs match
                   {search.trim() ? ` "${search}"` : ""}
                   {tagFilter.size > 0 ? ` with ${[...tagFilter].join(" + ")}` : ""}.
@@ -788,7 +856,8 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
           Sources, per column: <span className="mono">/review/ip-roles</span> (reviewed role) ·{" "}
           <span className="mono">/watch/ips</span> tags (TIP labels, analyst suggestions, read by no
           logic) · <span className="mono">/lookup/ip-identities</span> rdns (reverse DNS, shown when
-          present) ·{" "}
+          present) and ASN, holder and country (under the tags; "not looked up" where the IP has no
+          identity row yet) ·{" "}
           <span className="mono" style={{ color: "#4C8DFF" }}>
             /lookup/host-names
           </span>{" "}
@@ -799,7 +868,12 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
           table) · <span className="mono">/rollup/provider-mix-daily</span> (dominant category,
           excluding unclassified) · <span className="mono">/rollup/bph-contact-daily</span> (always
           30d) · <span className="mono">/rollup/unclassified-contacts-daily</span> (distinct peers,
-          always 7d) · <span className="mono">/lookup/host-scans</span> and{" "}
+          always 7d) · <span className="mono">/rollup/flow-daily/shared-peers</span> (shared peers: "3 of
+          24" says 24 peers had at least {SHARED_MIN_FLOWS} flows with this IP over the window and 3 of
+          them also had at least {SHARED_MIN_FLOWS} flows with another monitored IP, on any day of it;
+          hover for the count with single flows included, which is mostly one-packet sweeps; a peer
+          that is itself monitored counts, paused IPs count, scanner traffic is hidden as in every
+          rollup) · <span className="mono">/lookup/host-scans</span> and{" "}
           <span className="mono">/changes</span> (port scans: the summary counts scans and distinct
           fingerprints summed across censys + shodan — an approximation, not a true cross-source
           dedup; each chip is a run of consecutive scans with one fingerprint hash, hover for its
