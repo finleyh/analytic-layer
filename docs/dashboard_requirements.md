@@ -1108,6 +1108,40 @@ put the month/day next to the day of the week, and a number over every hour colu
 - Checked on `159.65.230.164` (7 and 30 days) and `185.134.23.8` (7, 30 and 90 days), at 1440 px
   and at the preview pane's width (columns 19 px wide, the two-digit hour needs 11 px).
 
+### Watchlist and Entity detail, 2026-11-12 — the OpenCTI description of a watched IP
+
+netflow-rollups now mirrors the description an analyst writes on the OpenCTI IPv4 observable
+onto the watched IP's row (its migration `0129`; hourly reconcile) and serves it as
+`description: string | null` on `GET /watch/ips` and `GET /watch/ips/{ip}`. No dashboard note was
+written for it; the `GET /watch/ips` row of `netflow-rollups/docs/api.md` is the reference. The
+client was regenerated (`WatchedIp.description`; nothing else in the spec changed).
+
+- **One source.** The pages read the description from `/watch/ips`, never from OpenCTI directly,
+  so there is no extra OpenCTI round trip and the two cannot disagree on screen. "Third source"
+  above noted that every watchlist IP has an `x_opencti_description` that could be read over
+  GraphQL; for watched IPs the mirror now answers that. Notes are still only in OpenCTI.
+- **Provenance.** It is an analyst's words, like the TIP labels: display only, read by no logic,
+  not filtered, not sorted, colouring nothing. The Watchlist search still matches on the IP only
+  (tags are filtered by their own chips, not by the search), so the description was not added to
+  it.
+- **Watchlist.** Under the tag chips of each row, above the ASN line: two lines at most, the whole
+  text on hover, and the whole text with its line breaks once the row is expanded (the same
+  arrow that opens the traffic and port-scan detail).
+- **Entity detail.** Under the tag chips of the header, the whole text with its line breaks, with
+  the source badge `/watch/ips description`.
+- **No description.** `null` (or only white space) draws nothing in a Watchlist row and "no
+  description on the OpenCTI observable" on the Entity page; never the word "null".
+- **Not done.** `IpReviewContext` (the tags and port scans block on Candidate review) keeps its
+  own map of watched IPs and does not carry the description: neither page above reads its
+  watched IPs through it. Showing it there too is a small addition if the reviewer wants the
+  description beside the tags. Peers have no description; only watched IPs carry one.
+- Checked against the live API on 2026-11-12: 57 watched IPs, all with a description (8 to 313
+  characters, ten with line breaks), 28 rows cut to two lines. `103.205.131.82` (313 characters,
+  three paragraphs) on both pages, collapsed and expanded. No row is null today, so the null
+  case was checked by answering `description: null` for `46.8.227.73` inside the browser tab
+  only (nothing was changed on the API): the row and the Entity header render cleanly.
+- The repo has no test or lint script; `tsc --noEmit` and `npm run build` are the checks.
+
 ### Still open
 
 - Pipeline health says scanner verdict counts and roles/providers last-write times are not

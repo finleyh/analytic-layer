@@ -279,7 +279,7 @@ function EntityContent({
           </span>
         )}
       </div>
-      <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap", alignItems: "center" }}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 12, flexWrap: "wrap", alignItems: "center" }}>
         {watchedIp.tags.filter((t) => t.startsWith("msk:")).sort().map((t) => (
           <span className="chip" key={t} title="OpenCTI label (/watch/ips tags) — an msk:* watch label">
             {t}
@@ -302,6 +302,31 @@ function EntityContent({
             reviewed role and TIP label are shown separately on purpose
           </span>
         )}
+      </div>
+      {/* The analyst's description of the OpenCTI observable, mirrored on /watch/ips. Display
+          only, like the TIP labels: read by no logic. */}
+      <div style={{ display: "flex", gap: 12, alignItems: "flex-start", marginBottom: 24, flexWrap: "wrap" }}>
+        {watchedIp.description?.trim() ? (
+          <div
+            style={{
+              fontSize: 13,
+              lineHeight: 1.5,
+              color: "#C6EBE2",
+              whiteSpace: "pre-wrap",
+              overflowWrap: "anywhere",
+              maxWidth: 820,
+              borderLeft: "2px dashed #3F9C8A",
+              paddingLeft: 12,
+            }}
+          >
+            {watchedIp.description.trim()}
+          </div>
+        ) : (
+          <span style={{ fontSize: 11, color: "#6FA89E" }}>no description on the OpenCTI observable</span>
+        )}
+        <span className="src" title="The description an analyst wrote on the OpenCTI observable, mirrored hourly by netflow-rollups">
+          /watch/ips description
+        </span>
       </div>
 
       <div

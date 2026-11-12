@@ -307,6 +307,7 @@ function IdentityCell({
         </span>
       ))}
       <br />
+      <WatchDescription text={ip.description} full={expanded} />
       {identity?.asn ? (
         <span
           style={{ fontSize: 11, color: "#A6D8CD" }}
@@ -329,6 +330,33 @@ function IdentityCell({
         </span>
       )}
     </td>
+  );
+}
+
+// The description an analyst wrote on the OpenCTI observable, as netflow-rollups mirrors it
+// (`/watch/ips` `description`). Display only: an analyst's words, read by no logic, like the TIP
+// labels. Two lines in the row with the whole text on hover; the whole text, line breaks kept,
+// once the row is expanded. Nothing at all when the observable has no description.
+function WatchDescription({ text, full }: { text: string | null; full: boolean }) {
+  const desc = text?.trim();
+  if (!desc) return null;
+  return (
+    <div
+      title={full ? "OpenCTI description (/watch/ips description)" : `OpenCTI description (/watch/ips description)\n\n${desc}`}
+      style={{
+        fontSize: 11,
+        lineHeight: 1.45,
+        color: "#A6D8CD",
+        maxWidth: 380,
+        margin: "3px 0",
+        overflowWrap: "anywhere",
+        ...(full
+          ? { whiteSpace: "pre-wrap" }
+          : { display: "-webkit-box", WebkitBoxOrient: "vertical", WebkitLineClamp: 2, overflow: "hidden" }),
+      }}
+    >
+      {desc}
+    </div>
   );
 }
 
@@ -855,7 +883,8 @@ function WatchlistTable({ data }: { data: WatchlistData }) {
         <div className="note">
           Sources, per column: <span className="mono">/review/ip-roles</span> (reviewed role) ·{" "}
           <span className="mono">/watch/ips</span> tags (TIP labels, analyst suggestions, read by no
-          logic) · <span className="mono">/lookup/ip-identities</span> rdns (reverse DNS, shown when
+          logic) and description (the analyst's text on the OpenCTI observable, under the tags: two
+          lines, all of it on hover or when the row is expanded) · <span className="mono">/lookup/ip-identities</span> rdns (reverse DNS, shown when
           present) and ASN, holder and country (under the tags; "not looked up" where the IP has no
           identity row yet) ·{" "}
           <span className="mono" style={{ color: "#4C8DFF" }}>
