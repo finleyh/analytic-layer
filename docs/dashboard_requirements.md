@@ -858,8 +858,9 @@ differs) and Approve sends the selected one, closing the gap the 2026-11-09 plan
 
 ### Provider category `hosting`, 2026-11-10
 
-netflow-rollups migration `0128` (commit `3734ffa`, built, **not deployed** when this was written)
-splits `hosting` out of `cloud`. `cloud` becomes a short list of very large platforms (Amazon,
+netflow-rollups migration `0128` (commit `3734ffa`; built 2026-11-10, **deployed 2026-11-12**: the
+migration ran at 13:33 UTC and the new API image serves from 13:34 UTC) splits `hosting` out of
+`cloud`. `cloud` becomes a short list of very large platforms (Amazon,
 Microsoft, Google, Oracle, Alibaba, Tencent, Huawei); `hosting` is every company that rents out
 servers (DigitalOcean, Hetzner, OVHcloud and 69 other networks). Upstream measured about 69% of
 the peers that read `cloud` over 30 days, with 94% of their connections, moving to `hosting`, on
@@ -899,16 +900,52 @@ migration, simulated in the browser only by rewriting the API's answers on the w
 `cloud` peers renamed `hosting`, each `cloud` mix row split 94/6, `hosting` added to the category
 list): the Watchlist's category chip, the Overview's bars, the Flow graph's nodes and Sankey bands
 and the Top talkers chips all draw `hosting` in lime, `cloud` stays blue, and the candidate picker
-offers `hosting`. Not seen on real rows; that waits for the deploy.
+offers `hosting`. Real rows: see "Seen on real rows" below.
 
 **Noticed, not part of this:** `government`, `vpn` and `cellular_iot` have no colour of their own
 (a grey chip, and on the Overview a fallback colour that repeats another category's), and none of
 those three nor `educational` is in the Flow graph's legend or `CLASS_ORDER`, so the Sankey files
 those peers under unclassified. The `reverse_proxy` keys are still there from the `cdn` rename.
 
-**When `0128` is deployed:** look at the Overview's provider mix and the Flow graph with real
-rows, confirm `hosting` shows in its colour on past days as well as today, and replace "not
-deployed" above with the date.
+**Seen on real rows, 2026-11-12** (from 14:00 UTC, after the deploy). Nothing drew grey, landed
+under unclassified or broke, so no code changed. A fresh generation of the API client was identical
+to the one in the tree.
+
+- The API: `/ref/provider-categories` lists `hosting`. `/rollup/provider-mix-daily` carries it on
+  all 72 days it holds (2026-08-09 to 2026-11-11; 2026-11-12 has no rows yet): 1,411.5 MB against
+  187.0 MB for `cloud`. In 70 days of `/rollup/flow-daily`, `hosting` stands alone on 40,013 rows,
+  `cloud` alone on 17,795, `bph` with `hosting` on 442; no peer is in both `cloud` and `hosting`,
+  and `hosting` never pairs with a category that has no colour. (One day, 2026-10-25, hit the
+  20,000-row limit, so these counts are a floor.)
+- Overview, "Traffic touching each peer category — 7d": `hosting` 73.8 MB · 7% in lime, second
+  after residential isp (872.0 MB · 84%); `cloud` 2.1 MB in blue. The card is one 7-day total, not
+  a chart by day, so "on past days" was read from the API and seen on the dated pages below.
+- Flow graph: the legend lists `hosting` after `cloud` with a lime ring. For `128.199.103.165` the
+  node graph draws 15 lime and 4 blue peers. The Sankey tab (30 days) has a lime `hosting` class;
+  its place in the column comes from the layout, `CLASS_ORDER` only decides which class a peer in
+  two categories goes to.
+- Watchlist: the dominant category is `hosting` for 34 of 57 IPs, `cloud` for 2.
+- Netflow (3,000 rows, 2026-11-06 to 11-08 among them): 1,194 `hosting` chips, 251 `cloud`. Every
+  row on DigitalOcean (AS14061, 942 rows), Hetzner (AS24940), OVH (AS16276), Vultr (AS20473) and
+  Linode (AS63949) reads `hosting`; every row on Amazon (AS14618, AS16509), Google (AS15169,
+  AS396982), Microsoft (AS8075), Oracle (AS31898) and Alibaba (AS45102) reads `cloud`.
+- Top talkers: `hosting` chips in lime (the top peer, `37.187.146.93`, is one); no `cloud` peer is
+  in the top 20.
+- Entity detail: a peer's page shows "Provider categories" as plain text from
+  `/lookup/ip-identities/{ip}`. `157.90.226.70` (Hetzner) and `37.187.146.93` (OVH) read `hosting`;
+  `3.235.74.192` (Amazon) and `158.23.180.16` (Microsoft) read `cloud`. A peer with no identity row
+  shows no category. A watched IP's own page has never shown provider categories.
+- Candidate review, ASN candidates: 17 pending (16 suggested `cloud`, 1 `mobile`), `hosting` is in
+  every category choice. Pointing AS393406 (DigitalOcean) at `hosting` shows "differs from the
+  suggested cloud"; it was set back and no decision was sent.
+- Pipeline health: a "providers hosting" card (the page draws underscores as spaces), OK, 30
+  minutes old against a 36-hour limit.
+- Console: no script error or warning on any page. The only lines are 404s for per-IP lookups
+  that have no row (`/lookup/ip-identities/{ip}` on the Watchlist, Geo and Flow graph; `/watch/ips/{ip}`
+  and the review lookups on a peer's page), which were there before `hosting`.
+- The colour: lime reads clearly on the Overview bars and the chips. On the Flow graph legend it
+  sits a few degrees of hue from the `sip_server` role swatch and the `icmp` edge colour, both of
+  which get their colour from a hash of the name (`src/lib/colors.ts`).
 
 ### Still open
 
