@@ -7,6 +7,7 @@ import {
 } from "../api/netflow-rollups-client";
 import { CopyButton } from "./CopyButton";
 import { BTN_APPROVE, BTN_REJECT, DecidedChip } from "./reviewControls";
+import { IpReviewContext, IpTagChips, useIpTags, type IpTags } from "./IpReviewContext";
 import { errorMessage } from "../lib/errors";
 
 // The relations queue: statements about one IP *relative to another*, reviewed like
@@ -41,8 +42,12 @@ function RelationCard({
   row,
   decided,
   onDecide,
+  tags,
+  otherTags,
 }: {
   row: IpRelation;
+  tags: IpTags;
+  otherTags: IpTags;
   decided: { decision: "confirm" | "reject"; rollups?: string } | undefined;
   onDecide: (row: IpRelation, decision: "confirm" | "reject", note: string) => Promise<void>;
 }) {
@@ -102,6 +107,14 @@ function RelationCard({
             </>
           )}
         </div>
+      </div>
+
+      <IpReviewContext ip={row.ip} tags={tags} />
+      <div style={{ display: "flex", gap: 10, alignItems: "flex-start", fontSize: 12, color: "#6FA89E", margin: "0 0 10px 15px" }}>
+        <span style={{ flexShrink: 0 }}>
+          Tags of <span className="mono">{row.other_ip}</span>, the other side:
+        </span>
+        <IpTagChips tags={otherTags} />
       </div>
 
       {rules.map(([rule, s]) => (
@@ -191,6 +204,9 @@ export function RelationQueue({ onPendingCount }: { onPendingCount: (n: number) 
     return m;
   }, [rows, verdict]);
   const allKinds = useMemo(() => [...new Set((rows ?? []).map((r) => r.relation))].sort(), [rows]);
+  // Every tag of both IPs of each relationship: one /watch/ips read, plus the TIP for the unwatched ones.
+  const allIps = useMemo(() => (rows ?? []).flatMap((r) => [r.ip, r.other_ip]), [rows]);
+  const tagsOf = useIpTags(allIps);
   const verdictCounts = useMemo(() => {
     const c: Record<Bucket, number> = { agree: 0, disagree: 0, unsure: 0, unevaluated: 0 };
     for (const r of (rows ?? []).filter((x) => !kind || x.relation === kind)) c[bucket(r)]++;
@@ -278,7 +294,14 @@ export function RelationQueue({ onPendingCount }: { onPendingCount: (n: number) 
 
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {visible.slice(0, 100).map((row) => (
-          <RelationCard key={relKey(row)} row={row} decided={decided.get(relKey(row))} onDecide={decide} />
+          <RelationCard
+            key={relKey(row)}
+            row={row}
+            decided={decided.get(relKey(row))}
+            onDecide={decide}
+            tags={tagsOf(row.ip)}
+            otherTags={tagsOf(row.other_ip)}
+          />
         ))}
         {rows && visible.length === 0 && (
           <div className="card" style={{ padding: 20, color: "#6FA89E" }}>

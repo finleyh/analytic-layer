@@ -55,3 +55,51 @@ export async function fetchOwner(openctiId: string): Promise<OpenCtiOwner | null
   if (!from) return null;
   return { id: from.id, entity_type: from.entity_type, name: from.representative.main };
 }
+
+// ---------- Labels by observable value ----------
+//
+// "Is this IP an observable in the TIP at all, and what is it labelled?" for IPs that are
+// not on netflow-rollups' watchlist (a watched IP's labels are already mirrored in
+// `/watch/ips` tags). One query per 100 values rather than one per IP.
+
+const LABELS_QUERY = `
+  query($filters: FilterGroup) {
+    stixCyberObservables(first: 500, filters: $filters) {
+      edges {
+        node {
+          id
+          observable_value
+          objectLabel { value }
+        }
+      }
+    }
+  }
+`;
+
+type LabelsQueryResult = {
+  stixCyberObservables: {
+    edges: { node: { id: string; observable_value: string; objectLabel: { value: string }[] | null } }[];
+  };
+};
+
+export type OpenCtiLabels = { id: string; labels: string[] };
+
+/** Observable value → its OpenCTI id and labels, for the values that are observables. */
+export async function fetchLabelsByValue(values: string[]): Promise<Map<string, OpenCtiLabels>> {
+  const out = new Map<string, OpenCtiLabels>();
+  for (let i = 0; i < values.length; i += 100) {
+    const chunk = values.slice(i, i + 100);
+    const data = await graphql<LabelsQueryResult>(LABELS_QUERY, {
+      filters: {
+        mode: "and",
+        filters: [{ key: "value", values: chunk, operator: "eq", mode: "or" }],
+        filterGroups: [],
+      },
+    });
+    for (const edge of data.stixCyberObservables.edges) {
+      const n = edge.node;
+      out.set(n.observable_value, { id: n.id, labels: (n.objectLabel ?? []).map((l) => l.value).sort() });
+    }
+  }
+  return out;
+}

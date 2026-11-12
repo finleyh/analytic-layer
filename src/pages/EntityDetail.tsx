@@ -280,7 +280,14 @@ function EntityContent({
         )}
       </div>
       <div style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap", alignItems: "center" }}>
-        <span className="chip">msk:voip_analysis</span>
+        {watchedIp.tags.filter((t) => t.startsWith("msk:")).sort().map((t) => (
+          <span className="chip" key={t} title="OpenCTI label (/watch/ips tags) — an msk:* watch label">
+            {t}
+          </span>
+        ))}
+        {watchedIp.tags.length === 0 && (
+          <span style={{ fontSize: 11, color: "#6FA89E" }}>on the watchlist with no tags</span>
+        )}
         {tips.map((t) => (
           <span
             className="chip tip"

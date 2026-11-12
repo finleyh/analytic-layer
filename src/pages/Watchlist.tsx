@@ -285,7 +285,11 @@ function IdentityCell({
         </span>
       ))}
       <br />
-      <span className="chip">msk:voip_analysis</span>
+      {ip.tags.filter((t) => t.startsWith("msk:")).sort().map((t) => (
+        <span className="chip" key={t} title="OpenCTI label (/watch/ips tags) — an msk:* watch label">
+          {t}
+        </span>
+      ))}
       {tips.map((t) => (
         <span className="chip tip" key={t} title="OpenCTI label — an analyst's suggestion, read by no logic">
           {t}

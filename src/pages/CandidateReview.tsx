@@ -24,6 +24,7 @@ import { formatBytes, formatShortDate, isoDate, daysAgo } from "../lib/format";
 import { CopyButton } from "../components/CopyButton";
 import { BTN_APPROVE, BTN_REJECT, DecidedChip } from "../components/reviewControls";
 import { RelationQueue } from "../components/RelationQueue";
+import { IpReviewContext, useIpTags, type IpTags } from "../components/IpReviewContext";
 import { RoleDecisionsPanel, type RolePreset } from "../components/RoleDecisionsPanel";
 import { errorMessage } from "../lib/errors";
 
@@ -692,6 +693,8 @@ function IpRoleQueue({
   const [roleFilter, setRoleFilter] = useState<string>("");
 
   const ipOptions = useMemo(() => [...new Set((rows ?? []).map((r) => r.ip))].sort(), [rows]);
+  // Every tag of each IP in the queue: one /watch/ips read, plus the TIP for the unwatched ones.
+  const tagsOf = useIpTags(ipOptions);
   // Each facet's counts (and its own "all N") are computed against rows
   // filtered by every OTHER active filter, not the raw unfiltered list —
   // otherwise picking a role leaves the verdict dropdown's numbers
@@ -934,6 +937,7 @@ function IpRoleQueue({
             onDecide={decide}
             onDecidedMany={decidedMany}
             glossary={glossary}
+            tags={tagsOf(row.ip)}
           />
         ))}
         {rows && rows.length === 0 && (
@@ -962,6 +966,7 @@ function IpRoleCard({
   onDecide,
   onDecidedMany,
   glossary,
+  tags,
 }: {
   row: IpRole;
   vantage: "peer" | "watched";
@@ -969,6 +974,7 @@ function IpRoleCard({
   onDecide: (row: IpRole, decision: "confirm" | "reject", pairs?: PairRef[]) => Promise<void>;
   onDecidedMany: (result: RoleDecisionsResult) => void;
   glossary: Glossary;
+  tags: IpTags;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [pairs, setPairs] = useState<SipPair[] | null>(null);
@@ -1076,6 +1082,8 @@ function IpRoleCard({
           )}
         </div>
       </div>
+
+      <IpReviewContext ip={row.ip} tags={tags} watchedVantage={vantage === "watched"} />
 
       {Object.keys(suggestions).length === 0 ? (
         <div

@@ -956,3 +956,81 @@ to the one in the tree.
   the API).
 - Watchlist identity lookups are one request per IP (404 for IPs with no identity row yet); a
   bulk route would remove the console noise.
+### Candidate review, 2026-11-12 — tags and port scans of the IP under review
+
+Finley's request: on the candidate review page, show the port scan data and every tag of the IP
+the analyst is deciding on, so the decision does not need a second tab on the Entity page.
+
+**What the page shows.** Every card in the Peer roles, Monitored IP roles and Peer relationships
+queues now carries one block between its header and the rule's suggestion
+(`src/components/IpReviewContext.tsx`):
+
+- **Tags.** Every tag of the IP, as chips. `msk:*` tags are plain chips (they are what
+  netflow-rollups itself reads); every other tag is a dashed chip, the same "OpenCTI label, an
+  analyst's suggestion, read by no logic" chip as on the Watchlist. A tag never sets a role, a
+  colour or a default in the decision controls: the label-provenance rule (2026-10-15) holds, and
+  the reviewed role, the proposal and the tags stay three separate things on the card.
+- **Port scans.** Per scan source (Shodan, Censys): the day of the latest scan, the number of
+  services, and whether the fingerprint changed over the scans in its history; then the services of
+  the latest scan as chips (port, transport, service, software, HTTP title), the first 14 with a
+  count of the rest. "Scan history and full facts" opens the same fingerprint history as the
+  Entity page (one chip per run of an unchanged fingerprint; click for the facts, the difference
+  from the run before, and the raw response). A link goes to the IP's Entity page. The line
+  "scanned because" names the trigger values of the scans read.
+- **Relationships cards** also show the tags of the other side (`other_ip`) on one line. Its port
+  scans are not shown: the decision is about `ip`, and all 16 `other_ip` values pending today are
+  watched IPs with their own Entity page.
+
+**Where it comes from.**
+
+| On the card | Source | Notes |
+|---|---|---|
+| Tags of a watched IP | `/watch/ips` (`tags`) | One request for the whole page; `tags` mirrors every OpenCTI label of the observable. A paused IP says so. |
+| Tags of an IP that is not watched | OpenCTI GraphQL, `stixCyberObservables` filtered on `value`, `objectLabel` | One request per 100 IPs, through the dev proxy with this project's own token. netflow-rollups serves tags only for watched IPs. |
+| Port scans | `/lookup/host-scans?ip=…`, all time, `limit=1000` | One request per IP, sent only when the card comes within 400 px of the window, kept for the session. |
+
+An IP that is in neither place reads "none — not on the watchlist and not an observable in
+OpenCTI", and an observable without labels reads "an observable in OpenCTI with no labels";
+neither is left blank.
+An IP without a scan reads "No port scan of this peer. netflow-rollups scans a peer only after a
+rule recommends it."
+
+**Why one scan request per card and not one for the page.** `/lookup/host-scans` returns at most
+1,000 rows, newest first, with no offset. Peer scans are 811 rows over 447 IPs all time today and
+growing, and the watched sweep adds two rows per watched IP per day, so a page-wide read would
+silently lose the oldest scans. Per IP the largest history today is 42 rows. Measured on the Peer
+roles tab: 143 cards drawn, 5 scan requests before any scrolling.
+
+**Measured today (2026-11-12).**
+
+- Peer roles: 143 pending rows over 137 IPs; 130 of the 137 have at least one scan; none is watched.
+- Monitored IP roles: 9 rows over 7 IPs; all 7 are watched and show their tags. The two cards
+  read in full had scans from the daily sweep (`159.65.230.164`: 42 scans, Censys unchanged over
+  20 scans since 2026-10-20, Shodan with 2 fingerprints; `209.38.44.23`: 1 scan).
+- Peer relationships: 78 rows over 61 IPs; 21 of the 61 have a scan; 1 is watched.
+- Of the 197 pending peer and relationship IPs, 3 are OpenCTI observables: `143.198.172.85`
+  (watched: `msk:analyze`, `msk:voip_analysis`), and `147.182.136.219` and `142.93.8.58` (not
+  watched; both carry `hostring:digital_ocean`, spelled that way in OpenCTI). The other 194 have
+  no tag anywhere, which the card states.
+- Every request the page sent returned 200 and it added no console line.
+
+**Left as it was.** The ASN candidates queue: its subject is an ASN, not an IP, and only 1 of its
+17 triggering peers has a scan.
+
+**The fixed `msk:voip_analysis` chip, replaced the same day.** The Watchlist rows
+(`src/pages/Watchlist.tsx`) and the Entity page header (`src/pages/EntityDetail.tsx`) drew a
+fixed `msk:voip_analysis` chip on every watched IP, written when that was the only watch label.
+The live `/watch/ips` tags say otherwise: all 57 watched IPs carry `msk:analyze`, and 17 of them
+also carry `msk:voip_analysis`, so the chip was wrong on 40 rows and hid `msk:analyze` on all 57.
+Finley asked for the real tags. Both places now draw the IP's own `msk:*` tags as plain chips,
+then the other tags as dashed chips as before; the Entity page says "on the watchlist with no
+tags" when there are none. Checked: the chips of all 57 Watchlist rows equal the `tags` of
+`/watch/ips`; the Entity page of `159.65.230.164` shows `msk:analyze` alone and that of
+`185.134.23.8` shows both.
+
+**Seen while doing this, not changed.**
+
+- Peer scans carry `trigger = recommended` (810 of 811 rows; the other is `api`). The OpenAPI
+  description of the `trigger` filter does not list `recommended`. The page prints whatever value
+  it gets, so nothing breaks; the note is for netflow-rollups' documentation.
+
