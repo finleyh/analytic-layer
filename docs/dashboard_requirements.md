@@ -1083,6 +1083,31 @@ tags" when there are none. Checked: the chips of all 57 Watchlist rows equal the
   description of the `trigger` filter does not list `recommended`. The page prints whatever value
   it gets, so nothing breaks; the note is for netflow-rollups' documentation.
 
+### Entity detail, 2026-11-12 — dates and every hour on "Traffic by hour"
+
+Finley's request, made from the Watchlist (the panel is on the Entity page a Watchlist row opens):
+put the month/day next to the day of the week, and a number over every hour column.
+
+- **Row labels.** Each weekday row now carries the UTC dates behind it, as month/day. Over 7 days
+  a row is exactly one date (`Mon 11/09`). Over 30 or 90 days a row is the average of several
+  dates, so the label gives the first and the last (`Mon 10/19–11/09`) and hovering it lists them
+  all ("4 dates: 10/19, 10/26, 11/02, 11/09"). The line above the grid says which of the two
+  readings applies.
+- **Hour columns.** Every column has its hour, `00` to `23` (before: every third).
+- **Cell tooltips** name the date over 7 days ("Mon 11/09 00:00 UTC · 52 B") and the number of
+  dates averaged over longer windows.
+- **Rows in date order, oldest first** (Finley, same day: "the days need to be in correct
+  numerical order"). The first version kept Monday to Sunday, which over 7 days read
+  Mon 11/09 … Thu 11/12, then Fri 11/06 … Sun 11/08. Rows are now sorted by the first date each
+  weekday has in the window. Over 7 days that is plain date order ending today (on 2026-11-12, a
+  Thursday: Fri 11/06 … Thu 11/12). Over 30 and 90 days the rows are still weekdays averaged
+  over several dates, so they are ordered by their first date (30 days: Wed 10/14–11/11 …
+  Tue 10/20–11/10); the top row is therefore the weekday the window starts on, and it moves
+  from day to day.
+- **Not changed.** Data, route (`/rollup/flow-hourly`) and the averaging are as before.
+- Checked on `159.65.230.164` (7 and 30 days) and `185.134.23.8` (7, 30 and 90 days), at 1440 px
+  and at the preview pane's width (columns 19 px wide, the two-digit hour needs 11 px).
+
 ### Still open
 
 - Pipeline health says scanner verdict counts and roles/providers last-write times are not

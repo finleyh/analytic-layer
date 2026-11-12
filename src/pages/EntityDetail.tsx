@@ -1394,6 +1394,8 @@ type HeatGrids = {
   families: { key: string; bytes: number; flows: number; grid: Record<HeatMeasure, number[][]> }[];
   // how many dates of each weekday the window covers, so a cell can be an average per hour
   occurrences: number[];
+  // the UTC dates (YYYY-MM-DD, oldest first) behind each weekday row, for the row labels
+  dates: string[][];
   truncated: boolean;
 };
 
@@ -1453,11 +1455,13 @@ function ActivityHeatmap({ ip }: { ip: string }) {
             f.flows += r.flow_count;
           }
         }
-        const occurrences = Array(7).fill(0);
-        for (const d = new Date(from); d <= to; d.setUTCDate(d.getUTCDate() + 1)) occurrences[(d.getUTCDay() + 6) % 7] += 1;
+        const dates: string[][] = Array.from({ length: 7 }, () => []);
+        for (const d = new Date(from); d <= to; d.setUTCDate(d.getUTCDate() + 1))
+          dates[(d.getUTCDay() + 6) % 7].push(d.toISOString().slice(0, 10));
         setGrids({
           families: [...byFamily.entries()].map(([key, f]) => ({ key, ...f })).sort((a, b) => b.bytes - a.bytes),
-          occurrences,
+          occurrences: dates.map((d) => d.length),
+          dates,
           truncated,
         });
       } catch (err) {
@@ -1501,6 +1505,19 @@ function ActivityHeatmap({ ip }: { ip: string }) {
   const max = Math.max(0, ...combined.flat());
   const fmt = (v: number) => (measure === "bytes" ? formatBytes(v) : `${Math.round(v).toLocaleString()} flows`);
   const windowLabel = windowRange(windowKey).label;
+  // Month/day of the dates behind a weekday row: one date over 7 days, first-last over longer windows.
+  const md = (iso: string) => `${iso.slice(5, 7)}/${iso.slice(8, 10)}`;
+  const rowDates = (dayIdx: number) => {
+    const d = grids?.dates[dayIdx] ?? [];
+    if (d.length === 0) return "";
+    return d.length === 1 ? md(d[0]) : `${md(d[0])}–${md(d[d.length - 1])}`;
+  };
+  const singleDates = grids ? grids.dates.every((d) => d.length <= 1) : false;
+  // Rows in date order, oldest first: by the first date each weekday has in the window. Over 7
+  // days that is plain date order ending today; over longer windows the first dates ascend.
+  const rowOrder = [0, 1, 2, 3, 4, 5, 6].sort((a, b) =>
+    (grids?.dates[a][0] ?? "").localeCompare(grids?.dates[b][0] ?? ""),
+  );
 
   return (
     <div className="card" style={{ padding: "22px 24px", marginBottom: 28 }}>
@@ -1635,28 +1652,44 @@ function ActivityHeatmap({ ip }: { ip: string }) {
           </div>
 
           <div style={{ fontSize: 11, color: "#6FA89E", marginBottom: 16 }}>
-            UTC hours · Mon → Sun · each cell is the average for that weekday and hour over {windowLabel}
-            {windowKey !== "7d" ? ` (${Math.min(...grids.occurrences)} to ${Math.max(...grids.occurrences)} dates per weekday)` : ""}
+            UTC hours and dates (month/day) · rows in date order, oldest first ·{" "}
+            {singleDates
+              ? "each row is one date, each cell that date's hour"
+              : `each cell is the average for that weekday and hour over ${windowLabel} (${Math.min(...grids.occurrences)} to ${Math.max(...grids.occurrences)} dates per weekday; the label gives the first and last)`}
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "44px repeat(24,1fr)", gap: 3, alignItems: "center" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "max-content repeat(24,1fr)", gap: 3, alignItems: "center" }}>
             <div />
             {Array.from({ length: 24 }, (_, h) => (
               <div key={h} className="mono" style={{ fontSize: 9, color: "#6FA89E", textAlign: "center" }}>
-                {h % 3 === 0 ? String(h).padStart(2, "0") : ""}
+                {String(h).padStart(2, "0")}
               </div>
             ))}
-            {combined.map((hours, dayIdx) => (
+            {rowOrder.map((dayIdx) => {
+              const hours = combined[dayIdx];
+              return (
               <Fragment key={dayIdx}>
-                <div className="mono" style={{ fontSize: 11, color: "#A6D8CD" }}>
-                  {HEATMAP_DAYS[dayIdx]}
+                <div
+                  className="mono"
+                  style={{ fontSize: 11, color: "#A6D8CD", whiteSpace: "nowrap", paddingRight: 8 }}
+                  title={
+                    grids.dates[dayIdx].length > 1
+                      ? `${grids.dates[dayIdx].length} dates: ${grids.dates[dayIdx].map(md).join(", ")}`
+                      : grids.dates[dayIdx][0]
+                  }
+                >
+                  {HEATMAP_DAYS[dayIdx]} <span style={{ color: "#6FA89E" }}>{rowDates(dayIdx)}</span>
                 </div>
                 {hours.map((value, hour) => {
                   const t = max > 0 ? Math.sqrt(value) / Math.sqrt(max) : 0;
                   return (
                     <div
                       key={hour}
-                      title={`${HEATMAP_DAYS[dayIdx]} ${String(hour).padStart(2, "0")}:00 UTC · ${fmt(value)} per hour`}
+                      title={
+                        grids.dates[dayIdx].length > 1
+                          ? `${HEATMAP_DAYS[dayIdx]} ${String(hour).padStart(2, "0")}:00 UTC · ${fmt(value)} per hour, average of ${grids.dates[dayIdx].length} dates (${rowDates(dayIdx)})`
+                          : `${HEATMAP_DAYS[dayIdx]} ${rowDates(dayIdx)} ${String(hour).padStart(2, "0")}:00 UTC · ${fmt(value)}`
+                      }
                       style={{
                         height: 22,
                         borderRadius: 3,
@@ -1667,7 +1700,8 @@ function ActivityHeatmap({ ip }: { ip: string }) {
                   );
                 })}
               </Fragment>
-            ))}
+              );
+            })}
           </div>
 
           <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 16 }}>
